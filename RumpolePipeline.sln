@@ -5,19 +5,19 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "coordinator", "coordinator", "{EE3C3368-3FC2-4D31-A172-FD2C50B0A1B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "coordinator", "coordinator\coordinator\coordinator.csproj", "{99C23CD1-B31C-4A47-97AE-42D8E5A9D8B8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "coordinator", "coordinator\coordinator.csproj", "{99C23CD1-B31C-4A47-97AE-42D8E5A9D8B8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pdf-generator", "pdf-generator", "{AC4C7297-D7A1-42A3-9720-E98C04771886}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pdf-generator", "pdf-generator\pdf-generator\pdf-generator.csproj", "{EC3B7119-D13A-453B-8406-9B9DA2D93590}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pdf-generator", "pdf-generator\pdf-generator.csproj", "{EC3B7119-D13A-453B-8406-9B9DA2D93590}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "indexer", "indexer", "{137A80C1-72F3-4EBF-B03A-BD659AA0EB79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "indexer", "indexer\indexer\indexer.csproj", "{FC2AE03F-AC83-452F-991A-7EFCA0FCBEB4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "indexer", "indexer\indexer.csproj", "{FC2AE03F-AC83-452F-991A-7EFCA0FCBEB4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "text-extractor", "text-extractor", "{ED864099-3446-4E5C-900B-6A20790D3632}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "text-extractor", "text-extractor\text-extractor\text-extractor.csproj", "{5A692CFA-B116-480A-A910-EB4762C291C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "text-extractor", "text-extractor\text-extractor.csproj", "{5A692CFA-B116-480A-A910-EB4762C291C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
