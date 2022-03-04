@@ -40,7 +40,7 @@ namespace Services.SearchDataStorageService
 
         public async Task UploadToIndex(int caseId)
         {
-            var container = _cosmosClient.GetContainer(_storageOptions.DatabaseName, "documents");
+            var container = _cosmosClient.GetContainer(_storageOptions.DatabaseName, _storageOptions.ContainerName);
             var query = new QueryDefinition("SELECT * FROM c ");
 
             var iterator = container.GetItemQueryIterator<SearchDocument>(query,

@@ -6,7 +6,3 @@ resource "azurerm_cognitive_account" "computer_vision_service" {
   
   sku_name = "S1"
 }
-
-output "computer_vision_endpoint" {
-    value = azurerm_cognitive_account.computer_vision_service.endpoint
-}

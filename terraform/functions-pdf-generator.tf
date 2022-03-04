@@ -16,6 +16,8 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
+    "blobStorage__ConnectionString"           = azurerm_storage_account.sa.primary_connection_string
+    "blobStorage__ContainerName"              = azurerm_storage_container.container.name
   }
   site_config {
     always_on      = true
@@ -32,4 +34,9 @@ resource "azurerm_function_app" "fa_pdf_generator" {
       app_settings["WEBSITE_ENABLE_SYNC_UPDATE_SITE"],
     ]
   }
+}
+
+data "azurerm_function_app_host_keys" "ak_pdf_generator" {
+  name                = "fa-${local.resource_name}-pdf-generator"
+  resource_group_name = azurerm_resource_group.rg.name
 }

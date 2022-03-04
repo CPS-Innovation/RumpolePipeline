@@ -32,6 +32,7 @@ locals {
 
 data "azurerm_client_config" "current" {}
 
+
 # data "azuread_service_principal" "terraform_service_principal" {
 #   application_id = "__terraform_service_principal_app_id__"
 # }
