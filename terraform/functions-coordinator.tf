@@ -38,9 +38,11 @@ resource "azurerm_function_app" "fa_coordinator" {
     ]
   }
 
-  # depends_on = [
-  #   azurerm_key_vault_secret.kvs_fa_coordinator_client_secret
-  # ]
+  depends_on = [
+    data.azurerm_function_app_host_keys.ak_pdf_generator,
+    data.azurerm_function_app_host_keys.ak_text_extractor,
+    data.azurerm_function_app_host_keys.ak_indexer
+  ]
 }
 
 # resource "azuread_application" "fa_coordinator" {
