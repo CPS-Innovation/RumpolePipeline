@@ -6,7 +6,9 @@ resource "azurerm_cosmosdb_account" "cdba" {
   resource_group_name = azurerm_resource_group.rg.name
   offer_type          = "Standard"
   kind                = "GlobalDocumentDB"
-
+  capabilities {
+    name = "EnableServerless"
+  }
   consistency_policy {
     consistency_level       = "BoundedStaleness"
     max_interval_in_seconds = 10
@@ -18,13 +20,14 @@ resource "azurerm_cosmosdb_account" "cdba" {
     location          = azurerm_resource_group.rg.location
     failover_priority = 0
   }
+
 }
 
 resource "azurerm_cosmosdb_sql_database" "cdb" {
   name                = "cdb-rumpole-pipeline"
   resource_group_name = azurerm_cosmosdb_account.cdba.resource_group_name
   account_name        = azurerm_cosmosdb_account.cdba.name
-  throughput          = 400
+  #throughput          = 400  # do not use if serverless
 }
 
 resource "azurerm_cosmosdb_sql_container" "cdbdc" {

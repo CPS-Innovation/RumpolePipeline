@@ -4,7 +4,7 @@ resource "azurerm_storage_account" "sa" {
   location            = azurerm_resource_group.rg.location
 
   account_kind              = "StorageV2"
-  account_replication_type  = "RAGRS"
+  account_replication_type  = "LRS"
   account_tier              = "Standard"
   enable_https_traffic_only = true
 

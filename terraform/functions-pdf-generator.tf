@@ -4,10 +4,10 @@ resource "azurerm_function_app" "fa_pdf_generator" {
   name                       = "fa-${local.resource_name}-pdf-generator"
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
-  app_service_plan_id        = azurerm_app_service_plan.asp.id 
+  app_service_plan_id        = azurerm_app_service_plan.aspw.id 
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
-  os_type                    = "linux"
+  #os_type                    = "linux"
   version                    = "~3"
   app_settings = {
     "AzureWebJobsStorage"                     = azurerm_storage_account.sa.primary_connection_string
