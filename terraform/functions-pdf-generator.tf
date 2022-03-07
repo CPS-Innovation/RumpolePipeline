@@ -39,4 +39,5 @@ resource "azurerm_function_app" "fa_pdf_generator" {
 data "azurerm_function_app_host_keys" "ak_pdf_generator" {
   name                = "fa-${local.resource_name}-pdf-generator"
   resource_group_name = azurerm_resource_group.rg.name
+  depends_on = [azurerm_function_app.fa_pdf_generator]
 }

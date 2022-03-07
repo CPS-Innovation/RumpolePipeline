@@ -51,4 +51,5 @@ resource "azurerm_function_app" "fa_text_extractor" {
 data "azurerm_function_app_host_keys" "ak_text_extractor" {
   name                = "fa-${local.resource_name}-text-extractor"
   resource_group_name = azurerm_resource_group.rg.name
+    depends_on = [azurerm_function_app.fa_text_extractor]
 }
