@@ -38,7 +38,7 @@ namespace Services.BlobStorageService
 
         private BlobClient CreateBobClient(string blobName)
         {
-            return new BlobClient(_options.ConnectionString, "rumpole", blobName);
+            return new BlobClient(_options.ConnectionString, _options.ContainerName, blobName);
         }
     }
 }
