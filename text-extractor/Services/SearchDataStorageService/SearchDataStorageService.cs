@@ -63,7 +63,7 @@ namespace Services.SearchDataStorageService
                 {
                     Id = $"{caseId}-{documentId}-{readResult.Page}-{index}",
                     CaseId = caseId,
-                    DocumentId = documentId.ToString(),
+                    DocumentId = documentId,
                     PageIndex = readResult.Page,
                     LineIndex = index,
                     Language = line.Language,
@@ -94,7 +94,7 @@ namespace Services.SearchDataStorageService
             tasks.Add(Upsert(container, new SearchDocument
             {
                 CaseId = caseId,
-                Id = $"{caseId}-{documentId}",
+                Id = documentId.ToString(), // cosmos db id must be string
                 ModelVersion = analyzeresults.ModelVersion,
                 Version = analyzeresults.Version,
                 ReadResults = analyzeresults.ReadResults,

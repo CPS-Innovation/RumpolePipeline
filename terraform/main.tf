@@ -14,12 +14,6 @@ terraform {
     }
   }
 
-  # backend "azurerm" {
-  #   storage_account_name = "cpsdevstorageterraform"
-  #   container_name       = "terraform-rumpole-pipeline"
-  #   key                  = "terraform.tfstate"
-  #   access_key           = XXX
-  # }
   backend "azurerm" {
     storage_account_name = "__terraform_storage_account__"
     container_name       = "__terraform_container_name__"

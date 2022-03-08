@@ -25,6 +25,12 @@ resource "azurerm_function_app" "fa_coordinator" {
   site_config {
     always_on      = true
     ip_restriction = []
+
+    cors {
+      allowed_origins = [
+        "*" // TEMPORARY - needs to be removed when we have gateway
+      ]
+    }
   }
 
   identity {
