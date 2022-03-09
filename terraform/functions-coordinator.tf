@@ -16,7 +16,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
-    "endpoint__CmsDocumentDetails"            = "https://sarumpolespike.blob.core.windows.net/cms/docs.json?sp=r&st=2022-01-26T20:41:33Z&se=2024-01-01T04:41:33Z&spr=https&sv=2020-08-04&sr=b&sig=0lNL8hXQ5pasoJuFV5hqFks8%2FI6qaHbqDoQfVT3DyxY%3D"
+    "endpoint__CmsDocumentDetails"            = "https://sarumpolepipelinecmsstub.blob.core.windows.net/cms/docs.json?sp=r&st=2022-03-09T06:49:45Z&se=2023-06-01T13:49:45Z&spr=https&sv=2020-08-04&sr=b&sig=MisgIvsdLpg7ES7Om8CNqRlotB0tra%2F%2BJInUaDf1FHs%3D"
     "endpoint__DocToPdf"                      = "https://${azurerm_function_app.fa_pdf_generator.default_hostname}/api/doc-to-pdf?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
     "endpoint__PdfToSearchData"               = "https://${azurerm_function_app.fa_text_extractor.default_hostname}/api/pdf-to-search-data?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "endpoint__SearchIndexer"                 = "https://${azurerm_function_app.fa_indexer.default_hostname}/api/search-indexer?code=${data.azurerm_function_app_host_keys.ak_indexer.default_function_key}"
