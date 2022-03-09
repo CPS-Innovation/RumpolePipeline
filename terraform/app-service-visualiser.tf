@@ -1,9 +1,9 @@
 locals {
-  visualiser_name = "as-web-${local.resource_name}-visualiser" 
+  app_name = "as-web-${local.resource_name}-visualiser" 
 }
 
 resource "azurerm_app_service" "as_web" {
-  name                = "as-web-${local.resource_name}-visualiser"
+  name                = local.app_name
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   app_service_plan_id = azurerm_app_service_plan.asp.id
@@ -27,21 +27,38 @@ resource "azurerm_app_service" "as_web" {
     active_directory {
       client_id         = azuread_application.as_read.application_id
       client_secret     = azuread_application_password.as_password.value
-      allowed_audiences = ["https://CPSGOVUK.onmicrosoft.com/as-web-${local.resource_name}-visualiser"]
+      allowed_audiences = ["https://CPSGOVUK.onmicrosoft.com/${local.app_name}"]
     }
   }
 }
 
 resource "azuread_application" "as_read" {
-  display_name               = "as-web-${local.resource_name}-visualiser"
-  //oauth2_allow_implicit_flow = false
-  identifier_uris            = ["https://CPSGOVUK.onmicrosoft.com/as-web-${local.resource_name}-visualiser"]
+  display_name               = local.app_name
+
+  identifier_uris            = ["https://CPSGOVUK.onmicrosoft.com/${local.app_name}"]
   owners                     = ["4acc9fb2-3e32-4109-b3d1-5fcd3a253e4e"] // Stef's admin account todo: get rid of this
   # reply_urls = [
   #   "https://as-web-${local.resource_name}-visualiser.azurewebsites.net/.auth/login/aad/callback",
   # ]
   # homepage = "https://as-web-${local.resource_name}-visualiser.azurewebsites.net"
 
+  single_page_application {
+    redirect_uris = [
+      "https://${local.app_name}.azurewebsites.net/",
+    ]
+  }
+  web {
+    implicit_grant {
+      access_token_issuance_enabled = true
+      id_token_issuance_enabled = true
+    }
+
+    redirect_uris = [
+      "https://${local.app_name}.azurewebsites.net/.auth/login/aad/callback"
+    ]
+
+  }
+  
   required_resource_access {
     resource_app_id = "00000002-0000-0000-c000-000000000000" # Azure AD Graph (deprecated!?)
 
