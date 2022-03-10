@@ -28,7 +28,7 @@ resource "azurerm_function_app" "fa_coordinator" {
 
     cors {
       allowed_origins = [
-        "*" // TEMPORARY - needs to be removed when we have gateway
+        "https://${azurerm_app_service.as_web.name}.azurewebsites.net/"
       ]
     }
   }
