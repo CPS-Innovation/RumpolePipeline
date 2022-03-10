@@ -20,7 +20,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     "endpoint__DocToPdf"                      = "https://${azurerm_function_app.fa_pdf_generator.default_hostname}/api/doc-to-pdf?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
     "endpoint__PdfToSearchData"               = "https://${azurerm_function_app.fa_text_extractor.default_hostname}/api/pdf-to-search-data?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "endpoint__SearchIndexer"                 = "https://${azurerm_function_app.fa_indexer.default_hostname}/api/search-indexer?code=${data.azurerm_function_app_host_keys.ak_indexer.default_function_key}"
-    "endpoint__SearchIndexerEnabled"          = "true"
+    "endpoint__SearchIndexerEnabled"          = "false"
   }
   site_config {
     always_on      = true

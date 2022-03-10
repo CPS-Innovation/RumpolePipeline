@@ -24,12 +24,12 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "searchDataStorage__AuthorizationKey"      = azurerm_cosmosdb_account.cdba.primary_key
     "searchDataStorage__DatabaseName"          = azurerm_cosmosdb_sql_database.cdb.name
     "searchDataStorage__ContainerName"         = azurerm_cosmosdb_sql_container.cdbdc.name
-    "searchDataStorage__Enabled"               = "true"
+    "searchDataStorage__Enabled"               = "false"
 
     "searchDataIndex__EndpointUrl"             = "https://${azurerm_search_service.ss.name}.search.windows.net"
     "searchDataIndex__AuthorizationKey"        = azurerm_search_service.ss.primary_key
     "searchDataIndex__IndexName"               = jsondecode(file("search-index-definition.json")).name
-    "searchDataIndex__Enabled"                 = "false"
+    "searchDataIndex__Enabled"                 = "true"
   }
   site_config {
     always_on      = true
