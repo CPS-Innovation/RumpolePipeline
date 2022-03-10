@@ -22,6 +22,7 @@ export const Results: React.FC<Props> = ({ tracker }) => {
           <th>Doc id</th>
           <th>Pdf ready?</th>
           <th>Search Ready?</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -35,6 +36,13 @@ export const Results: React.FC<Props> = ({ tracker }) => {
               <Val
                 val={document.pageDetails?.every((item) => item.dimensions)}
               />
+            </td>
+            <td>
+              {document.pdfUrl && (
+                <a href={document.pdfUrl} target="_blank" rel="noreferrer">
+                  Open Pdf
+                </a>
+              )}
             </td>
           </tr>
         ))}

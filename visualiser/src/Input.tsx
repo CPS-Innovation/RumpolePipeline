@@ -20,6 +20,7 @@ export const Input: React.FC<Props> = ({ setCaseId }) => {
         <input type="checkbox" ref={checkBoxRef} />
       </label>
       <br />
+      <br />
       <button
         onClick={() =>
           setCaseId({
