@@ -1,0 +1,25 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "_AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=sacpsdevrumpolepipeline;AccountKey=g8PLInLf+MIOMd3eVbvZLOAfxxGc4GoISdOtecNzejYvPNSNe8mNIc/co87qy0scx+SagO1VZJZoIzVUIGi6ZA==;EndpointSuffix=core.windows.net",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+
+    "ocrService:ServiceUrl": "https://uksouth.api.cognitive.microsoft.com/",
+    "ocrService:ServiceKey": "4e965df75e5d4c8f8729b108e69eba78",
+
+    "searchDataStorage:EndpointUrl": "https://cdb-rumpole-pipeline-dev.documents.azure.com:443/",
+    "searchDataStorage:AuthorizationKey": "Su83jH1Js97h7vjjo1TEkianOnjAlVhXzGW5Gu8GRCwtFIG9c6SaPm9h30ktZS5GcO9DBgwnF7dQCfhxZoZhsQ==",
+    "searchDataStorage:DatabaseName": "cdb-rumpole-pipeline",
+    "searchDataStorage:ContainerName": "documents",
+    "searchDataStorage:Enabled": "false",
+
+    "searchDataIndex:EndpointUrl": "https://ss-rumpole-pipeline-dev.search.windows.net",
+    "searchDataIndex:AuthorizationKey": "2245725B2743E72D54A0EEA6F52FA480",
+    "searchDataIndex:IndexName": "lines-index",
+    "searchDataIndex:Enabled": "true"
+  },
+  "Host": {
+    "LocalHttpPort": 7076
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "_AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=sacpsdevrumpolepipeline;AccountKey=g8PLInLf+MIOMd3eVbvZLOAfxxGc4GoISdOtecNzejYvPNSNe8mNIc/co87qy0scx+SagO1VZJZoIzVUIGi6ZA==;EndpointSuffix=core.windows.net",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "endpoint:CmsDocumentDetails": "https://sarumpolepipelinecmsstub.blob.core.windows.net/cms/docs.json?sp=r&st=2022-03-09T06:49:45Z&se=2023-06-01T13:49:45Z&spr=https&sv=2020-08-04&sr=b&sig=MisgIvsdLpg7ES7Om8CNqRlotB0tra%2F%2BJInUaDf1FHs%3D",
+    "endpoint:SearchIndexerEnabled": "false",
+
+    "_endpoint:DocToPdf": "http://localhost:7072/api/doc-to-pdf?code=code-here",
+    "endpoint:PdfToSearchData": "http://localhost:7076/api/pdf-to-search-data?code=code-here",
+    "endpoint:SearchIndexer": "http://localhost:7075/api/search-indexer?code=code-here",
+
+    "endpoint:DocToPdf": "https://fa-rumpole-pipeline-dev-pdf-generator.azurewebsites.net/api/doc-to-pdf?code=BJnbvV6iKL4l3NxLtnmnYAybKqdOxu/0Uui4dCDtbaD1P9jDC58Lvw==",
+    "_endpoint:PdfToSearchData": "https://fa-rumpole-pipeline-dev-text-extractor.azurewebsites.net/api/pdf-to-search-data?code=1ET2Y1ITia2/Owxr8In5yaEkBoWeaE0mQiTvaUwzvs3za//l9DQJgw==",
+    "_endpoint:SearchIndexer": "https://fa-rumpole-pipeline-dev-indexer.azurewebsites.net/api/search-indexer?code=9FU2tpNnJF8JKyPwBtqu3MhAeeB0ay2P8UYInPaWxHRH871RFR1McQ=="
+  },
+  "Host": {
+    "CORS": "*"
+  }
+}
