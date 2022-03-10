@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+  paths:
+    include:
+      - "visualiser"
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  REACT_APP_BUILD_NUMBER: $(Build.BuildNumber)
+
+steps:
+  - task: Npm@1
+    inputs:
+      command: "install"
+      workingDir: "visualiser"
+    displayName: "npm install"
+
+  - task: Npm@1
+    inputs:
+      command: "custom"
+      workingDir: "visualiser"
+      customCommand: "run build"
+    displayName: "npm build"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: "visualiser/build"
+      ArtifactName: "visualiser-drop"
+      publishLocation: "Container"

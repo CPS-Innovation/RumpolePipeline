@@ -40,7 +40,7 @@ namespace Services.SearchDataStorageService
 
         public async Task UploadToIndex(int caseId)
         {
-            var container = _cosmosClient.GetContainer(_storageOptions.DatabaseName, "documents");
+            var container = _cosmosClient.GetContainer(_storageOptions.DatabaseName, _storageOptions.ContainerName);
             var query = new QueryDefinition("SELECT * FROM c ");
 
             var iterator = container.GetItemQueryIterator<SearchDocument>(query,
@@ -62,7 +62,7 @@ namespace Services.SearchDataStorageService
                         {
                             Id = $"{caseId}-{result.Id}-{readResult.Page}-{index}",
                             CaseId = caseId,
-                            DocumentId = result.Id,
+                            DocumentId = int.Parse(result.Id),
                             PageIndex = readResult.Page,
                             LineIndex = index,
                             Language = line.Language,
@@ -83,9 +83,16 @@ namespace Services.SearchDataStorageService
                 KeyFieldAccessor = searchLine => searchLine.Id
             });
 
+            indexer.ActionFailed += async (arg) =>
+            {
+                var exception = arg.Exception == null ? "No exception" : arg.Exception.Message;
+                var result = arg.Result == null ? "No result" : "Result";
+                await Console.Out.WriteLineAsync($"Failed {exception}, {result}");
+            };
+
             await indexer.UploadDocumentsAsync(lines);
+
             await indexer.FlushAsync();
         }
-
     }
 }
