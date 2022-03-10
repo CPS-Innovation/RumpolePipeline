@@ -1,4 +1,3 @@
-import { stringify } from "querystring";
 import { useEffect, useRef, useState } from "react";
 import { Tracker } from "./types";
 import { useClock } from "./useClock";
@@ -19,9 +18,12 @@ const initiatePipeline = async (caseId: string, force: boolean) => {
   const koResponse = await fetch(resolveUrl(COORDNINATOR_URL, caseId, force));
   const koResponseContent = await koResponse.json();
 
-  const statusQueryCallResponse = await fetch(
-    resolveHttps(koResponseContent.statusQueryGetUri as string)
+  const resolvedStatusQueryGetUri = resolveHttps(
+    koResponseContent.statusQueryGetUri as string
   );
+
+  const statusQueryCallResponse = await fetch(resolvedStatusQueryGetUri);
+
   const statusQueryContent = await statusQueryCallResponse.json();
 
   return statusQueryContent.input.TrackerUrl;
@@ -45,7 +47,7 @@ export const useApi = () => {
     isInProgressRef.current = true;
 
     initiatePipeline(caseId.val, caseId.force).then((trackerUrl) => {
-      setTrackerUrl(resolveUrl(trackerUrl, caseId.val));
+      setTrackerUrl(resolveUrl(resolveHttps(trackerUrl), caseId.val));
     });
   }, [caseId]);
 
