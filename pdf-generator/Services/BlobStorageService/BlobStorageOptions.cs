@@ -1,4 +1,4 @@
-﻿namespace Services.BlobStorageService
+﻿namespace pdf_generator.Services.BlobStorageService
 {
     public class BlobStorageOptions
     {

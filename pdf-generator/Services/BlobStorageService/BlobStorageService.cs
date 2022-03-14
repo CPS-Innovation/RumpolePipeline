@@ -2,12 +2,11 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
-using Azure.Storage.Sas;
 using Microsoft.Extensions.Options;
 
-namespace Services.BlobStorageService
+namespace pdf_generator.Services.BlobStorageService
 {
-    public class BlobStorageService
+    public class BlobStorageService : IBlobStorageService
     {
         private readonly BlobStorageOptions _options;
         public BlobStorageService(IOptions<BlobStorageOptions> options)
@@ -15,30 +14,30 @@ namespace Services.BlobStorageService
             _options = options.Value;
         }
 
-        public async Task<string> UploadAsync(Stream stream, string blobName, string contentType)
+        public async Task<Stream> DownloadDocumentAsync(string documentSasUrl)
         {
-            var blobClient = CreateBobClient(blobName);
+            var blobClient = CreateBlobClient(new Uri(documentSasUrl));
 
-            await blobClient.UploadAsync(stream, true);
+            var result = await blobClient.DownloadContentAsync();
 
-            var sasBuilder = new BlobSasBuilder()
-            {
-                BlobContainerName = _options.ContainerName,
-                Resource = "c"
-            };
-
-            sasBuilder.ExpiresOn = DateTimeOffset.UtcNow.AddDays(365 * 2);
-            sasBuilder.SetPermissions(BlobContainerSasPermissions.Read);
-
-            var fileSuffix = Path.GetExtension(blobName);
-            sasBuilder.ContentType = contentType;
-
-            return blobClient.GenerateSasUri(sasBuilder).AbsoluteUri;
+            return result.Value.Content.ToStream();
         }
 
-        private BlobClient CreateBobClient(string blobName)
+        public async Task UploadAsync(Stream stream, string blobName)
         {
-            return new BlobClient(_options.ConnectionString, "rumpole", blobName);
+            var blobClient = CreateBlobClient(blobName);
+
+            await blobClient.UploadAsync(stream, true);
+        }
+
+        private BlobClient CreateBlobClient(Uri documentSasUrl)
+        {
+            return new BlobClient(documentSasUrl);
+        }
+
+        private BlobClient CreateBlobClient(string blobName)
+        {
+            return new BlobClient(_options.ConnectionString, _options.ContainerName, blobName);
         }
     }
 }
