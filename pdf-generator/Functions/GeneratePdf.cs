@@ -44,35 +44,34 @@ namespace pdf_generator.Functions
         }
 
         [FunctionName("generate-pdf")]
-        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "generate")] HttpRequestMessage req, ILogger log)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "generate")] HttpRequestMessage request, ILogger log)
         {
             try
             {
-                var content = await req.Content.ReadAsStringAsync();
-                //TODO test if json exception can be thrown and if it can then add to exception handler
-                var request = _jsonConvertWrapper.DeserializeObject<GeneratePdfRequest>(content);
+                var content = await request.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    throw new BadRequestException("Request body cannot be null", nameof(request));
+                }
 
-                var results = _validatorWrapper.Validate(request);
+                var pdfRequest = _jsonConvertWrapper.DeserializeObject<GeneratePdfRequest>(content);
+
+                var results = _validatorWrapper.Validate(pdfRequest);
                 if (results.Any())
                 {
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
                 }
 
-                var documentSasUrl = await _documentExtractionService.GetDocumentSasLinkAsync(request.CaseId, request.DocumentId);
+                var documentSasUrl = await _documentExtractionService.GetDocumentSasLinkAsync(pdfRequest.CaseId, pdfRequest.DocumentId);
 
                 var documentStream = await _blobStorageService.DownloadDocumentAsync(documentSasUrl);
 
-                //var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, request.FileName);
+                var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, pdfRequest.FileName);
 
-                var blobName = $"{request.CaseId}/pdfs/{request.DocumentId}.txt";
-                await _blobStorageService.UploadAsync(documentStream, blobName);
+                var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
+                await _blobStorageService.UploadAsync(pdfStream, blobName);
 
-                var response =  new GeneratePdfResponse
-                {
-                    BlobName = blobName
-                };
-
-                return OkResponse(Serialize(response));
+                return OkResponse(Serialize(new GeneratePdfResponse { BlobName = blobName }));
             }
             catch(Exception exception)
             {

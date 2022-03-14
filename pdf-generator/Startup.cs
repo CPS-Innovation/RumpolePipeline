@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http.Headers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +26,7 @@ namespace pdf_generator
 
             builder.Services.AddHttpClient<IDocumentExtractionService, DocumentExtractionService>(client =>
             {
+                //TODO config to terraform -- configuration["DocumentExtractionBaseUrl"]
                 client.BaseAddress = new Uri("http://www.google.co.uk");
                 client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
             });
@@ -34,9 +36,10 @@ namespace pdf_generator
             builder.Services.AddTransient<IPdfService, SlidesPdfService>();
             builder.Services.AddTransient<IPdfOrchestratorService, PdfOrchestratorService>(provider =>
             {
-                var wordsPdfService = provider.GetRequiredService<WordsPdfService>();
-                var cellsPdfService = provider.GetRequiredService<CellsPdfService>();
-                var slidesPdfService = provider.GetRequiredService<SlidesPdfService>();
+                var pdfServices = provider.GetServices<IPdfService>();
+                var wordsPdfService = pdfServices.First(s => s.GetType() == typeof(WordsPdfService));
+                var cellsPdfService = pdfServices.First(s => s.GetType() == typeof(CellsPdfService));
+                var slidesPdfService = pdfServices.First(s => s.GetType() == typeof(SlidesPdfService));
                 return new PdfOrchestratorService(wordsPdfService, cellsPdfService, slidesPdfService);
             });
 

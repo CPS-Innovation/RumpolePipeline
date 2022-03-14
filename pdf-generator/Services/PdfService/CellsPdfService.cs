@@ -16,7 +16,7 @@ namespace pdf_generator.Services.PdfService
             }
             catch (Exception e)
             {
-                throw new Exception($"Failed to set Aspose License: {e.Message}");
+                //throw new Exception($"Failed to set Aspose License: {e.Message}");
             }
         }
 

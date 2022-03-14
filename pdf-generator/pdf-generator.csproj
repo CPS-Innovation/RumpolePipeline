@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AzureFunctionsVersion>v3</AzureFunctionsVersion>
-    <RootNamespace>document_pipeline</RootNamespace>
+    <RootNamespace>pdf_generator</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
 
@@ -15,8 +15,7 @@
 
     <PackageReference Include="Aspose.Cells" Version="22.3.0" />
     <PackageReference Include="Aspose.Slides.NET" Version="22.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.17" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Domain\Requests\" />
@@ -26,16 +25,16 @@
     <None Remove="Domain\Exceptions\" />
     <None Remove="Services\DocumentExtractionService\" />
     <None Remove="Factories\" />
-    <None Remove="Aspose.Cells" />
-    <None Remove="Aspose.Slides.NET" />
-    <None Remove="Microsoft.Extensions.DependencyInjection" />
     <None Remove="Microsoft.Extensions.Http" />
-    <None Remove="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+   </None>
   </ItemGroup>
 
   <ItemGroup>

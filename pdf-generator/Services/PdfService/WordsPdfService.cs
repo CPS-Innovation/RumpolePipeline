@@ -11,13 +11,13 @@ namespace pdf_generator.Services.PdfService
         {
             try
             {
-                //TODO move this into orchestrator - will that work?
+                //TODO do we only need 1 license for all pdf services, and can it go in the orchestrator instead?
                 var license = new License();
                 license.SetLicense("Aspose.Total.NET.lic");
             }
             catch (Exception e)
             {
-                throw new Exception($"Failed to set Aspose License: {e.Message}");
+                //throw new Exception($"Failed to set Aspose License: {e.Message}");
             }
         }
 

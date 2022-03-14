@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace pdf_generator.Services.PdfService
 {
@@ -21,7 +20,7 @@ namespace pdf_generator.Services.PdfService
 
         public Stream ReadToPdfStream(Stream inputStream, string fileType)
         {
-            using var pdfStream = new MemoryStream(); //TODO need using?
+            using var pdfStream = new MemoryStream();
             //TODO other file types
             switch (fileType)
             {
