@@ -28,7 +28,8 @@ resource "azurerm_function_app" "fa_coordinator" {
 
     cors {
       allowed_origins = [
-        "https://${azurerm_app_service.as_web.name}.azurewebsites.net/"
+        # "https://${azurerm_app_service.as_web.name}.azurewebsites.net" this does not work due to circular dependency
+        "https://${local.app_name}.azurewebsites.net"
       ]
     }
   }
@@ -50,6 +51,13 @@ resource "azurerm_function_app" "fa_coordinator" {
   #   data.azurerm_function_app_host_keys.ak_indexer
   # ]
 }
+
+data "azurerm_function_app_host_keys" "ak_coordinator" {
+  name                = "fa-${local.resource_name}-coordinator"
+  resource_group_name = azurerm_resource_group.rg.name
+  depends_on = [azurerm_function_app.fa_coordinator]
+}
+
 
 # resource "azuread_application" "fa_coordinator" {
 #   display_name               = "fa-${local.resource_name}-coordinator"

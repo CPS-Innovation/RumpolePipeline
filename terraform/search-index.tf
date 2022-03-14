@@ -1,10 +1,3 @@
-
-
-
-# POST https://[servicename].search.windows.net/indexes?api-version=2020-06-30  
-#   Content-Type: application/json
-#   api-key: [admin key] 
-
 provider "restapi" {
   uri                  = "https://${azurerm_search_service.ss.name}.search.windows.net"
   debug                = true
