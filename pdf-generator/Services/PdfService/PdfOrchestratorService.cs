@@ -20,7 +20,7 @@ namespace pdf_generator.Services.PdfService
 
         public Stream ReadToPdfStream(Stream inputStream, string fileType)
         {
-            using var pdfStream = new MemoryStream();
+            var pdfStream = new MemoryStream();
             //TODO other file types
             switch (fileType)
             {
