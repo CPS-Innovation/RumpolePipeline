@@ -46,8 +46,8 @@ namespace pdf_generator.Services.PdfService
                 case "gif":
                 case "jpg":
                 case "jpeg":
-                case "tiff":
                 case "tif":
+                case "tiff":
                 case "png":
                     _imagingPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
