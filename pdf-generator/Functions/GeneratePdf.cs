@@ -65,10 +65,18 @@ namespace pdf_generator.Functions
 
                 var documentStream = await _blobStorageService.DownloadDocumentAsync(documentSasUrl);
 
-                var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, pdfRequest.FileName);
-
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
-                await _blobStorageService.UploadAsync(pdfStream, blobName);
+
+                //TODO extract file type from filename
+                if (pdfRequest.FileName == "pdf")
+                {
+                    await _blobStorageService.UploadAsync(documentStream, blobName);
+                }
+                else
+                {
+                    var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, pdfRequest.FileName);
+                    await _blobStorageService.UploadAsync(pdfStream, blobName);
+                }
 
                 return OkResponse(Serialize(new GeneratePdfResponse { BlobName = blobName }));
             }
