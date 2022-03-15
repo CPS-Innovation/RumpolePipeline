@@ -31,6 +31,8 @@ namespace pdf_generator.Services.DocumentExtractionService
             //var response = _jsonConvertWrapper.DeserializeObject<DocumentExtractionResponse>(stringContent);
 
             //return response.DocumentSasDetails.DocumentSasUrl;
+
+            //TODO write calling mechanism to document extraction once we know what it looks like
             return "https://sadevcmsdocumentservices.blob.core.windows.net/cms-documents/004fb83c-8206-4992-84e0-19d868e76624/title-543096053-331205364-unusedMaterials-otherMaterials-a.txt?sp=r&st=2022-03-15T13:49:55Z&se=2026-07-31T20:49:55Z&spr=https&sv=2020-08-04&sr=b&sig=kJk78Sq8vClyX%2F6jCnQBKUHFw3Q4Yd5g4QKth31rQJk%3D";
         }
 

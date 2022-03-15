@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -44,7 +43,7 @@ namespace pdf_generator.Functions
         }
 
         [FunctionName("generate-pdf")]
-        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "generate")] HttpRequestMessage request, ILogger log)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "generate")] HttpRequestMessage request)
         {
             try
             {
