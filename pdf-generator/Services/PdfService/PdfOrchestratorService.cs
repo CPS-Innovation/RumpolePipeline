@@ -22,6 +22,7 @@ namespace pdf_generator.Services.PdfService
         {
             var pdfStream = new MemoryStream();
             //TODO other file types
+            //TODO add aspose imaging
             switch (fileType)
             {
                 case "docx":

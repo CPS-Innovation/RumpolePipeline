@@ -19,15 +19,26 @@ namespace pdf_generator
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            builder.Services.AddOptions<BlobStorageOptions>().Configure<IConfiguration>((setttings, configuration) =>
+            var localRoot = Environment.GetEnvironmentVariable("AzureWebJobsScriptRoot");
+            var azureRoot = $"{Environment.GetEnvironmentVariable("HOME")}/site/wwwroot";
+
+            var actualRoot = localRoot ?? azureRoot;
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(actualRoot)
+                .AddEnvironmentVariables()
+                .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            builder.Services.AddOptions<BlobStorageOptions>().Configure<IConfiguration>((settings, configuration) =>
             {
-                configuration.GetSection("blobStorage").Bind(setttings);
+                configuration.GetSection("blobStorage").Bind(settings);
             });
 
             builder.Services.AddHttpClient<IDocumentExtractionService, DocumentExtractionService>(client =>
             {
-                //TODO config to terraform -- configuration["DocumentExtractionBaseUrl"]
-                client.BaseAddress = new Uri("http://www.google.co.uk");
+                //TODO config to terraform
+                client.BaseAddress = new Uri(configuration["DocumentExtractionBaseUrl"]);
                 client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
             });
 

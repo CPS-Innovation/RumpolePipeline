@@ -25,13 +25,13 @@ namespace pdf_generator.Services.DocumentExtractionService
 
         public async Task<string> GetDocumentSasLinkAsync(int caseId, int documentId)
         {
-            var content = await GetHttpContentAsync($"cases/{caseId}/documents/{documentId}");
-            var stringContent = await content.ReadAsStringAsync();
+            //var content = await GetHttpContentAsync($"cases/{caseId}/documents/{documentId}");
+            //var stringContent = await content.ReadAsStringAsync();
 
-            var response = _jsonConvertWrapper.DeserializeObject<DocumentExtractionResponse>(stringContent);
+            //var response = _jsonConvertWrapper.DeserializeObject<DocumentExtractionResponse>(stringContent);
 
-            return response.DocumentSasDetails.DocumentSasUrl;
-            //return "https://sadevcmsdocumentservices.blob.core.windows.net/cms-documents/004fb83c-8206-4992-84e0-19d868e76624/title-543096053-331205364-unusedMaterials-otherMaterials-a.txt?sp=r&st=2022-03-14T13:37:24Z&se=2022-03-14T21:37:24Z&spr=https&sv=2020-08-04&sr=b&sig=WZ9dg00cZ%2BRWSQMH3QS8kUtK%2FTL5KnNQdpdSUOS%2Fq9U%3D";
+            //return response.DocumentSasDetails.DocumentSasUrl;
+            return "https://sadevcmsdocumentservices.blob.core.windows.net/cms-documents/004fb83c-8206-4992-84e0-19d868e76624/title-543096053-331205364-unusedMaterials-otherMaterials-a.txt?sp=r&st=2022-03-15T13:49:55Z&se=2026-07-31T20:49:55Z&spr=https&sv=2020-08-04&sr=b&sig=kJk78Sq8vClyX%2F6jCnQBKUHFw3Q4Yd5g4QKth31rQJk%3D";
         }
 
         private async Task<HttpContent> GetHttpContentAsync(string requestUri)
