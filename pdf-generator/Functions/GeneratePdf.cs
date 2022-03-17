@@ -61,7 +61,7 @@ namespace pdf_generator.Functions
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
                 }
 
-                var documentSasUrl = await _documentExtractionService.GetDocumentSasLinkAsync(pdfRequest.CaseId, pdfRequest.DocumentId);
+                var documentSasUrl = await _documentExtractionService.GetDocumentSasLinkAsync(pdfRequest.DocumentId);
 
                 var documentStream = await _blobStorageService.DownloadDocumentAsync(documentSasUrl);
 

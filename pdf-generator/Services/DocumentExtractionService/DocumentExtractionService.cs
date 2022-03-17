@@ -23,9 +23,9 @@ namespace pdf_generator.Services.DocumentExtractionService
             _jsonConvertWrapper = jsonConvertWrapper;
         }
 
-        public async Task<string> GetDocumentSasLinkAsync(int caseId, int documentId)
+        public async Task<string> GetDocumentSasLinkAsync(int documentId)
         {
-            //var content = await GetHttpContentAsync($"cases/{caseId}/documents/{documentId}");
+            //var content = await GetHttpContentAsync($"documents/{documentId}");
             //var stringContent = await content.ReadAsStringAsync();
 
             //var response = _jsonConvertWrapper.DeserializeObject<DocumentExtractionResponse>(stringContent);
