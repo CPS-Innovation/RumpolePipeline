@@ -1,4 +1,4 @@
-namespace Tracker
+namespace coordinator.Tracker
 {
     public class TrackerPdfArg
     {

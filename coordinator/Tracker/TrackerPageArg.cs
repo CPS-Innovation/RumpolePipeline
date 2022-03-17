@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Tracker
+namespace coordinator.Tracker
 {
     public class TrackerPageArg
     {

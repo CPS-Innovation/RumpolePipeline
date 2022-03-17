@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Tracker
+namespace coordinator.Tracker
 {
     public interface ITracker
     {

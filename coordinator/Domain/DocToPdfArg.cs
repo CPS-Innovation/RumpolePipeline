@@ -1,4 +1,4 @@
-namespace Domain
+namespace coordinator.Domain
 {
     public class DocToPdfArg
     {

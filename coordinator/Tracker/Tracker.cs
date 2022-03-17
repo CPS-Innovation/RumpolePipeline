@@ -10,7 +10,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace Tracker
+namespace coordinator.Tracker
 {
 
     [JsonObject(MemberSerialization.OptIn)]

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Tracker
+namespace coordinator.Tracker
 {
     public class TrackerDocument
     {

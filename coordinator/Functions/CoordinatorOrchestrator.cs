@@ -3,69 +3,44 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Domain;
+using coordinator.Domain;
+using coordinator.Tracker;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Tracker;
 
-namespace Functions
+namespace coordinator.Functions
 {
-    public class Coordinator
+    public class CoordinatorOrchestrator
     {
         private readonly EndpointOptions _endpoints;
 
-        public Coordinator(IOptions<EndpointOptions> endpointOptions)
+        public CoordinatorOrchestrator(IOptions<EndpointOptions> endpointOptions)
         {
-            this._endpoints = endpointOptions.Value;
+            _endpoints = endpointOptions.Value;
         }
 
-        [FunctionName("Coordinator_HttpStart")]
-        public async Task<HttpResponseMessage> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "cases/{caseId}")] HttpRequestMessage req,
-            int caseId,
-            [DurableClient] IDurableOrchestrationClient client,
-            ILogger log)
-        {
-            var instanceId = caseId.ToString();
-            // Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated).
-            var existingInstance = await client.GetStatusAsync(instanceId);
-            if (existingInstance == null
-            || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Completed
-            || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Failed
-            || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Terminated)
-            {
-                var query = System.Web.HttpUtility.ParseQueryString(req.RequestUri.Query);
-                // pass ?force=... if we do not want to be given the existing cached results
-                var force = query.Get("force");
-
-                await client.StartNewAsync("CaseOrchestration", instanceId, new OrchestratorArg
-                {
-                    CaseId = caseId,
-                    TrackerUrl = $"{req.RequestUri.GetLeftPart(UriPartial.Path)}/tracker{req.RequestUri.Query}",
-                    ForceRefresh = force == "true"
-                });
-            }
-
-            return client.CreateCheckStatusResponse(req, instanceId);
-        }
-
-        [FunctionName("CaseOrchestration")]
+        [FunctionName("CoordinatorOrchestrator")]
         public async Task<List<TrackerDocument>> RunCaseOrchestrator(
         [OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
-            var arg = context.GetInput<OrchestratorArg>();
+            var payload = context.GetInput<CoordinatorOrchestrationPayload>();
+
+            if (payload == null)
+            {
+                throw new ArgumentException("Orchestration payload cannot be null.", nameof(CoordinatorOrchestrationPayload));
+            }
             var caseId = arg.CaseId;
             var transactionId = context.InstanceId;
             var tracker = GetTracker(context, caseId);
 
-            if (!arg.ForceRefresh && await tracker.GetIsAlreadyProcessed())
-            {
-                return await tracker.GetDocuments();
-            }
+            //if (!arg.ForceRefresh && await tracker.GetIsAlreadyProcessed())
+            //{
+            //    return await tracker.GetDocuments();
+            //}
 
             await tracker.Initialise(transactionId);
 
@@ -82,16 +57,6 @@ namespace Functions
             }
 
             await Task.WhenAll(caseDocumentTasks);
-
-            // todo: we should have the indexing per-document, rather than doing the indexing at the end like this, see https://dev.azure.com/CPSDTS/Information%20Management/_workitems/edit/12654
-            if (_endpoints.SearchIndexerEnabled)
-            {
-                await CallHttpAsync<object>(context, HttpMethod.Post, _endpoints.SearchIndexer, new SearchIndexerArg
-                {
-                    CaseId = caseId,
-                    TransactionId = transactionId
-                });
-            }
 
             tracker.RegisterIsIndexed();
 
