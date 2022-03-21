@@ -1,4 +1,5 @@
 
+using common.Wrappers;
 using coordinator.Domain;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,8 @@ namespace ServerlessPDFConversionDemo
             {
                 configuration.GetSection("endpoint").Bind(setttings);
             });
+
+            builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
         }
     }
 }

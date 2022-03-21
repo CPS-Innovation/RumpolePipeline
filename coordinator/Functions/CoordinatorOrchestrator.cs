@@ -3,24 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using common.Wrappers;
 using coordinator.Domain;
-using coordinator.Tracker;
+using coordinator.Domain.Tracker;
+using coordinator.Functions.SubOrchestrators;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 
 namespace coordinator.Functions
 {
     public class CoordinatorOrchestrator
     {
         private readonly EndpointOptions _endpoints;
+        private readonly IJsonConvertWrapper _jsonConvertWrapper;
 
-        public CoordinatorOrchestrator(IOptions<EndpointOptions> endpointOptions)
+        public CoordinatorOrchestrator(IOptions<EndpointOptions> endpointOptions, IJsonConvertWrapper jsonConvertWrapper)
         {
             _endpoints = endpointOptions.Value;
+            _jsonConvertWrapper = jsonConvertWrapper;
         }
 
         [FunctionName("CoordinatorOrchestrator")]
@@ -33,97 +35,40 @@ namespace coordinator.Functions
             {
                 throw new ArgumentException("Orchestration payload cannot be null.", nameof(CoordinatorOrchestrationPayload));
             }
-            var caseId = arg.CaseId;
-            var transactionId = context.InstanceId;
-            var tracker = GetTracker(context, caseId);
 
-            //if (!arg.ForceRefresh && await tracker.GetIsAlreadyProcessed())
-            //{
-            //    return await tracker.GetDocuments();
-            //}
+            var tracker = GetTracker(context, payload.CaseId);
 
-            await tracker.Initialise(transactionId);
+            //!arg.ForceRefresh &&
+            if (await tracker.IsAlreadyProcessed())
+            {
+                return await tracker.GetDocuments();
+            }
 
-            var cmsCaseDocumentDetails = await CallHttpAsync<List<CmsCaseDocumentDetails>>(context, HttpMethod.Get, _endpoints.CmsDocumentDetails);
-            await tracker.Register(cmsCaseDocumentDetails.Select(item => item.Id).ToList());
+            tracker.Initialise(context.InstanceId);
+
+            //TODO what are we meant to be calling here - core data api?
+            //var cmsCaseDocumentDetails = await CallHttpAsync<List<CmsCaseDocumentDetails>>(context, HttpMethod.Get, _endpoints.CmsDocumentDetails);
+            var cmsCaseDocumentDetails = new List<CmsCaseDocumentDetails> { new CmsCaseDocumentDetails { CaseId = 1, DocumentId = 1 }, new CmsCaseDocumentDetails { CaseId = 1, DocumentId = 2 }, new CmsCaseDocumentDetails { CaseId = 1, DocumentId = 3 } };
+            tracker.RegisterDocumentIds(cmsCaseDocumentDetails.Select(item => item.DocumentId).ToList());
 
             var caseDocumentTasks = new List<Task<string>>();
             foreach (var caseDocumentDetails in cmsCaseDocumentDetails)
             {
-                // kick off the processing of each document in parallel
-                caseDocumentDetails.CaseId = caseId;
-                caseDocumentDetails.TransactionId = transactionId;
-                caseDocumentTasks.Add(context.CallSubOrchestratorAsync<string>("CaseDocumentOrchestration", caseDocumentDetails));
+                caseDocumentDetails.CaseId = payload.CaseId; //TODO do we need to set this?
+                caseDocumentTasks.Add(context.CallSubOrchestratorAsync<string>(nameof(CaseDocumentOrchestrator), caseDocumentDetails));
             }
 
             await Task.WhenAll(caseDocumentTasks);
 
-            tracker.RegisterIsIndexed();
+            tracker.RegisterCompleted();
 
             return await tracker.GetDocuments();
         }
 
-        [FunctionName("CaseDocumentOrchestration")]
-        public async Task RunDocumentOrchestrator(
-        [OrchestrationTrigger] IDurableOrchestrationContext context)
+        private async Task<T> CallHttpAsync<T>(IDurableOrchestrationContext context, HttpMethod httpMethod, string url)
         {
-            var caseDocument = context.GetInput<CmsCaseDocumentDetails>();
-            var caseId = caseDocument.CaseId;
-            var documentId = caseDocument.Id;
-            var transactionId = caseDocument.TransactionId;
-
-            var tracker = GetTracker(context, caseId);
-
-            // convert doc to pdf
-            var pdfBlobNameAndSasLinkUrl = await CallHttpAsync<BlobNameAndSasLinkUrl>(context, HttpMethod.Post, _endpoints.DocToPdf, new DocToPdfArg
-            {
-                CaseId = caseId,
-                DocumentId = documentId,
-                DocumentUrl = caseDocument.Url,
-                TransactionId = transactionId
-            });
-            tracker.RegisterPdfUrl(new TrackerPdfArg
-            {
-                DocumentId = documentId,
-                PdfUrl = pdfBlobNameAndSasLinkUrl.SasLinkUrl
-            });
-
-            // ocr
-            await context.CallSubOrchestratorAsync("CaseDocumentSearchPdfOrchestration", new PdfToSearchDataArg
-            {
-                CaseId = caseId,
-                DocumentId = documentId,
-                SasLink = pdfBlobNameAndSasLinkUrl.SasLinkUrl,
-                TransactionId = transactionId
-            });
-        }
-
-        [FunctionName("CaseDocumentSearchPdfOrchestration")]
-        public async Task RunDocumentSearchPdf(
-        [OrchestrationTrigger] IDurableOrchestrationContext context)
-        {
-            var arg = context.GetInput<PdfToSearchDataArg>();
-
-            var response = await CallHttpAsync<List<PdfToSearchDataResponse>>(context, HttpMethod.Post, _endpoints.PdfToSearchData, arg);
-            var tracker = GetTracker(context, arg.CaseId);
-
-            tracker.RegisterIsProcessedForSearchAndPageDimensions(new TrackerPageArg
-            {
-                DocumentId = arg.DocumentId,
-                PageDimensions = response
-                                .OrderBy(item => item.PageIndex)
-                                .Select(item => new TrackerPageDimensions
-                                {
-                                    Height = item.Height,
-                                    Width = item.Width
-                                }).ToList()
-            });
-        }
-
-        private async Task<T> CallHttpAsync<T>(IDurableOrchestrationContext context, HttpMethod httpMethod, string url, object arg = null)
-        {
-            var response = await context.CallHttpAsync(httpMethod, new Uri(url), arg == null ? null : JsonConvert.SerializeObject(arg));
-            return JsonConvert.DeserializeObject<T>(response.Content);
+            var response = await context.CallHttpAsync(httpMethod, new Uri(url));
+            return _jsonConvertWrapper.DeserializeObject<T>(response.Content);
         }
 
         private ITracker GetTracker(IDurableOrchestrationContext context, int caseId)

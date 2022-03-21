@@ -17,9 +17,10 @@ namespace coordinator.Functions
         {
             if (!int.TryParse(caseId, out var caseIdNum))
             {
-                //TODO
-                //throw new BadRequestException("Invalid case id. A 32-bit integer is required.", caseId);
+                throw new ArgumentException("Invalid case id. A 32-bit integer is required.", caseId);
             }
+
+            var instanceId = caseId;
 
             // Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated).
             var existingInstance = await orchestrationClient.GetStatusAsync(caseId);
@@ -32,17 +33,20 @@ namespace coordinator.Functions
                 //// pass ?force=... if we do not want to be given the existing cached results
                 //var force = query.Get("force");
 
-                await orchestrationClient.StartNewAsync(nameof(CoordinatorOrchestrator), caseId, new CoordinatorOrchestrationPayload
-                {
-                    CaseId = caseIdNum,
-                    //TrackerUrl = $"{req.RequestUri.GetLeftPart(UriPartial.Path)}/tracker{req.RequestUri.Query}",
-                    //ForceRefresh = force == "true"
-                });
+                await orchestrationClient.StartNewAsync(
+                    nameof(CoordinatorOrchestrator),
+                    instanceId,
+                    new CoordinatorOrchestrationPayload
+                    {
+                        CaseId = caseIdNum,
+                        //TrackerUrl = $"{req.RequestUri.GetLeftPart(UriPartial.Path)}/tracker{req.RequestUri.Query}",
+                        //ForceRefresh = force == "true"
+                    });
             }
 
-            log.LogInformation($"Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'");
+            log.LogInformation($"Started {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}'");
 
-            return orchestrationClient.CreateCheckStatusResponse(req, caseId);
+            return orchestrationClient.CreateCheckStatusResponse(req, instanceId);
         }
     }
 }

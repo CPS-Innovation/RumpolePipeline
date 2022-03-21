@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace coordinator.Tracker
+namespace coordinator.Domain.Tracker
 {
     public class Log
     {

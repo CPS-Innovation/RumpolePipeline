@@ -4,7 +4,8 @@ namespace coordinator.Domain
     {
         public int CaseId { get; set; }
 
-        public string TrackerUrl { get; set; }
+        //TODO do we need?
+        //public string TrackerUrl { get; set; }
 
         //TODO do we need to force?
         public bool ForceRefresh { get; set; }
