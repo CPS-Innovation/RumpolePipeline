@@ -23,8 +23,8 @@ namespace pdf_generator.Services.PdfService
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
             var doc = new Document(inputStream);
-            doc.Save(pdfStream, SaveFormat.Pdf); //TODO need to save in specific format? (like Slides)
-            pdfStream.Seek(0, SeekOrigin.Begin); // check this is actually required, and if needed for others
+            doc.Save(pdfStream, SaveFormat.Pdf);
+            pdfStream.Seek(0, SeekOrigin.Begin);
         }
     }
 }

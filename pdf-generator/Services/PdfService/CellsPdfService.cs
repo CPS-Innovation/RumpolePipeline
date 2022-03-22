@@ -22,7 +22,8 @@ namespace pdf_generator.Services.PdfService
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
             using var workbook = new Workbook(inputStream);
-            workbook.Save(pdfStream, SaveFormat.Pdf); //TODO need to save in specific format? (like Slides)
+            workbook.Save(pdfStream, SaveFormat.Pdf);
+            pdfStream.Seek(0, SeekOrigin.Begin);
         }
     }
 }
