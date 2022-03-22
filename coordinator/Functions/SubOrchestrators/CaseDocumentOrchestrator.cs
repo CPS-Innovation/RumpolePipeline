@@ -30,19 +30,17 @@ namespace coordinator.Functions.SubOrchestrators
 
             var tracker = GetTracker(context, caseDocumentDetails.CaseId);
 
-            //var response = await CallHttpAsync<GeneratePdfResponse>(
-            //    context,
-            //    HttpMethod.Post,
-            //    _endpoints.GeneratePdf,
-            //    new GeneratePdfRequest
-            //    {
-            //        CaseId = caseDocumentDetails.CaseId,
-            //        DocumentId = caseDocumentDetails.DocumentId
-            //    });
+            var response = await CallHttpAsync<GeneratePdfResponse>(
+                context,
+                HttpMethod.Post,
+                _endpoints.GeneratePdf,
+                new GeneratePdfRequest
+                {
+                    CaseId = caseDocumentDetails.CaseId,
+                    DocumentId = caseDocumentDetails.DocumentId
+                });
 
-            var response = new GeneratePdfResponse { BlobName = $"{caseDocumentDetails.CaseId}/pdfs/{caseDocumentDetails.DocumentId}.pdf" };
-
-            tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = caseDocumentDetails.DocumentId, BlobName = response.BlobName });
+            await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = caseDocumentDetails.DocumentId, BlobName = response.BlobName });
         }
 
         private async Task<T> CallHttpAsync<T>(IDurableOrchestrationContext context, HttpMethod httpMethod, string url, object content)

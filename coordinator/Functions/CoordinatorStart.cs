@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using coordinator.Domain;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -29,9 +30,14 @@ namespace coordinator.Functions
             || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Failed
             || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Terminated)
             {
-                //var query = System.Web.HttpUtility.ParseQueryString(req.RequestUri.Query);
-                //// pass ?force=... if we do not want to be given the existing cached results
-                //var force = query.Get("force");
+                var query = HttpUtility.ParseQueryString(req.RequestUri.Query);
+                var force = query.Get("force");
+
+                var forceRefresh = false;
+                if(force != null && !bool.TryParse(force, out forceRefresh))
+                {
+                    throw new ArgumentException("Invalid query string. Force value must be a boolean.", force);
+                }
 
                 await orchestrationClient.StartNewAsync(
                     nameof(CoordinatorOrchestrator),
@@ -39,8 +45,7 @@ namespace coordinator.Functions
                     new CoordinatorOrchestrationPayload
                     {
                         CaseId = caseIdNum,
-                        //TrackerUrl = $"{req.RequestUri.GetLeftPart(UriPartial.Path)}/tracker{req.RequestUri.Query}",
-                        //ForceRefresh = force == "true"
+                        ForceRefresh = forceRefresh
                     });
             }
 

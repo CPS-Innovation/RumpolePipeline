@@ -5,14 +5,11 @@ namespace coordinator.Domain.Tracker
 {
     public interface ITracker
     {
-        void Initialise(string transactionId); //TODO do we need transaction id?
-        void RegisterDocumentIds(List<int> documentIds);
-        void RegisterPdfBlobName(RegisterPdfBlobNameArg arg);
-        void RegisterCompleted();
-        Task<ITracker> Get();
+        Task Initialise(string transactionId); //TODO do we need transaction id?
+        Task RegisterDocumentIds(List<int> documentIds);
+        Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg);
+        Task RegisterCompleted();
         Task<List<TrackerDocument>> GetDocuments();
         Task<bool> IsAlreadyProcessed();
-
-        //TODO make them all tasks?
     }
 }

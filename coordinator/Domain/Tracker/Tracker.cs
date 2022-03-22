@@ -30,8 +30,7 @@ namespace coordinator.Domain.Tracker
         [JsonConverter(typeof(StringEnumConverter))]
         public TrackerStatus Status { get; set; }
 
-        // a `Task` so we can wait for it and be assured we are initialsed and avoid null references //TODO do we really need this to be a Task?
-        public void Initialise(string transactionId)
+        public Task Initialise(string transactionId)
         {
             TransactionId = transactionId;
             Documents = new List<TrackerDocument>();
@@ -39,10 +38,11 @@ namespace coordinator.Domain.Tracker
             Status = TrackerStatus.Initialise;
 
             Log(Status);
+
+            return Task.CompletedTask;
         }
 
-        // a `Task` so we can wait for it and be assured we are registered and avoid null references //TODO do we really need this to be a Task?
-        public void RegisterDocumentIds(List<int> documentIds)
+        public Task RegisterDocumentIds(List<int> documentIds)
         {
             Documents = documentIds
                 .Select(documentId => new TrackerDocument { DocumentId = documentId })
@@ -50,26 +50,27 @@ namespace coordinator.Domain.Tracker
 
             Status = TrackerStatus.RegisterDocumentIds;
             Log(Status);
+
+            return Task.CompletedTask;
         }
 
-        public void RegisterPdfBlobName(RegisterPdfBlobNameArg arg)
+        public Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg)
         {
             var doc = Documents.Find(document => document.DocumentId == arg.DocumentId);
             doc.PdfBlobName = arg.BlobName;
 
             Status = TrackerStatus.RegisterPdfBlobName;
             Log(Status, arg.DocumentId);
+
+            return Task.CompletedTask;
         }
 
-        public void RegisterCompleted()
+        public Task RegisterCompleted()
         {
             Status = TrackerStatus.Complete;
             Log(Status);
-        }
 
-        public Task<ITracker> Get()
-        {
-            return Task.FromResult((ITracker)this);
+            return Task.CompletedTask;
         }
 
         public Task<List<TrackerDocument>> GetDocuments()
@@ -109,11 +110,11 @@ namespace coordinator.Domain.Tracker
             var stateResponse = await client.ReadEntityStateAsync<Tracker>(entityId);
             if (!stateResponse.EntityExists)
             {
-                return new NotFoundObjectResult($"No pipeline tracker with id '{caseId}'");
+                //TODO log
+                return new NotFoundObjectResult($"No pipeline tracker found with id '{caseId}'");
             }
 
-            var response = await stateResponse.EntityState.Get(); //TODO can we just do entity state here? and not Get
-            return new OkObjectResult(response);
+            return new OkObjectResult(stateResponse.EntityState);
         }
     }
 }

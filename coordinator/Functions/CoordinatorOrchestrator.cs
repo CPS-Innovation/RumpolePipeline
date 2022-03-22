@@ -38,18 +38,16 @@ namespace coordinator.Functions
 
             var tracker = GetTracker(context, payload.CaseId);
 
-            //!arg.ForceRefresh &&
-            if (await tracker.IsAlreadyProcessed())
+            if (!payload.ForceRefresh && await tracker.IsAlreadyProcessed())
             {
                 return await tracker.GetDocuments();
             }
 
-            tracker.Initialise(context.InstanceId);
+            await tracker.Initialise(context.InstanceId);
 
             //TODO what are we meant to be calling here - core data api?
-            //var cmsCaseDocumentDetails = await CallHttpAsync<List<CmsCaseDocumentDetails>>(context, HttpMethod.Get, _endpoints.CmsDocumentDetails);
-            var cmsCaseDocumentDetails = new List<CmsCaseDocumentDetails> { new CmsCaseDocumentDetails { CaseId = 1, DocumentId = 1 }, new CmsCaseDocumentDetails { CaseId = 1, DocumentId = 2 }, new CmsCaseDocumentDetails { CaseId = 1, DocumentId = 3 } };
-            tracker.RegisterDocumentIds(cmsCaseDocumentDetails.Select(item => item.DocumentId).ToList());
+            var cmsCaseDocumentDetails = await CallHttpAsync<List<CmsCaseDocumentDetails>>(context, HttpMethod.Get, _endpoints.CmsDocumentDetails);
+            await tracker.RegisterDocumentIds(cmsCaseDocumentDetails.Select(item => item.DocumentId).ToList());
 
             var caseDocumentTasks = new List<Task<string>>();
             foreach (var caseDocumentDetails in cmsCaseDocumentDetails)
@@ -60,7 +58,7 @@ namespace coordinator.Functions
 
             await Task.WhenAll(caseDocumentTasks);
 
-            tracker.RegisterCompleted();
+            await tracker.RegisterCompleted();
 
             return await tracker.GetDocuments();
         }
