@@ -37,6 +37,7 @@ namespace coordinator.Functions.SubOrchestrators
 
                 var tracker = GetTracker(context, payload.CaseId);
 
+                //TODO how to add token to this
                 var response = await CallHttpAsync<GeneratePdfResponse>(
                     context,
                     HttpMethod.Post,
