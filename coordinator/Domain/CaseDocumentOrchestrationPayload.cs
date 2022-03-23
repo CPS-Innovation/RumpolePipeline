@@ -1,8 +1,9 @@
-namespace coordinator.Domain
+﻿namespace coordinator.Domain
 {
-    public class CmsCaseDocumentDetails
+    public class CaseDocumentOrchestrationPayload
     {
         public int CaseId { get; set; }
+
         public int DocumentId { get; set; }
     }
 }

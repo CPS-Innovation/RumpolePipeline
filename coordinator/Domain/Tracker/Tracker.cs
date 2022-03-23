@@ -42,7 +42,7 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterDocumentIds(List<int> documentIds)
+        public Task RegisterDocumentIds(IEnumerable<int> documentIds)
         {
             Documents = documentIds
                 .Select(documentId => new TrackerDocument { DocumentId = documentId })
@@ -56,8 +56,8 @@ namespace coordinator.Domain.Tracker
 
         public Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg)
         {
-            var doc = Documents.Find(document => document.DocumentId == arg.DocumentId);
-            doc.PdfBlobName = arg.BlobName;
+            var document = Documents.Find(document => document.DocumentId == arg.DocumentId);
+            document.PdfBlobName = arg.BlobName;
 
             Status = TrackerStatus.RegisterPdfBlobName;
             Log(Status, arg.DocumentId);

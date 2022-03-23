@@ -1,6 +1,9 @@
 
 using common.Wrappers;
+using coordinator.Clients;
 using coordinator.Domain;
+using coordinator.Factories;
+using coordinator.Handlers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +21,10 @@ namespace ServerlessPDFConversionDemo
             });
 
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
+            builder.Services.AddTransient<ICoreDataApiClient, CoreDataApiClient>();
+            builder.Services.AddTransient<IOnBehalfOfTokenClient, OnBehalfOfTokenClient>();
+            builder.Services.AddTransient<IAuthenticatedGraphQLHttpRequestFactory, AuthenticatedGraphQLHttpRequestFactory>();
+            builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
         }
     }
 }

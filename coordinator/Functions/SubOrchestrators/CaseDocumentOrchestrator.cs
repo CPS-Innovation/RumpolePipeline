@@ -8,6 +8,7 @@ using coordinator.Domain.Responses;
 using coordinator.Domain.Tracker;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace coordinator.Functions.SubOrchestrators
@@ -24,23 +25,35 @@ namespace coordinator.Functions.SubOrchestrators
         }
 
         [FunctionName("CaseDocumentOrchestrator")]
-        public async Task RunDocumentOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+        public async Task RunDocumentOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
-            var caseDocumentDetails = context.GetInput<CmsCaseDocumentDetails>();
-
-            var tracker = GetTracker(context, caseDocumentDetails.CaseId);
-
-            var response = await CallHttpAsync<GeneratePdfResponse>(
-                context,
-                HttpMethod.Post,
-                _endpoints.GeneratePdf,
-                new GeneratePdfRequest
+            try
+            {
+                var payload = context.GetInput<CaseDocumentOrchestrationPayload>();
+                if (payload == null)
                 {
-                    CaseId = caseDocumentDetails.CaseId,
-                    DocumentId = caseDocumentDetails.DocumentId
-                });
+                    throw new ArgumentException("Orchestration payload cannot be null.", nameof(CaseDocumentOrchestrationPayload));
+                }
 
-            await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = caseDocumentDetails.DocumentId, BlobName = response.BlobName });
+                var tracker = GetTracker(context, payload.CaseId);
+
+                var response = await CallHttpAsync<GeneratePdfResponse>(
+                    context,
+                    HttpMethod.Post,
+                    _endpoints.GeneratePdf,
+                    new GeneratePdfRequest
+                    {
+                        CaseId = payload.CaseId,
+                        DocumentId = payload.DocumentId
+                    });
+
+                await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = payload.DocumentId, BlobName = response.BlobName });
+            }
+            catch (Exception exception)
+            {
+                log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration");
+                throw;
+            }
         }
 
         private async Task<T> CallHttpAsync<T>(IDurableOrchestrationContext context, HttpMethod httpMethod, string url, object content)
