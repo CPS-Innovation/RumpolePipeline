@@ -74,7 +74,7 @@ namespace coordinator.Functions
             }
             catch(Exception exception)
             {
-                _exceptionHandler.HandleException(exception);
+                return _exceptionHandler.HandleException(exception);
             }
         }
     }

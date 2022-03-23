@@ -28,7 +28,7 @@ namespace coordinator.Clients
                     Query = "query {case(id: " + caseId + ")  {id documents { id type { code name } }  }}"
                 };
 
-                var authenticatedRequest = await _authenticatedGraphQLHttpRequestFactory.Create(query, accessToken);
+                var authenticatedRequest = _authenticatedGraphQLHttpRequestFactory.Create(query, accessToken);
                 var response = await _graphQLClient.SendQueryAsync<GetCaseDetailsByIdResponse>(authenticatedRequest);
 
                 if (response?.Data?.CaseDetails == null)
