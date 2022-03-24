@@ -1,8 +1,7 @@
 namespace coordinator.Domain
 {
-    public class EndpointOptions
+    public class FunctionEndpointOptions
     {
-        public string CoreDataApi { get; set; }
         public string GeneratePdf { get; set; }
     }
 }

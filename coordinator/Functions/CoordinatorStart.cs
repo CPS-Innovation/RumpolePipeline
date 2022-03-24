@@ -44,7 +44,7 @@ namespace coordinator.Functions
                 var forceRefresh = false;
                 if (force != null && !bool.TryParse(force, out forceRefresh))
                 {
-                    throw new ArgumentException("Invalid query string. Force value must be a boolean.", force);
+                    throw new BadRequestException("Invalid query string. Force value must be a boolean.", force);
                 }
 
                 var accessToken = values.First().Replace("Bearer ", "");
@@ -66,9 +66,9 @@ namespace coordinator.Functions
                             ForceRefresh = forceRefresh,
                             AccessToken = accessToken
                         });
-                }
 
-                log.LogInformation($"Started {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}'");
+                    log.LogInformation($"Started {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}'");
+                }
 
                 return orchestrationClient.CreateCheckStatusResponse(req, instanceId);
             }

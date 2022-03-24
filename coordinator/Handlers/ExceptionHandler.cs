@@ -32,14 +32,6 @@ namespace coordinator.Handlers
                 baseErrorMessage = "Invalid request";
                 statusCode = HttpStatusCode.BadRequest;
             }
-            else if (exception is OnBehalfOfTokenClientException || exception is CoreDataApiClientException)
-            {
-                baseErrorMessage = "An OnBehalfOfTokenClient exception occurred";
-            }
-            else if (exception is CoreDataApiClientException)
-            {
-                baseErrorMessage = "A CoreDataApiClient exception occurred";
-            }
 
             return ErrorResponse(baseErrorMessage, exception, statusCode);
         }

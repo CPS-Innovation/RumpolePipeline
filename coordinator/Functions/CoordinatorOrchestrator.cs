@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
-using common.Wrappers;
 using coordinator.Clients;
 using coordinator.Domain;
 using coordinator.Domain.Tracker;
@@ -11,7 +9,6 @@ using coordinator.Functions.SubOrchestrators;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace coordinator.Functions
 {
@@ -49,7 +46,6 @@ namespace coordinator.Functions
 
                 await tracker.Initialise(context.InstanceId);
 
-                //TODO if exceptions are thrown below are they caught by the exception handler in CoordinatorStart - test
                 var accessToken = await _onBehalfOfTokenClient.GetAccessToken(payload.AccessToken);
                 var caseDetails = await _coreDataApiClient.GetCaseDetailsById(payload.CaseId, accessToken);
 
@@ -73,7 +69,7 @@ namespace coordinator.Functions
             }
             catch (Exception exception)
             {
-                log.LogError(exception, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration");
+                log.LogError(exception, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration.");
                 throw;
             }
         }

@@ -15,12 +15,12 @@ namespace coordinator.Functions.SubOrchestrators
 {
     public class CaseDocumentOrchestrator
     {
-        private readonly EndpointOptions _endpoints;
+        private readonly FunctionEndpointOptions _functionEndpoints;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
 
-        public CaseDocumentOrchestrator(IOptions<EndpointOptions> endpointOptions, IJsonConvertWrapper jsonConvertWrapper)
+        public CaseDocumentOrchestrator(IOptions<FunctionEndpointOptions> functionEndpointOptions, IJsonConvertWrapper jsonConvertWrapper)
         {
-            _endpoints = endpointOptions.Value;
+            _functionEndpoints = functionEndpointOptions.Value;
             _jsonConvertWrapper = jsonConvertWrapper;
         }
 
@@ -41,7 +41,7 @@ namespace coordinator.Functions.SubOrchestrators
                 var response = await CallHttpAsync<GeneratePdfResponse>(
                     context,
                     HttpMethod.Post,
-                    _endpoints.GeneratePdf,
+                    _functionEndpoints.GeneratePdf,
                     new GeneratePdfRequest
                     {
                         CaseId = payload.CaseId,
@@ -52,7 +52,7 @@ namespace coordinator.Functions.SubOrchestrators
             }
             catch (Exception exception)
             {
-                log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration");
+                log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
                 throw;
             }
         }
