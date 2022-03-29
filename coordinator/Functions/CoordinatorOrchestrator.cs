@@ -17,7 +17,7 @@ namespace coordinator.Functions
     public class CoordinatorOrchestrator
     {
         [FunctionName("CoordinatorOrchestrator")]
-        public async Task<List<TrackerDocument>> RunCaseOrchestrator(
+        public async Task<List<TrackerDocument>> Run(
         [OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
             try

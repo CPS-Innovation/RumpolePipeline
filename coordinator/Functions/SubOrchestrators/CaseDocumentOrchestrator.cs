@@ -17,15 +17,20 @@ namespace coordinator.Functions.SubOrchestrators
     {
         private readonly FunctionEndpointOptions _functionEndpoints;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
+        private readonly ILogger<CaseDocumentOrchestrator> _log;
 
-        public CaseDocumentOrchestrator(IOptions<FunctionEndpointOptions> functionEndpointOptions, IJsonConvertWrapper jsonConvertWrapper)
+        public CaseDocumentOrchestrator(
+            IOptions<FunctionEndpointOptions> functionEndpointOptions,
+            IJsonConvertWrapper jsonConvertWrapper,
+            ILogger<CaseDocumentOrchestrator> log)
         {
             _functionEndpoints = functionEndpointOptions.Value;
             _jsonConvertWrapper = jsonConvertWrapper;
+            _log = log;
         }
 
         [FunctionName("CaseDocumentOrchestrator")]
-        public async Task RunDocumentOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+        public async Task Run([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             try
             {
@@ -37,32 +42,25 @@ namespace coordinator.Functions.SubOrchestrators
 
                 var tracker = GetTracker(context, payload.CaseId);
 
-                //TODO how to add token to this
-                var response = await CallHttpAsync<GeneratePdfResponse>(
-                    context,
-                    HttpMethod.Post,
-                    _functionEndpoints.GeneratePdf,
-                    new GeneratePdfRequest
-                    {
-                        CaseId = payload.CaseId,
-                        DocumentId = payload.DocumentId
-                    });
+                var response = await CallHttpAsync(context, payload.CaseId, payload.DocumentId);
 
                 await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = payload.DocumentId, BlobName = response.BlobName });
             }
             catch (Exception exception)
             {
                 //TODO should we throw custom exception here and catch in orchestrator to stop whole thing failing?
-
-                log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
+                _log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
                 throw;
             }
         }
 
-        private async Task<T> CallHttpAsync<T>(IDurableOrchestrationContext context, HttpMethod httpMethod, string url, object content)
+        private async Task<GeneratePdfResponse> CallHttpAsync(IDurableOrchestrationContext context, int caseId, int documentId)
         {
-            var response = await context.CallHttpAsync(httpMethod, new Uri(url), _jsonConvertWrapper.SerializeObject(content));
-            return _jsonConvertWrapper.DeserializeObject<T>(response.Content);
+            var request = _jsonConvertWrapper.SerializeObject(new GeneratePdfRequest { CaseId = caseId, DocumentId = documentId });
+            //TODO add access token to this?
+            //TODO error handling for invalid response codes
+            var response = await context.CallHttpAsync(HttpMethod.Post, new Uri(_functionEndpoints.GeneratePdf), request);
+            return _jsonConvertWrapper.DeserializeObject<GeneratePdfResponse>(response.Content);
         }
 
         private ITracker GetTracker(IDurableOrchestrationContext context, int caseId)
