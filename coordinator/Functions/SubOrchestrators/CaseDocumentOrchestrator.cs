@@ -52,6 +52,8 @@ namespace coordinator.Functions.SubOrchestrators
             }
             catch (Exception exception)
             {
+                //TODO should we throw custom exception here and catch in orchestrator to stop whole thing failing?
+
                 log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
                 throw;
             }

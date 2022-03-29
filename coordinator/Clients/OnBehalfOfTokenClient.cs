@@ -1,8 +1,6 @@
 ﻿using coordinator.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
-using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 

@@ -4,7 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using coordinator.Clients;
 using coordinator.Domain;
+using coordinator.Domain.CoreDataApi;
 using coordinator.Domain.Tracker;
+using coordinator.Functions.ActivityFunctions;
 using coordinator.Functions.SubOrchestrators;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -14,17 +16,6 @@ namespace coordinator.Functions
 {
     public class CoordinatorOrchestrator
     {
-        private readonly IOnBehalfOfTokenClient _onBehalfOfTokenClient;
-        private readonly ICoreDataApiClient _coreDataApiClient;
-
-        public CoordinatorOrchestrator(
-            IOnBehalfOfTokenClient onBehalfOfTokenClient,
-            ICoreDataApiClient coreDataApiClient)
-        {
-            _onBehalfOfTokenClient = onBehalfOfTokenClient;
-            _coreDataApiClient = coreDataApiClient;
-        }
-
         [FunctionName("CoordinatorOrchestrator")]
         public async Task<List<TrackerDocument>> RunCaseOrchestrator(
         [OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
@@ -46,8 +37,10 @@ namespace coordinator.Functions
 
                 await tracker.Initialise(context.InstanceId);
 
-                var accessToken = await _onBehalfOfTokenClient.GetAccessToken(payload.AccessToken);
-                var caseDetails = await _coreDataApiClient.GetCaseDetailsById(payload.CaseId, accessToken);
+                var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
+                var caseDetails = await context.CallActivityAsync<CaseDetails>(
+                    nameof(GetCaseDetailsById),
+                    new GetCaseDetailsByIdActivityPayload { CaseId = payload.CaseId, AccessToken = payload.AccessToken });
 
                 var caseDocumentTasks = new List<Task<string>>();
                 var documentIds = caseDetails.Documents.Select(item =>
@@ -61,6 +54,7 @@ namespace coordinator.Functions
 
                 await tracker.RegisterDocumentIds(documentIds);
 
+                //TODO what happens when one task fails?
                 await Task.WhenAll(caseDocumentTasks);
 
                 await tracker.RegisterCompleted();
@@ -69,6 +63,7 @@ namespace coordinator.Functions
             }
             catch (Exception exception)
             {
+                //await tracker.RegisterError();
                 log.LogError(exception, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration.");
                 throw;
             }

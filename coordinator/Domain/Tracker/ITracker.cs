@@ -9,6 +9,7 @@ namespace coordinator.Domain.Tracker
         Task RegisterDocumentIds(IEnumerable<int> documentIds);
         Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg);
         Task RegisterCompleted();
+        Task RegisterError();
         Task<List<TrackerDocument>> GetDocuments();
         Task<bool> IsAlreadyProcessed();
     }

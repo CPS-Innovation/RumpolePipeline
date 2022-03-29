@@ -5,6 +5,7 @@
         Initialise,
         RegisterDocumentIds,
         RegisterPdfBlobName,
-        Complete
+        Complete,
+        Error
     }
 }

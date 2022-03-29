@@ -1,9 +1,9 @@
 ﻿namespace coordinator.Domain
 {
-    public class CaseDocumentOrchestrationPayload
+    public class GetCaseDetailsByIdActivityPayload
     {
         public int CaseId { get; set; }
 
-        public int DocumentId { get; set; }
+        public string AccessToken { get; set; }
     }
 }

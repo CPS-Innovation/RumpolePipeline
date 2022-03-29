@@ -73,6 +73,14 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
+        public Task RegisterError()
+        {
+            Status = TrackerStatus.Error;
+            Log(Status);
+
+            return Task.CompletedTask;
+        }
+
         public Task<List<TrackerDocument>> GetDocuments()
         {
             return Task.FromResult(Documents);
