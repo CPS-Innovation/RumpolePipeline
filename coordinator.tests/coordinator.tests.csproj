@@ -17,6 +17,8 @@
     <None Remove="xunit.runner.visualstudio" />
     <None Remove="AutoFixture" />
     <None Remove="Microsoft.NET.Test.Sdk" />
+    <None Remove="Domain\" />
+    <None Remove="Domain\Tracker\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Clients\" />
@@ -25,6 +27,8 @@
     <Folder Include="Functions\ActivityFunctions\" />
     <Folder Include="Functions\SubOrchestrators\" />
     <Folder Include="Handlers\" />
+    <Folder Include="Domain\" />
+    <Folder Include="Domain\Tracker\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\coordinator\coordinator.csproj" />

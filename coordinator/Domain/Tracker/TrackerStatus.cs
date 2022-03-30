@@ -2,10 +2,10 @@
 {
     public enum TrackerStatus
     {
-        Initialise,
-        RegisterDocumentIds,
-        RegisterPdfBlobName,
-        Complete,
-        Error
+        Initialised,
+        RegisteredDocumentIds,
+        RegisteredPdfBlobName,
+        Completed,
+        Errored
     }
 }
