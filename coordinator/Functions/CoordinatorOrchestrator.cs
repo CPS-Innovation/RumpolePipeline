@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using coordinator.Clients;
 using coordinator.Domain;
 using coordinator.Domain.CoreDataApi;
 using coordinator.Domain.Tracker;
@@ -16,9 +15,16 @@ namespace coordinator.Functions
 {
     public class CoordinatorOrchestrator
     {
+        private readonly ILogger<CoordinatorOrchestrator> _log;
+
+        public CoordinatorOrchestrator(ILogger<CoordinatorOrchestrator> log)
+        {
+           _log = log;
+        }
+
         [FunctionName("CoordinatorOrchestrator")]
         public async Task<List<TrackerDocument>> Run(
-        [OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+        [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             try
             {
@@ -40,19 +46,15 @@ namespace coordinator.Functions
                 var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
                 var caseDetails = await context.CallActivityAsync<CaseDetails>(
                     nameof(GetCaseDetailsById),
-                    new GetCaseDetailsByIdActivityPayload { CaseId = payload.CaseId, AccessToken = payload.AccessToken });
+                    new GetCaseDetailsByIdActivityPayload { CaseId = payload.CaseId, AccessToken = accessToken });
 
-                var caseDocumentTasks = new List<Task<string>>();
-                var documentIds = caseDetails.Documents.Select(item =>
-                {
-                    caseDocumentTasks.Add(
-                        context.CallSubOrchestratorAsync<string>(
-                            nameof(CaseDocumentOrchestrator),
-                            new CaseDocumentOrchestrationPayload { CaseId = payload.CaseId, DocumentId = item.Id }));
-                    return item.Id;
-                });
-
+                var documentIds = caseDetails.Documents.Select(item => item.Id);
                 await tracker.RegisterDocumentIds(documentIds);
+
+                var caseDocumentTasks = documentIds.Select(id =>
+                    context.CallSubOrchestratorAsync(
+                            nameof(CaseDocumentOrchestrator),
+                            new CaseDocumentOrchestrationPayload { CaseId = payload.CaseId, DocumentId = id }));
 
                 //TODO what happens when one task fails?
                 await Task.WhenAll(caseDocumentTasks);
@@ -64,7 +66,7 @@ namespace coordinator.Functions
             catch (Exception exception)
             {
                 //await tracker.RegisterError();
-                log.LogError(exception, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration.");
+                _log.LogError(exception, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration.");
                 throw;
             }
         }

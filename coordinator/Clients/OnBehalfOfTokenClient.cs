@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace coordinator.Clients
 {
-    class OnBehalfOfTokenClient : IOnBehalfOfTokenClient
+    public class OnBehalfOfTokenClient : IOnBehalfOfTokenClient
     {
         private readonly IConfidentialClientApplication _application;
         private readonly IConfiguration _configuration;
@@ -20,7 +20,7 @@ namespace coordinator.Clients
             _configuration = configuration;
         }
 
-        public async Task<string> GetAccessToken(string accessToken)
+        public async Task<string> GetAccessTokenAsync(string accessToken)
         {
             AuthenticationResult result;
             

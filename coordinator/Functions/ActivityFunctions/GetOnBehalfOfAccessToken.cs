@@ -24,7 +24,7 @@ namespace coordinator.Functions.ActivityFunctions
                 throw new ArgumentException("Access token cannot be null.");
             }
 
-            return await _onBehalfOfTokenClient.GetAccessToken(accessToken);
+            return await _onBehalfOfTokenClient.GetAccessTokenAsync(accessToken);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace coordinator.Functions.ActivityFunctions
                 throw new ArgumentException("Payload cannot be null.");
             }
 
-            return await _coreDataApiClient.GetCaseDetailsById(payload.CaseId, payload.AccessToken);
+            return await _coreDataApiClient.GetCaseDetailsByIdAsync(payload.CaseId, payload.AccessToken);
         }
     }
 }

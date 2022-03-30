@@ -19,7 +19,7 @@ namespace coordinator.Clients
             _authenticatedGraphQLHttpRequestFactory = authenticatedGraphQLHttpRequestFactory;
         }
          
-        public async Task<CaseDetails> GetCaseDetailsById(int caseId, string accessToken)
+        public async Task<CaseDetails> GetCaseDetailsByIdAsync(int caseId, string accessToken)
         {
             try
             {
