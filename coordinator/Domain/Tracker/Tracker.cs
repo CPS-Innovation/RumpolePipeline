@@ -110,11 +110,11 @@ namespace coordinator.Domain.Tracker
         }
 
         [FunctionName("TrackerStatus")]
-        public async Task<IActionResult> Run(
+        public async Task<IActionResult> HttpStart(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "cases/{caseId}/tracker")] HttpRequestMessage req,
             string caseId,
             [DurableClient] IDurableEntityClient client,
-            ILogger<Tracker> log)
+            ILogger log)
         {
             var entityId = new EntityId(nameof(Tracker), caseId);
             var stateResponse = await client.ReadEntityStateAsync<Tracker>(entityId);

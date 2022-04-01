@@ -33,7 +33,7 @@ namespace coordinator.Clients
             }
             catch (MsalException exception)
             {
-                throw new OnBehalfOfTokenClientException("Failed to acquire onBehalfOf token.", exception);
+                throw new OnBehalfOfTokenClientException($"Failed to acquire onBehalfOf token. Exception: {exception.Message}");
             }
 
             return result.AccessToken;

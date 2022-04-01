@@ -41,7 +41,7 @@ namespace coordinator.Clients
             }
             catch (Exception exception)
             {
-                throw new CoreDataApiClientException($"Failed to retrieve case details for case id '{caseId}'.", innerException: exception);
+                throw new CoreDataApiClientException($"Failed to retrieve case details for case id '{caseId}'. Exception: {exception.Message}.");
             }
         }
     }

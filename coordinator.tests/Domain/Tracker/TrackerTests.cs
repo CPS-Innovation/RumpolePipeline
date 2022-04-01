@@ -25,7 +25,7 @@ namespace coordinator.tests.Domain.Tracker
 
         private Mock<IDurableEntityContext> _mockDurableEntityContext;
         private Mock<IDurableEntityClient> _mockDurableEntityClient;
-        private Mock<ILogger<coordinator.Domain.Tracker.Tracker>> _mockLogger;
+        private Mock<ILogger> _mockLogger;
 
         private coordinator.Domain.Tracker.Tracker Tracker;
 
@@ -43,7 +43,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _mockDurableEntityContext = new Mock<IDurableEntityContext>();
             _mockDurableEntityClient = new Mock<IDurableEntityClient>();
-            _mockLogger = new Mock<ILogger<coordinator.Domain.Tracker.Tracker>>();
+            _mockLogger = new Mock<ILogger>();
 
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
@@ -146,17 +146,17 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
-        public async Task Run_TrackerStatus_ReturnsOK()
+        public async Task HttpStart_TrackerStatus_ReturnsOK()
         {
-            var response = await Tracker.Run(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await Tracker.HttpStart(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<OkObjectResult>();
         }
 
         [Fact]
-        public async Task Run_TrackerStatus_ReturnsEntityState()
+        public async Task HttpStart_TrackerStatus_ReturnsEntityState()
         {
-            var response  = await Tracker.Run(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response  = await Tracker.HttpStart(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             var okObjectResult = response as OkObjectResult;
 
@@ -164,7 +164,7 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
-        public async Task Run_TrackerStatus_ReturnsNotFoundIfEntityNotFound()
+        public async Task HttpStart_TrackerStatus_ReturnsNotFoundIfEntityNotFound()
         {
             var entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = false };
             _mockDurableEntityClient.Setup(
@@ -173,7 +173,7 @@ namespace coordinator.tests.Domain.Tracker
                     null, null))
                 .ReturnsAsync(entityStateResponse);
 
-            var response = await Tracker.Run(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await Tracker.HttpStart(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<NotFoundObjectResult>();
         }
