@@ -17,6 +17,10 @@
     <PackageReference Include="Aspose.Slides.NET" Version="22.2.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.17" />
     <PackageReference Include="Aspose.Imaging" Version="22.3.0" />
+    <PackageReference Include="Aspose.Diagram" Version="22.3.0" />
+    <PackageReference Include="Aspose.HTML" Version="22.3.0" />
+    <PackageReference Include="Aspose.PDF" Version="22.3.0" />
+    <PackageReference Include="Aspose.Email" Version="22.3.0" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Domain\Requests\" />
@@ -28,6 +32,10 @@
     <None Remove="Factories\" />
     <None Remove="Microsoft.Extensions.Http" />
     <None Remove="Aspose.Imaging" />
+    <None Remove="Aspose.Diagram" />
+    <None Remove="Aspose.HTML" />
+    <None Remove="Aspose.PDF" />
+    <None Remove="Aspose.Email" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

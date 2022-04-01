@@ -47,6 +47,8 @@ namespace pdf_generator
             builder.Services.AddTransient<IPdfService, SlidesPdfService>();
             builder.Services.AddTransient<IPdfService, ImagingPdfService>();
             builder.Services.AddTransient<IPdfService, DiagramPdfService>();
+            builder.Services.AddTransient<IPdfService, HtmlPdfService>();
+            builder.Services.AddTransient<IPdfService, EmailPdfService>();
             builder.Services.AddTransient<IPdfOrchestratorService, PdfOrchestratorService>(provider =>
             {
                 var pdfServices = provider.GetServices<IPdfService>();
@@ -55,7 +57,10 @@ namespace pdf_generator
                 var slidesPdfService = pdfServices.First(s => s.GetType() == typeof(SlidesPdfService));
                 var imagingPdfService = pdfServices.First(s => s.GetType() == typeof(ImagingPdfService));
                 var diagramPdfService = pdfServices.First(s => s.GetType() == typeof(DiagramPdfService));
-                return new PdfOrchestratorService(wordsPdfService, cellsPdfService, slidesPdfService, imagingPdfService, diagramPdfService);
+                var htmlPdfService = pdfServices.First(s => s.GetType() == typeof(HtmlPdfService));
+                var emailPdfService = pdfServices.First(s => s.GetType() == typeof(EmailPdfService));
+                return new PdfOrchestratorService(
+                    wordsPdfService, cellsPdfService, slidesPdfService, imagingPdfService, diagramPdfService, htmlPdfService, emailPdfService);
             });
 
             builder.Services.AddTransient<IDocumentExtractionService, DocumentExtractionService>();

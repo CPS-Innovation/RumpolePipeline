@@ -1,12 +1,16 @@
 ﻿using System;
 using System.IO;
-using Aspose.Cells;
+using Aspose.Html;
+using Aspose.Html.Converters;
+using Aspose.Html.Saving;
+using Aspose.Pdf;
+using License = Aspose.Pdf.License;
 
 namespace pdf_generator.Services.PdfService
 {
-    public class CellsPdfService : IPdfService
+    public class HtmlPdfService : IPdfService
     {
-        public CellsPdfService()
+        public HtmlPdfService()
         {
             try
             {
@@ -21,8 +25,10 @@ namespace pdf_generator.Services.PdfService
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
-            using var workbook = new Workbook(inputStream);
-            workbook.Save(pdfStream, new PdfSaveOptions { OnePagePerSheet = true });
+            using var doc = new Document(inputStream, new HtmlLoadOptions());
+            doc.Save(pdfStream);
+            //using var document = new HTMLDocument(inputStream, ".");
+            //Converter.ConvertHTML(document, new PdfSaveOptions(), pdfStream);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }
     }

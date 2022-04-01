@@ -9,19 +9,25 @@ namespace pdf_generator.Services.PdfService
         private readonly IPdfService _slidesPdfService;
         private readonly IPdfService _imagingPdfService;
         private readonly IPdfService _diagramPdfService;
+        private readonly IPdfService _htmlPdfService;
+        private readonly IPdfService _emailPdfService;
 
         public PdfOrchestratorService(
             IPdfService wordsPdfService,
             IPdfService cellsPdfService,
             IPdfService slidesPdfService,
             IPdfService imagingPdfService,
-            IPdfService diagramPdfService)
+            IPdfService diagramPdfService,
+            IPdfService htmlPdfService,
+            IPdfService emailPdfService)
         {
             _wordsPdfService = wordsPdfService;
             _cellsPdfService = cellsPdfService;
             _slidesPdfService = slidesPdfService;
             _imagingPdfService = imagingPdfService;
             _diagramPdfService = diagramPdfService;
+            _htmlPdfService = htmlPdfService;
+            _emailPdfService = emailPdfService;
         }
 
         public Stream ReadToPdfStream(Stream inputStream, string fileType)
@@ -56,6 +62,12 @@ namespace pdf_generator.Services.PdfService
                     break;
                 case "vsd":
                     _diagramPdfService.ReadToPdfStream(inputStream, pdfStream);
+                    break;
+                case "html":
+                    _htmlPdfService.ReadToPdfStream(inputStream, pdfStream);
+                    break;
+                case "msg":
+                    _emailPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
             }
 

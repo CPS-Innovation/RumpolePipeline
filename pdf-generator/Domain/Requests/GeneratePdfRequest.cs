@@ -12,5 +12,7 @@ namespace pdf_generator.Domain.Requests
 
         [Required]
         public string FileName { get; set; }
+
+        public string BlobLink { get; set; }
     }
 }
