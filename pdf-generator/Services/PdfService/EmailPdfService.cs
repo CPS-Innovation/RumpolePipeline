@@ -23,13 +23,13 @@ namespace pdf_generator.Services.PdfService
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
-            //pdfStream.Seek(0, SeekOrigin.Begin); //TODO need this?
             var mailMsg = MailMessage.Load(inputStream);
             mailMsg.Save(pdfStream, SaveOptions.DefaultMhtml);
 
             // load the MTHML from pdfStream into a document
             var document = new Document(pdfStream, new Aspose.Words.Loading.LoadOptions { LoadFormat = LoadFormat.Mhtml });
-            document.Save(pdfStream, new Aspose.Words.Saving.PdfSaveOptions());
+            document.Save(pdfStream, SaveFormat.Pdf);
+            pdfStream.Seek(0, SeekOrigin.Begin);
         }
     }
 }
