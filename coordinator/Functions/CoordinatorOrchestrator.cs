@@ -43,12 +43,20 @@ namespace coordinator.Functions
 
                 await tracker.Initialise(context.InstanceId);
 
-                var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
-                var caseDetails = await context.CallActivityAsync<CaseDetails>(
-                    nameof(GetCaseDetailsById),
-                    new GetCaseDetailsByIdActivityPayload { CaseId = payload.CaseId, AccessToken = accessToken });
+                //var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
+                //var documents = await context.CallActivityAsync<List<Document>>(
+                //    nameof(GetCaseDocumentsById),
+                //    new GetCaseDocumentsByIdActivityPayload { CaseId = payload.CaseId, AccessToken = accessToken });
 
-                var documentIds = caseDetails.Documents.Select(item => item.Id);
+                var documents = new List<Document> { new Document { Id = 1 }, new Document { Id = 2 }, new Document { Id = 3 }, new Document { Id = 4 } };
+
+                if (documents.Count() == 0)
+                {
+                    await tracker.RegisterCompleted();
+                    return new List<TrackerDocument>();
+                }
+
+                var documentIds = documents.Select(item => item.Id);
                 await tracker.RegisterDocumentIds(documentIds);
 
                 var caseDocumentTasks = documentIds.Select(id =>
@@ -56,8 +64,7 @@ namespace coordinator.Functions
                             nameof(CaseDocumentOrchestrator),
                             new CaseDocumentOrchestrationPayload { CaseId = payload.CaseId, DocumentId = id }));
 
-                //TODO what happens when one task fails?
-                await Task.WhenAll(caseDocumentTasks);
+                await Task.WhenAll(caseDocumentTasks.Select(t => BufferCall(t)));
 
                 await tracker.RegisterCompleted();
 
@@ -65,9 +72,21 @@ namespace coordinator.Functions
             }
             catch (Exception exception)
             {
-                //await tracker.RegisterError();
                 _log.LogError(exception, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration.");
                 throw;
+            }
+        }
+
+        //TODO test
+        private async Task BufferCall(Task task)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception)
+            {
+                return;
             }
         }
 

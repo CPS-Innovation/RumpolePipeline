@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using common.Wrappers;
@@ -48,7 +49,6 @@ namespace coordinator.Functions.SubOrchestrators
             }
             catch (Exception exception)
             {
-                //TODO should we throw custom exception here and catch in orchestrator to stop whole thing failing?
                 _log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
                 throw;
             }
@@ -58,8 +58,14 @@ namespace coordinator.Functions.SubOrchestrators
         {
             var request = _jsonConvertWrapper.SerializeObject(new GeneratePdfRequest { CaseId = caseId, DocumentId = documentId });
             //TODO add access token to this?
-            //TODO error handling for invalid response codes
             var response = await context.CallHttpAsync(HttpMethod.Post, new Uri(_functionEndpoints.GeneratePdf), request);
+
+            //TODO test
+            if(response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new HttpRequestException($"Failed to generate pdf for document id '{documentId}'.");
+            }
+
             return _jsonConvertWrapper.DeserializeObject<GeneratePdfResponse>(response.Content);
         }
 

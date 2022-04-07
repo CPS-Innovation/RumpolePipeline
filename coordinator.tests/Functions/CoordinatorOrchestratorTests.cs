@@ -22,7 +22,7 @@ namespace coordinator.tests.Functions
         private Fixture _fixture;
         private CoordinatorOrchestrationPayload _payload;
         private string _accessToken;
-        private CaseDetails _caseDetails;
+        private List<Document> _documents;
         private string _transactionId;
         private List<TrackerDocument> _trackerDocuments;
 
@@ -39,7 +39,7 @@ namespace coordinator.tests.Functions
                         .With(p => p.ForceRefresh, false)
                         .Create();
             _accessToken = _fixture.Create<string>();
-            _caseDetails = _fixture.Create<CaseDetails>();
+            _documents = _fixture.Create<List<Document>>();
             _transactionId = _fixture.Create<string>();
             _trackerDocuments = _fixture.Create<List<TrackerDocument>>();
 
@@ -55,8 +55,8 @@ namespace coordinator.tests.Functions
                 .Returns(_mockTracker.Object);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), _payload.AccessToken))
                 .ReturnsAsync(_accessToken);
-            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDetails>(nameof(GetCaseDetailsById), It.Is<GetCaseDetailsByIdActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
-                .ReturnsAsync(_caseDetails);
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<List<Document>>(nameof(GetCaseDocumentsById), It.Is<GetCaseDocumentsByIdActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
+                .ReturnsAsync(_documents);
 
             _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
 
@@ -112,26 +112,50 @@ namespace coordinator.tests.Functions
         }
 
         [Fact]
-        public async Task Run_CallsSubOrchestratorForEachDocumentId()
+        public async Task Run_Tracker_RegistersCompletedWhenCaseDocumentsIsEmpty()
         {
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<List<Document>>(nameof(GetCaseDocumentsById), It.Is<GetCaseDocumentsByIdActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
+                .ReturnsAsync(new List<Document>());
+
             await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            foreach (var document in _caseDetails.Documents)
-            {
-                _mockDurableOrchestrationContext.Verify(
-                    context => context.CallSubOrchestratorAsync(
-                        nameof(CaseDocumentOrchestrator),
-                        It.Is<CaseDocumentOrchestrationPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == document.Id)));
-            }
+            _mockTracker.Verify(tracker => tracker.RegisterCompleted());
         }
+
+
+        [Fact]
+        public async Task Run_ReturnsEmptyListOfDocumentsWhenCaseDocumentsIsEmpty()
+        {
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<List<Document>>(nameof(GetCaseDocumentsById), It.Is<GetCaseDocumentsByIdActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
+                .ReturnsAsync(new List<Document>());
+
+            var documents = await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+
+            documents.Should().BeEmpty();
+        }
+
 
         [Fact]
         public async Task Run_Tracker_RegistersDocumentIds()
         {
             await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            var documentIds = _caseDetails.Documents.Select(d => d.Id);
+            var documentIds = _documents.Select(d => d.Id);
             _mockTracker.Verify(tracker => tracker.RegisterDocumentIds(documentIds));
+        }
+
+        [Fact]
+        public async Task Run_CallsSubOrchestratorForEachDocumentId()
+        {
+            await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+
+            foreach (var document in _documents)
+            {
+                _mockDurableOrchestrationContext.Verify(
+                    context => context.CallSubOrchestratorAsync(
+                        nameof(CaseDocumentOrchestrator),
+                        It.Is<CaseDocumentOrchestrationPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == document.Id)));
+            }
         }
 
         [Fact]

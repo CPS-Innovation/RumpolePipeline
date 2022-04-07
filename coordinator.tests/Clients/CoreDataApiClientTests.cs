@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture;
@@ -10,6 +11,7 @@ using FluentAssertions;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -22,10 +24,10 @@ namespace coordinator.tests.Clients
         private string _accessToken;
         private AuthenticatedGraphQLHttpRequest _authenticatedGraphQLHttpRequest;
         private GraphQLResponse<GetCaseDetailsByIdResponse> _graphQLResponse;
-        private GetCaseDetailsByIdResponse _getCaseDetailsByIdResponse;
 
         private Mock<IGraphQLClient> _mockGraphQLClient;
         private Mock<IAuthenticatedGraphQLHttpRequestFactory> _mockAuthenticatedGraphQLHttpRequestFactory;
+        private Mock<ILogger<CoreDataApiClient>> _mockLogger;
 
         private ICoreDataApiClient CoreDataApiClient;
 
@@ -35,35 +37,75 @@ namespace coordinator.tests.Clients
             _caseId = _fixture.Create<int>();
             _accessToken = _fixture.Create<string>();
             _authenticatedGraphQLHttpRequest = _fixture.Create<AuthenticatedGraphQLHttpRequest>();
-            _getCaseDetailsByIdResponse = _fixture.Create<GetCaseDetailsByIdResponse>();
             _graphQLResponse = _fixture.Create<GraphQLResponse<GetCaseDetailsByIdResponse>>();
 
             _mockGraphQLClient = new Mock<IGraphQLClient>();
             _mockAuthenticatedGraphQLHttpRequestFactory = new Mock<IAuthenticatedGraphQLHttpRequestFactory>();
+            _mockLogger = new Mock<ILogger<CoreDataApiClient>>();
 
             _mockAuthenticatedGraphQLHttpRequestFactory.Setup(factory => factory.Create(It.IsAny<GraphQLHttpRequest>(), _accessToken))
                 .Returns(_authenticatedGraphQLHttpRequest);
             _mockGraphQLClient.Setup(client => client.SendQueryAsync<GetCaseDetailsByIdResponse>(_authenticatedGraphQLHttpRequest, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(_graphQLResponse);
 
-            CoreDataApiClient = new CoreDataApiClient(_mockGraphQLClient.Object, _mockAuthenticatedGraphQLHttpRequestFactory.Object);
+            CoreDataApiClient = new CoreDataApiClient(_mockGraphQLClient.Object, _mockAuthenticatedGraphQLHttpRequestFactory.Object, _mockLogger.Object);
         }
 
         [Fact]
-        public async Task GetCaseDetailsByIdAsync_ReturnsCaseDetails()
+        public async Task GetCaseDocumentsByIdAsync_ReturnsCaseDetails()
         {
-            var caseDetails = await CoreDataApiClient.GetCaseDetailsByIdAsync(_caseId, _accessToken);
+            var documents = await CoreDataApiClient.GetCaseDocumentsByIdAsync(_caseId, _accessToken);
 
-            caseDetails.Should().Be(_graphQLResponse.Data.CaseDetails);
+            documents.Should().BeEquivalentTo(_graphQLResponse.Data.CaseDetails.Documents);
         }
 
         [Fact]
-        public async Task GetCaseDetailsByIdAsync_ThrowsCoreDataApiExceptionWhenFailsToRetrieveCaseDetails()
+        public async Task GetCaseDocumentsByIdAsync_ReturnsEmptyListOfDocumentsWhenResponseIsNull()
+        {
+            _mockGraphQLClient.Setup(client => client.SendQueryAsync<GetCaseDetailsByIdResponse>(_authenticatedGraphQLHttpRequest, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(default(GraphQLResponse<GetCaseDetailsByIdResponse>));
+            var documents = await CoreDataApiClient.GetCaseDocumentsByIdAsync(_caseId, _accessToken);
+
+            documents.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetCaseDocumentsByIdAsync_ReturnsEmptyListOfDocumentsWhenResponseDataIsNull()
+        {
+            _graphQLResponse.Data = null;
+
+            var documents = await CoreDataApiClient.GetCaseDocumentsByIdAsync(_caseId, _accessToken);
+
+            documents.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetCaseDocumentsByIdAsync_ReturnsEmptyListOfDocumentsWhenCaseDetailsIsNull()
+        {
+            _graphQLResponse.Data.CaseDetails = null;
+
+            var documents = await CoreDataApiClient.GetCaseDocumentsByIdAsync(_caseId, _accessToken);
+
+            documents.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetCaseDocumentsByIdAsync_ReturnsEmptyListOfDocumentsWhenDocumentsIsEmpty()
+        {
+            _graphQLResponse.Data.CaseDetails.Documents = new List<Document>();
+
+            var documents = await CoreDataApiClient.GetCaseDocumentsByIdAsync(_caseId, _accessToken);
+
+            documents.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetCaseDocumentssByIdAsync_ThrowsCoreDataApiExceptionWhenFailsToRetrieveCaseDetails()
         {
             _mockGraphQLClient.Setup(client => client.SendQueryAsync<GetCaseDetailsByIdResponse>(_authenticatedGraphQLHttpRequest, It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Exception("Test Exception"));
 
-            await Assert.ThrowsAsync<CoreDataApiClientException>(() => CoreDataApiClient.GetCaseDetailsByIdAsync(_caseId, _accessToken));
+            await Assert.ThrowsAsync<CoreDataApiClientException>(() => CoreDataApiClient.GetCaseDocumentsByIdAsync(_caseId, _accessToken));
         }
     }
 }

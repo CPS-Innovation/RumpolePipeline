@@ -4,7 +4,7 @@ namespace coordinator.Domain.CoreDataApi
 {
     public class GetCaseDetailsByIdResponse
     {
-        [JsonProperty("caseDetails")]
+        [JsonProperty("case")]
         public CaseDetails CaseDetails { get; set; }
     }
 }

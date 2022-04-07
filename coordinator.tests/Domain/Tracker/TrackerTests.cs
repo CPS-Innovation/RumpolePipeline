@@ -62,7 +62,7 @@ namespace coordinator.tests.Domain.Tracker
             Tracker.TransactionId.Should().Be(_transactionId);
             Tracker.Documents.Should().NotBeNull();
             Tracker.Logs.Should().NotBeNull();
-            Tracker.Status.Should().Be(TrackerStatus.Initialised);
+            Tracker.IsComplete.Should().BeFalse();
 
             Tracker.Logs.Count().Should().Be(1);
         }
@@ -74,7 +74,6 @@ namespace coordinator.tests.Domain.Tracker
             await Tracker.RegisterDocumentIds(_documentIds);
 
             Tracker.Documents.Count().Should().Be(_documentIds.Count());
-            Tracker.Status.Should().Be(TrackerStatus.RegisteredDocumentIds);
 
             Tracker.Logs.Count().Should().Be(2);
         }
@@ -88,7 +87,6 @@ namespace coordinator.tests.Domain.Tracker
 
             var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
             document.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
-            Tracker.Status.Should().Be(TrackerStatus.RegisteredPdfBlobName);
 
             Tracker.Logs.Count().Should().Be(3);
         }
@@ -103,7 +101,7 @@ namespace coordinator.tests.Domain.Tracker
 
             var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
             document.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
-            Tracker.Status.Should().Be(TrackerStatus.Completed);
+            Tracker.IsComplete.Should().BeTrue();
 
             Tracker.Logs.Count().Should().Be(4);
         }
@@ -120,7 +118,7 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsCompleted()
         {
-            Tracker.Status = TrackerStatus.Completed;
+            Tracker.IsComplete = true;
 
             var isAlreadyProcessed = await Tracker.IsAlreadyProcessed();
 
@@ -130,7 +128,7 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsFalseIfStatusIsNotCompleted()
         {
-            Tracker.Status = TrackerStatus.Initialised;
+            Tracker.IsComplete = false;
 
             var isAlreadyProcessed = await Tracker.IsAlreadyProcessed();
 

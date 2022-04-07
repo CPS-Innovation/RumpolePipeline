@@ -1,11 +1,10 @@
 ﻿namespace coordinator.Domain.Tracker
 {
-    public enum TrackerStatus
+    public enum LogType
     {
         Initialised,
         RegisteredDocumentIds,
         RegisteredPdfBlobName,
-        Completed,
-        Errored
+        Completed
     }
 }

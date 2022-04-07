@@ -3,7 +3,9 @@ using coordinator.Domain.Exceptions;
 using coordinator.Factories;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace coordinator.Clients
@@ -12,14 +14,18 @@ namespace coordinator.Clients
     {
         private readonly IGraphQLClient _graphQLClient;
         private readonly IAuthenticatedGraphQLHttpRequestFactory _authenticatedGraphQLHttpRequestFactory;
+        private readonly ILogger<CoreDataApiClient> _log;
+
         public CoreDataApiClient(IGraphQLClient graphQLClient,
-            IAuthenticatedGraphQLHttpRequestFactory authenticatedGraphQLHttpRequestFactory)
+            IAuthenticatedGraphQLHttpRequestFactory authenticatedGraphQLHttpRequestFactory,
+            ILogger<CoreDataApiClient> log)
         {
             _graphQLClient = graphQLClient;
             _authenticatedGraphQLHttpRequestFactory = authenticatedGraphQLHttpRequestFactory;
+            _log = log;
         }
          
-        public async Task<CaseDetails> GetCaseDetailsByIdAsync(int caseId, string accessToken)
+        public async Task<List<Document>> GetCaseDocumentsByIdAsync(int caseId, string accessToken)
         {
             try
             {
@@ -33,11 +39,17 @@ namespace coordinator.Clients
 
                 if (response?.Data?.CaseDetails == null)
                 {
-                    //TODO return this? or log warning no details found?
-                    return null;
+                    _log.LogInformation($"No data found for case with id '{caseId}'.");
+                    return new List<Document>();
                 }
 
-                return response.Data.CaseDetails;
+                var documents = response.Data.CaseDetails.Documents;
+                if(documents.Count == 0)
+                {
+                    _log.LogInformation($"No documents found for case id '{caseId}'.");
+                }
+
+                return documents;
             }
             catch (Exception exception)
             {

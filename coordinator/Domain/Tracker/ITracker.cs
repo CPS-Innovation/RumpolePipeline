@@ -5,11 +5,10 @@ namespace coordinator.Domain.Tracker
 {
     public interface ITracker
     {
-        Task Initialise(string transactionId); //TODO do we need transaction id?
+        Task Initialise(string transactionId);
         Task RegisterDocumentIds(IEnumerable<int> documentIds);
         Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg);
         Task RegisterCompleted();
-        Task RegisterError();
         Task<List<TrackerDocument>> GetDocuments();
         Task<bool> IsAlreadyProcessed();
     }

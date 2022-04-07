@@ -1,5 +1,6 @@
 ﻿using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
@@ -19,6 +20,8 @@ namespace coordinator.Domain.CoreDataApi
         {
             var message = base.ToHttpRequestMessage(options, serializer);
             message.Headers.Authorization = new AuthenticationHeaderValue("Bearer",  _accessToken);
+            message.Headers.Add("Correlation-Id", Guid.NewGuid().ToString());
+            message.Headers.Add("Request-Ip-Address", "0.0.0.0");
             return message;
         }
     }

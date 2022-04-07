@@ -9,7 +9,6 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace coordinator.Domain.Tracker
 {
@@ -26,18 +25,17 @@ namespace coordinator.Domain.Tracker
         [JsonProperty("logs")]
         public List<Log> Logs { get; set; }
 
-        [JsonProperty("status")]
-        [JsonConverter(typeof(StringEnumConverter))]
-        public TrackerStatus Status { get; set; }
+        [JsonProperty("IsComplete")]
+        public bool IsComplete { get; set; }
 
         public Task Initialise(string transactionId)
         {
             TransactionId = transactionId;
             Documents = new List<TrackerDocument>();
             Logs = new List<Log>();
-            Status = TrackerStatus.Initialised;
+            IsComplete = false;
 
-            Log(Status);
+            Log(LogType.Initialised);
 
             return Task.CompletedTask;
         }
@@ -48,8 +46,7 @@ namespace coordinator.Domain.Tracker
                 .Select(documentId => new TrackerDocument { DocumentId = documentId })
                 .ToList();
 
-            Status = TrackerStatus.RegisteredDocumentIds;
-            Log(Status);
+            Log(LogType.RegisteredDocumentIds);
 
             return Task.CompletedTask;
         }
@@ -59,25 +56,15 @@ namespace coordinator.Domain.Tracker
             var document = Documents.Find(document => document.DocumentId == arg.DocumentId);
             document.PdfBlobName = arg.BlobName;
 
-            //TODO always set status??
-            Status = TrackerStatus.RegisteredPdfBlobName;
-            Log(Status, arg.DocumentId);
+            Log(LogType.RegisteredPdfBlobName, arg.DocumentId);
 
             return Task.CompletedTask;
         }
 
         public Task RegisterCompleted()
         {
-            Status = TrackerStatus.Completed;
-            Log(Status);
-
-            return Task.CompletedTask;
-        }
-
-        public Task RegisterError()
-        {
-            Status = TrackerStatus.Errored;
-            Log(Status);
+            Log(LogType.Completed);
+            IsComplete = true;
 
             return Task.CompletedTask;
         }
@@ -89,11 +76,10 @@ namespace coordinator.Domain.Tracker
 
         public Task<bool> IsAlreadyProcessed()
         {
-            //TODO is it already processed if errored?
-            return Task.FromResult(Status == TrackerStatus.Completed);
+            return Task.FromResult(IsComplete);
         }
 
-        private void Log(TrackerStatus status, int? documentId = null)
+        private void Log(LogType status, int? documentId = null)
         {
             Logs.Add(new Log
             {
