@@ -24,10 +24,12 @@ namespace pdf_generator.Services.PdfService
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
             var mailMsg = MailMessage.Load(inputStream);
-            mailMsg.Save(pdfStream, SaveOptions.DefaultMhtml);
+            using var memoryStream = new MemoryStream();
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            mailMsg.Save(memoryStream, SaveOptions.DefaultMhtml);
 
-            // load the MTHML from pdfStream into a document
-            var document = new Document(pdfStream, new Aspose.Words.Loading.LoadOptions { LoadFormat = LoadFormat.Mhtml });
+            //// load the MTHML from memoryStream into a document
+            var document = new Document(memoryStream, new Aspose.Words.Loading.LoadOptions { LoadFormat = LoadFormat.Mhtml });
             document.Save(pdfStream, SaveFormat.Pdf);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }
