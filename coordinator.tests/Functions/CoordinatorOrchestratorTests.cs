@@ -159,6 +159,22 @@ namespace coordinator.tests.Functions
         }
 
         [Fact]
+        public async Task Run_DoesNotThrowWhenSubOrchestratorCallFails()
+        {
+            _mockDurableOrchestrationContext.Setup(
+                context => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), It.IsAny<CaseDocumentOrchestrationPayload>()))
+                    .ThrowsAsync(new Exception());
+            try
+            {
+                await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+            }
+            catch (Exception)
+            {
+                Assert.True(false);
+            }
+        }
+
+        [Fact]
         public async Task Run_Tracker_RegistersCompleted()
         {
             await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);

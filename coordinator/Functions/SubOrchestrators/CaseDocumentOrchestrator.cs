@@ -60,7 +60,6 @@ namespace coordinator.Functions.SubOrchestrators
             //TODO add access token to this?
             var response = await context.CallHttpAsync(HttpMethod.Post, new Uri(_functionEndpoints.GeneratePdf), request);
 
-            //TODO test
             if(response.StatusCode != HttpStatusCode.OK)
             {
                 throw new HttpRequestException($"Failed to generate pdf for document id '{documentId}'.");

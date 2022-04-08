@@ -77,11 +77,20 @@ namespace coordinator.tests.Functions.SubOrchestrators
         }
 
         [Fact]
-        public async Task Run_Tracker_RegistersPdfBlobNames()
+        public async Task Run_Tracker_RegistersPdfBlobName()
         {
             await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
             _mockTracker.Verify(tracker => tracker.RegisterPdfBlobName(It.Is<RegisterPdfBlobNameArg>(a => a.DocumentId == _payload.DocumentId && a.BlobName == _pdfResponse.BlobName)));
+        }
+
+        [Fact]
+        public async Task Run_ThrowsExceptionWhenCallToGeneratePdfReturnsNonOkResponse()
+        {
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(HttpMethod.Post, It.Is<Uri>(u => u.OriginalString == _functionEndpoints.GeneratePdf), _serializedRequest)).
+                ReturnsAsync(new DurableHttpResponse(HttpStatusCode.InternalServerError, content: _content));
+
+            await Assert.ThrowsAsync<HttpRequestException>(() => CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object));
         }
     }
 }

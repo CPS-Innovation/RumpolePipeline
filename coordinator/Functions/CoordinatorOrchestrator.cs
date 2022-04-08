@@ -75,7 +75,6 @@ namespace coordinator.Functions
             }
         }
 
-        //TODO test
         private async Task BufferCall(Task task)
         {
             try
