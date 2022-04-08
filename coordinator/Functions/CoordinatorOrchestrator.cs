@@ -43,12 +43,10 @@ namespace coordinator.Functions
 
                 await tracker.Initialise(context.InstanceId);
 
-                //var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
-                //var documents = await context.CallActivityAsync<List<Document>>(
-                //    nameof(GetCaseDocumentsById),
-                //    new GetCaseDocumentsByIdActivityPayload { CaseId = payload.CaseId, AccessToken = accessToken });
-
-                var documents = new List<Document> { new Document { Id = 1 }, new Document { Id = 2 }, new Document { Id = 3 }, new Document { Id = 4 } };
+                var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
+                var documents = await context.CallActivityAsync<List<Document>>(
+                    nameof(GetCaseDocumentsById),
+                    new GetCaseDocumentsByIdActivityPayload { CaseId = payload.CaseId, AccessToken = accessToken });
 
                 if (documents.Count() == 0)
                 {
