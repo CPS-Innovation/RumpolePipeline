@@ -16,6 +16,10 @@ variable "app_service_plan_sku" {
   })
 }
 
+variable "core_data_api_url" {
+  type = string 
+}
+
 # variable "core_data_api_details" {
 #   type = object({
 #     api_url = string

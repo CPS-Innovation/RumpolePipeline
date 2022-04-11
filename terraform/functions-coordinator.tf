@@ -16,11 +16,12 @@ resource "azurerm_function_app" "fa_coordinator" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
-    "endpoint__CmsDocumentDetails"            = "https://sarumpolepipelinecmsstub.blob.core.windows.net/cms/docs.json?sp=r&st=2022-03-09T06:49:45Z&se=2023-06-01T13:49:45Z&spr=https&sv=2020-08-04&sr=b&sig=MisgIvsdLpg7ES7Om8CNqRlotB0tra%2F%2BJInUaDf1FHs%3D"
-    "endpoint__DocToPdf"                      = "https://${azurerm_function_app.fa_pdf_generator.default_hostname}/api/doc-to-pdf?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
-    "endpoint__PdfToSearchData"               = "https://${azurerm_function_app.fa_text_extractor.default_hostname}/api/pdf-to-search-data?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
-    "endpoint__SearchIndexer"                 = "https://${azurerm_function_app.fa_indexer.default_hostname}/api/search-indexer?code=${data.azurerm_function_app_host_keys.ak_indexer.default_function_key}"
-    "endpoint__SearchIndexerEnabled"          = "false"
+    # "functionEndpoints:GeneratePdf"           = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
+    "CoreDataApiUrl"                          = var.core_data_api_url
+    "CoreDataApiScope"                        = "api://5f1f433a-41b3-45d3-895e-927f50232a47/case.confirm"
+    "OnBehalfOfTokenTenantId"                 = data.azurerm_client_config.current.tenant_id
+    "OnBehalfOfTokenClientId"                 = azuread_application.fa_coordinator.application_id
+    "OnBehalfOfTokenClientSecret"             = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_coordinator_client_secret.id})"
   }
   site_config {
     always_on      = true
@@ -28,7 +29,6 @@ resource "azurerm_function_app" "fa_coordinator" {
 
     cors {
       allowed_origins = [
-        # "https://${azurerm_app_service.as_web.name}.azurewebsites.net" this does not work due to circular dependency
         "https://${local.app_name}.azurewebsites.net"
       ]
     }
@@ -36,6 +36,18 @@ resource "azurerm_function_app" "fa_coordinator" {
 
   identity {
     type = "SystemAssigned"
+  }
+
+  auth_settings {
+    enabled                       = true
+    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
+    unauthenticated_client_action = "RedirectToLoginPage"
+    default_provider              = "AzureActiveDirectory"
+    active_directory {
+      client_id         = azuread_application.fa_coordinator.application_id
+      client_secret     = azuread_application_password.faap_fa_coordinator_app_service.value
+      allowed_audiences = ["api://fa-${local.resource_name}-coordinator"]
+    }
   }
   
   lifecycle {
@@ -58,39 +70,17 @@ data "azurerm_function_app_host_keys" "ak_coordinator" {
   depends_on = [azurerm_function_app.fa_coordinator]
 }
 
+resource "azuread_application" "fa_coordinator" {
+  display_name               = "fa-${local.resource_name}-coordinator"
+  identifier_uris            = ["api://fa-${local.resource_name}-coordinator"]
+}
 
-# resource "azuread_application" "fa_coordinator" {
-#   display_name               = "fa-${local.resource_name}-coordinator"
-#   #oauth2_allow_implicit_flow = false
-#   identifier_uris            = ["https://CPSGOVUK.onmicrosoft.com/fa-${local.resource_name}-coordinator"]
-#   owners                     = ["4acc9fb2-3e32-4109-b3d1-5fcd3a253e4e"]
-#   #reply_urls                 = ["https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback"]
+resource "azuread_application_password" "faap_fa_coordinator_app_service" {
+  application_object_id = azuread_application.fa_coordinator.id
+  end_date_relative     = "17520h"
+  # value                 = "xxx"
 
-#   # Please note: oauth2_permissions with a user impersonation value is created by default by Terraform
-#   # Creating another causes a duplication error
-
-#   required_resource_access {
-#     resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-
-#     resource_access {
-#       id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
-#       type = "Scope"
-#     }
-
-#     resource_access {
-#       id   = "5f8c59db-677d-491f-a6b8-5f174b11ec1d" # read all groups (requires admin consent?)
-#       type = "Scope"
-#     }
-#   }
-# }
-
-# resource "azuread_application_password" "faap_fa_coordinator_app_service" {
-#   application_object_id = azuread_application.fa_coordinator.id
-#   #description           = "Default function app password"
-#   end_date_relative     = "17520h"
-#   #value                 = "__faap_rumpole_pipeline_app_service_password__"
-
-#   depends_on = [
-#     azuread_application.fa_coordinator
-#   ]
-# }
+  depends_on = [
+    azuread_application.fa_coordinator
+  ]
+}
