@@ -4,11 +4,13 @@ namespace coordinator.Domain.Tracker
 {
     public class Log
     {
+        [JsonProperty("logType")]
         public string LogType { get; set; }
 
+        [JsonProperty("timestamp")]
         public string TimeStamp { get; set; }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty("documentId", NullValueHandling = NullValueHandling.Ignore)]
         public int? DocumentId { get; set; }
     }
 }

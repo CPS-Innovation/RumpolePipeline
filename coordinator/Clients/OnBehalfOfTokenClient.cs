@@ -27,7 +27,6 @@ namespace coordinator.Clients
             try
             {
                 var userAssertion = new UserAssertion(accessToken, assertionType);
-                //TODO add configuration scope to terraform "api://5f1f433a-41b3-45d3-895e-927f50232a47/case.confirm"
                 var scopes = new Collection<string> { _configuration["CoreDataApiScope"] };
                 result = await _application.AcquireTokenOnBehalfOf(scopes, userAssertion).ExecuteAsync();
             }

@@ -20,7 +20,6 @@ namespace ServerlessPDFConversionDemo
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            //TODO add all config to terraform
             var configuration = new ConfigurationBuilder()
                 .AddEnvironmentVariables()
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
