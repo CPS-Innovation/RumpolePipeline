@@ -1,4 +1,3 @@
-
 using System;
 using common.Wrappers;
 using coordinator.Clients;
