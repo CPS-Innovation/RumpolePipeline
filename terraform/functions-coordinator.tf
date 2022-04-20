@@ -17,8 +17,8 @@ resource "azurerm_function_app" "fa_coordinator" {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
     "functionEndpoints__GeneratePdf"          = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
-    "CoreDataApiUrl"                          = var.core_data_api_url
-    "CoreDataApiScope"                        = "api://5f1f433a-41b3-45d3-895e-927f50232a47/case.confirm"
+    "CoreDataApiUrl"                          = var.core_data_api_details.api_url
+    "CoreDataApiScope"                        = var.core_data_api_details.api_scope
     "OnBehalfOfTokenTenantId"                 = data.azurerm_client_config.current.tenant_id
     "OnBehalfOfTokenClientId"                 = azuread_application.fa_coordinator.application_id
     "OnBehalfOfTokenClientSecret"             = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_coordinator_client_secret.id})"
