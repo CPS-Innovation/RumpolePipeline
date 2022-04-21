@@ -1,0 +1,45 @@
+trigger:
+  branches:
+    include:
+      - main
+      - feature/12690-terraform-level0
+
+  paths:
+    include:
+      - "indexer/*"
+
+pool:
+  vmImage: "ubuntu-latest"
+
+variables:
+  functionName: "indexer"
+  buildConfiguration: "Release"
+
+steps:
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: "build"
+      projects: "$(functionName)/$(functionName).csproj"
+      arguments: "--configuration $(buildConfiguration)"
+    displayName: "Build"
+
+  # - task: DotNetCoreCLI@2
+  #   inputs:
+  #     command: "test"
+  #     projects: "$(functionName)*tests/$(functionName)*tests.csproj"
+  #   displayName: "Run tests"
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: publish
+      publishWebProjects: false
+      projects: "$(functionName)/$(functionName).csproj"
+      arguments: "--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)"
+      zipAfterPublish: False
+    displayName: "Publish"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: "$(Build.ArtifactStagingDirectory)"
+      artifactName: "$(functionName)-drop"
+      publishLocation: "Container"
