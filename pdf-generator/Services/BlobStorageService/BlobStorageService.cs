@@ -1,43 +1,34 @@
-using System;
-using System.IO;
+﻿using System.IO;
+using System.Net;
 using System.Threading.Tasks;
+using Azure;
 using Azure.Storage.Blobs;
-using Microsoft.Extensions.Options;
 
 namespace pdf_generator.Services.BlobStorageService
 {
     public class BlobStorageService : IBlobStorageService
     {
-        private readonly BlobStorageOptions _options;
-        public BlobStorageService(IOptions<BlobStorageOptions> options)
+        private readonly BlobServiceClient _blobServiceClient;
+        private readonly string _blobServiceContainerName;
+
+        public BlobStorageService(BlobServiceClient blobServiceClient, string blobServiceContainerName)
         {
-            _options = options.Value;
+            _blobServiceClient = blobServiceClient;
+            _blobServiceContainerName = blobServiceContainerName;
         }
 
-        public async Task<Stream> DownloadDocumentAsync(string documentSasUrl)
+        public async Task UploadDocumentAsync(Stream stream, string blobName)
         {
-            var blobClient = CreateBlobClient(new Uri(documentSasUrl));
+            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
 
-            var result = await blobClient.DownloadContentAsync();
+            if (!await blobContainerClient.ExistsAsync())
+            {
+                throw new RequestFailedException((int)HttpStatusCode.NotFound, $"Blob container '{_blobServiceContainerName}' does not exist");
+            }
 
-            return result.Value.Content.ToStream();
-        }
-
-        public async Task UploadAsync(Stream stream, string blobName)
-        {
-            var blobClient = CreateBlobClient(blobName);
+            var blobClient = blobContainerClient.GetBlobClient(blobName);
 
             await blobClient.UploadAsync(stream, true);
-        }
-
-        private BlobClient CreateBlobClient(Uri documentSasUrl)
-        {
-            return new BlobClient(documentSasUrl);
-        }
-
-        private BlobClient CreateBlobClient(string blobName)
-        {
-            return new BlobClient(_options.ConnectionString, _options.ContainerName, blobName);
         }
     }
 }

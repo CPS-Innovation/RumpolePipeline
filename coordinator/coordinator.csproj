@@ -1,8 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AzureFunctionsVersion>v3</AzureFunctionsVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <RootNamespace>coordinator</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />

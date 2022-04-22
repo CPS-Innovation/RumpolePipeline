@@ -5,8 +5,6 @@ namespace pdf_generator.Services.BlobStorageService
 {
     public interface IBlobStorageService
     {
-        Task<Stream> DownloadDocumentAsync(string documentSasUrl);
-
-        Task UploadAsync(Stream stream, string blobName);
+        Task UploadDocumentAsync(Stream stream, string blobName);
     }
 }

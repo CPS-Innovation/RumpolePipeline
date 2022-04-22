@@ -1,14 +1,15 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
+using common.Domain.Exceptions;
+using common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Newtonsoft.Json;
-using pdf_generator.Domain.Exceptions;
+using pdf_generator.Domain;
 using pdf_generator.Domain.Requests;
 using pdf_generator.Domain.Responses;
 using pdf_generator.Handlers;
@@ -46,10 +47,16 @@ namespace pdf_generator.Functions
         {
             try
             {
+                if (!request.Headers.TryGetValues("Authorization", out var values) ||
+                    string.IsNullOrWhiteSpace(values.FirstOrDefault()))
+                {
+                    throw new UnauthorizedException("No authorization token supplied.");
+                }
+
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
                 {
-                    throw new BadRequestException("Request body cannot be null", nameof(request));
+                    throw new BadRequestException("Request body cannot be null.", nameof(request));
                 }
 
                 var pdfRequest = _jsonConvertWrapper.DeserializeObject<GeneratePdfRequest>(content);
@@ -60,21 +67,21 @@ namespace pdf_generator.Functions
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
                 }
 
-                //var documentSasUrl = await _documentExtractionService.GetDocumentSasLinkAsync(pdfRequest.DocumentId);
-
-                var documentStream = await _blobStorageService.DownloadDocumentAsync(pdfRequest.BlobLink);
+                //TODO exchange access token via on behalf of?
+                var accessToken = values.First().Replace("Bearer ", "");
+                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.DocumentId, pdfRequest.FileName, "onBehalfOfAccessToken");
 
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
 
-                //TODO extract file type from filename
-                if (pdfRequest.FileName == "pdf")
+                var fileType = pdfRequest.FileName.ToFileType();
+                if (fileType == FileType.PDF)
                 {
-                    await _blobStorageService.UploadAsync(documentStream, blobName);
+                    await _blobStorageService.UploadDocumentAsync(documentStream, blobName);
                 }
                 else
                 {
-                    var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, pdfRequest.FileName);
-                    await _blobStorageService.UploadAsync(pdfStream, blobName);
+                    var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, fileType);
+                    await _blobStorageService.UploadDocumentAsync(pdfStream, blobName);
                 }
 
                 return OkResponse(Serialize(new GeneratePdfResponse { BlobName = blobName }));
@@ -87,7 +94,7 @@ namespace pdf_generator.Functions
 
         private string Serialize(object objectToSerialize)
         {
-            return _jsonConvertWrapper.SerializeObject(objectToSerialize, Formatting.None, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            return _jsonConvertWrapper.SerializeObject(objectToSerialize);
         }
 
         private HttpResponseMessage OkResponse(string content)

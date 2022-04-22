@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 
 namespace pdf_generator.Services.DocumentExtractionService
 {
     public interface IDocumentExtractionService
     {
-        Task<string> GetDocumentSasLinkAsync(int documentId);
+        Task<Stream> GetDocumentAsync(string documentId, string fileName, string accessToken);
     }
 }

@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace pdf_generator.Domain.Requests
 {
@@ -8,11 +8,10 @@ namespace pdf_generator.Domain.Requests
         public int CaseId { get; set; }
 
         [Required]
-        public int DocumentId { get; set; }
+        public string DocumentId { get; set; }
 
         [Required]
+        [RegularExpression(@"^[\w,\s-]+\.[A-Za-z]{3,4}$")] //TODO test
         public string FileName { get; set; }
-
-        public string BlobLink { get; set; }
     }
 }

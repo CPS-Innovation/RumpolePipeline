@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using pdf_generator.Domain;
 
 namespace pdf_generator.Services.PdfService
 {
@@ -30,43 +31,43 @@ namespace pdf_generator.Services.PdfService
             _emailPdfService = emailPdfService;
         }
 
-        public Stream ReadToPdfStream(Stream inputStream, string fileType)
+        public Stream ReadToPdfStream(Stream inputStream, FileType fileType)
         {
             var pdfStream = new MemoryStream();
             //TODO test all file types
             switch (fileType)
             {
-                case "doc":
-                case "docx":
-                case "docm":
-                case "rtf":
-                case "txt":
+                case FileType.DOC:
+                case FileType.DOCX:
+                case FileType.DOCM:
+                case FileType.RTF:
+                case FileType.TXT:
                     _wordsPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
-                case "xls":
-                case "xlsx":
+                case FileType.XLS:
+                case FileType.XLSX:
                     _cellsPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
-                case "ppt":
-                case "pptx":
+                case FileType.PPT:
+                case FileType.PPTX:
                     _slidesPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
-                case "bmp":
-                case "gif":
-                case "jpg":
-                case "jpeg":
-                case "tif":
-                case "tiff":
-                case "png":
+                case FileType.BMP:
+                case FileType.GIF:
+                case FileType.JPG:
+                case FileType.JPEG:
+                case FileType.TIF:
+                case FileType.TIFF:
+                case FileType.PNG:
                     _imagingPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
-                case "vsd":
+                case FileType.VSD:
                     _diagramPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
-                case "html":
+                case FileType.HTML:
                     _htmlPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
-                case "msg":
+                case FileType.MSG:
                     _emailPdfService.ReadToPdfStream(inputStream, pdfStream);
                     break;
             }

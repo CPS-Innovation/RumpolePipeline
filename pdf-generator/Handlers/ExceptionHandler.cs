@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using Azure;
+using common.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.Exceptions;
 
@@ -24,8 +25,14 @@ namespace pdf_generator.Handlers
             var statusCode = HttpStatusCode.InternalServerError;
 
             //TODO exception handling for aspose
+            //TODO think about what to return to coordinator and when
 
-            if (exception is BadRequestException)
+            if (exception is UnauthorizedException)
+            {
+                baseErrorMessage = "Unauthorized";
+                statusCode = HttpStatusCode.BadRequest;
+            }
+            else if (exception is BadRequestException)
             {
                 baseErrorMessage = "Invalid request";
                 statusCode = HttpStatusCode.BadRequest;
