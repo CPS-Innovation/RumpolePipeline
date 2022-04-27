@@ -54,7 +54,7 @@ namespace coordinator.Functions.SubOrchestrators
             }
         }
 
-        private async Task<GeneratePdfResponse> CallHttpAsync(IDurableOrchestrationContext context, int caseId, int documentId)
+        private async Task<GeneratePdfResponse> CallHttpAsync(IDurableOrchestrationContext context, int caseId, string documentId)
         {
             var request = _jsonConvertWrapper.SerializeObject(new GeneratePdfRequest { CaseId = caseId, DocumentId = documentId });
             //TODO add access token to this?

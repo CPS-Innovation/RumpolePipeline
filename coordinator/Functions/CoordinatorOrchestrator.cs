@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using coordinator.Domain;
 using coordinator.Domain.CoreDataApi;
+using coordinator.Domain.DocumentExtraction;
 using coordinator.Domain.Tracker;
 using coordinator.Functions.ActivityFunctions;
 using coordinator.Functions.SubOrchestrators;
@@ -44,9 +45,9 @@ namespace coordinator.Functions
                 await tracker.Initialise(context.InstanceId);
 
                 var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
-                var documents = await context.CallActivityAsync<List<Document>>(
-                    nameof(GetCaseDocumentsById),
-                    new GetCaseDocumentsByIdActivityPayload { CaseId = payload.CaseId, AccessToken = accessToken });
+                var documents = await context.CallActivityAsync<CaseDocument[]>(
+                    nameof(GetCaseDocuments),
+                    new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = accessToken });
 
                 if (documents.Count() == 0)
                 {
@@ -54,7 +55,7 @@ namespace coordinator.Functions
                     return new List<TrackerDocument>();
                 }
 
-                var documentIds = documents.Select(item => item.Id);
+                var documentIds = documents.Select(item => item.DocumentId);
                 await tracker.RegisterDocumentIds(documentIds);
 
                 var caseDocumentTasks = documentIds.Select(id =>

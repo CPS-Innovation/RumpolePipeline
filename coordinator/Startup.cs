@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using common.Wrappers;
 using coordinator.Clients;
 using coordinator.Domain;
@@ -29,7 +29,7 @@ namespace ServerlessPDFConversionDemo
                 configuration.GetSection("functionEndpoints").Bind(setttings);
             });
 
-            builder.Services.AddTransient<ICoreDataApiClient, CoreDataApiClient>();
+            builder.Services.AddTransient<IDocumentExtractionClient, DocumentExtractionClientStub>();
             builder.Services.AddTransient<IOnBehalfOfTokenClient, OnBehalfOfTokenClient>();
             builder.Services.AddSingleton(serviceProvider =>
             {

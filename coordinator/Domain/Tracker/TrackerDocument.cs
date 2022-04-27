@@ -1,11 +1,11 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace coordinator.Domain.Tracker
 {
     public class TrackerDocument
     {
         [JsonProperty("documentId")]
-        public int DocumentId { get; set; }
+        public string DocumentId { get; set; }
 
         [JsonProperty("pdfBlobName")]
         public string PdfBlobName { get; set; }
