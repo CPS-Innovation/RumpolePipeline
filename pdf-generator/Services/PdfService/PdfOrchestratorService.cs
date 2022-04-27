@@ -34,7 +34,6 @@ namespace pdf_generator.Services.PdfService
         public Stream ReadToPdfStream(Stream inputStream, FileType fileType)
         {
             var pdfStream = new MemoryStream();
-            //TODO test all file types
             switch (fileType)
             {
                 case FileType.DOC:

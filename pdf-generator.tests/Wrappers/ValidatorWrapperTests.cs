@@ -67,11 +67,14 @@ namespace pdf_generator.tests.Wrappers
             results.Should().NotBeEmpty();
         }
 
-        [Fact]
-        public void Validate_GeneratePdfRequest_ReturnsNonEmptyValidationResultsWhenFileNameIsInvalid()
+        [Theory]
+        [InlineData("12345")]
+        [InlineData("Test.so")]
+        [InlineData("Test.somet")]
+        public void Validate_GeneratePdfRequest_ReturnsNonEmptyValidationResultsWhenFileNameIsInvalid(string fileName)
         {
             var request = _fixture.Build<GeneratePdfRequest>()
-                            .With(r => r.FileName, "12345")
+                            .With(r => r.FileName, fileName)
                             .Create();
 
             var results = new ValidatorWrapper<GeneratePdfRequest>().Validate(request);
