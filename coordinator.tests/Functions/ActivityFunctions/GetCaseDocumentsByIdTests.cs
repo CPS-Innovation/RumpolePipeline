@@ -5,6 +5,7 @@ using AutoFixture;
 using coordinator.Clients;
 using coordinator.Domain;
 using coordinator.Domain.CoreDataApi;
+using coordinator.Domain.DocumentExtraction;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -13,50 +14,50 @@ using Xunit;
 
 namespace coordinator.tests.Functions.ActivityFunctions
 {
-    public class GetCaseDocumentsByIdTests
+    public class GetCaseDocumentsTests
     {
         private Fixture _fixture;
-        private GetCaseDocumentsByIdActivityPayload _payload;
-        private List<Document> _documents;
+        private GetCaseDocumentsActivityPayload _payload;
+        private Case _case;
 
-        private Mock<ICoreDataApiClient> _mockCoreDataApiClient;
+        private Mock<IDocumentExtractionClient> _mockDocumentExtractionClient;
         private Mock<IDurableActivityContext> _mockDurableActivityContext;
 
-        private GetCaseDocumentsById GetCaseDocumentsById;
+        private GetCaseDocuments GetCaseDocuments;
 
-        public GetCaseDocumentsByIdTests()
+        public GetCaseDocumentsTests()
         {
             _fixture = new Fixture();
-            _payload = _fixture.Create<GetCaseDocumentsByIdActivityPayload>();
-            _documents = _fixture.Create<List<Document>>();
+            _payload = _fixture.Create<GetCaseDocumentsActivityPayload>();
+            _case = _fixture.Create<Case>();
 
-            _mockCoreDataApiClient = new Mock<ICoreDataApiClient>();
+            _mockDocumentExtractionClient = new Mock<IDocumentExtractionClient>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
 
-            _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsByIdActivityPayload>())
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
                 .Returns(_payload);
 
-            _mockCoreDataApiClient.Setup(client => client.GetCaseDocumentsByIdAsync(_payload.CaseId, _payload.AccessToken))
-                .ReturnsAsync(_documents);
+            _mockDocumentExtractionClient.Setup(client => client.GetCaseDocumentsAsync(_payload.CaseId.ToString(), _payload.AccessToken))
+                .ReturnsAsync(_case);
 
-            GetCaseDocumentsById = new GetCaseDocumentsById(_mockCoreDataApiClient.Object);
+            GetCaseDocuments = new GetCaseDocuments(_mockDocumentExtractionClient.Object);
         }
 
         [Fact]
         public async Task Run_ThrowsWhenPayloadIsNull()
         {
-            _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsByIdActivityPayload>())
-                .Returns(default(GetCaseDocumentsByIdActivityPayload));
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
+                .Returns(default(GetCaseDocumentsActivityPayload));
 
-            await Assert.ThrowsAsync<ArgumentException>(() => GetCaseDocumentsById.Run(_mockDurableActivityContext.Object));
+            await Assert.ThrowsAsync<ArgumentException>(() => GetCaseDocuments.Run(_mockDurableActivityContext.Object));
         }
 
         [Fact]
         public async Task Run_ReturnsCaseDocuments()
         {
-            var documents = await GetCaseDocumentsById.Run(_mockDurableActivityContext.Object);
+            var caseDocuments = await GetCaseDocuments.Run(_mockDurableActivityContext.Object);
 
-            documents.Should().BeEquivalentTo(_documents);
+            caseDocuments.Should().BeEquivalentTo(_case.CaseDocuments);
         }
     }
 }

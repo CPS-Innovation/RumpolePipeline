@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoFixture;
 using coordinator.Domain;
 using coordinator.Domain.CoreDataApi;
+using coordinator.Domain.DocumentExtraction;
 using coordinator.Domain.Tracker;
 using coordinator.Functions;
 using coordinator.Functions.ActivityFunctions;
@@ -22,7 +23,7 @@ namespace coordinator.tests.Functions
         private Fixture _fixture;
         private CoordinatorOrchestrationPayload _payload;
         private string _accessToken;
-        private List<Document> _documents;
+        private CaseDocument[] _caseDocuments;
         private string _transactionId;
         private List<TrackerDocument> _trackerDocuments;
 
@@ -39,7 +40,7 @@ namespace coordinator.tests.Functions
                         .With(p => p.ForceRefresh, false)
                         .Create();
             _accessToken = _fixture.Create<string>();
-            _documents = _fixture.Create<List<Document>>();
+            _caseDocuments = _fixture.Create<CaseDocument[]>();
             _transactionId = _fixture.Create<string>();
             _trackerDocuments = _fixture.Create<List<TrackerDocument>>();
 
@@ -55,8 +56,8 @@ namespace coordinator.tests.Functions
                 .Returns(_mockTracker.Object);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), _payload.AccessToken))
                 .ReturnsAsync(_accessToken);
-            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<List<Document>>(nameof(GetCaseDocumentsById), It.Is<GetCaseDocumentsByIdActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
-                .ReturnsAsync(_documents);
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
+                .ReturnsAsync(_caseDocuments);
 
             _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
 
@@ -114,8 +115,8 @@ namespace coordinator.tests.Functions
         [Fact]
         public async Task Run_Tracker_RegistersCompletedWhenCaseDocumentsIsEmpty()
         {
-            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<List<Document>>(nameof(GetCaseDocumentsById), It.Is<GetCaseDocumentsByIdActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
-                .ReturnsAsync(new List<Document>());
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
+                .ReturnsAsync(new CaseDocument[] { });
 
             await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
@@ -126,8 +127,8 @@ namespace coordinator.tests.Functions
         [Fact]
         public async Task Run_ReturnsEmptyListOfDocumentsWhenCaseDocumentsIsEmpty()
         {
-            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<List<Document>>(nameof(GetCaseDocumentsById), It.Is<GetCaseDocumentsByIdActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
-                .ReturnsAsync(new List<Document>());
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
+                .ReturnsAsync(new CaseDocument[] { });
 
             var documents = await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
@@ -140,7 +141,7 @@ namespace coordinator.tests.Functions
         {
             await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            var documentIds = _documents.Select(d => d.Id);
+            var documentIds = _caseDocuments.Select(d => d.DocumentId);
             _mockTracker.Verify(tracker => tracker.RegisterDocumentIds(documentIds));
         }
 
@@ -149,12 +150,12 @@ namespace coordinator.tests.Functions
         {
             await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            foreach (var document in _documents)
+            foreach (var document in _caseDocuments)
             {
                 _mockDurableOrchestrationContext.Verify(
                     context => context.CallSubOrchestratorAsync(
                         nameof(CaseDocumentOrchestrator),
-                        It.Is<CaseDocumentOrchestrationPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == document.Id)));
+                        It.Is<CaseDocumentOrchestrationPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == document.DocumentId)));
             }
         }
 

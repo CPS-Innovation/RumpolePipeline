@@ -4,6 +4,6 @@
     {
         public int CaseId { get; set; }
 
-        public int DocumentId { get; set; }
+        public string DocumentId { get; set; }
     }
 }
