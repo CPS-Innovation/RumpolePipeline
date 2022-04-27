@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace coordinator.Domain.Tracker
 {
@@ -11,6 +11,6 @@ namespace coordinator.Domain.Tracker
         public string TimeStamp { get; set; }
 
         [JsonProperty("documentId", NullValueHandling = NullValueHandling.Ignore)]
-        public int? DocumentId { get; set; }
+        public string DocumentId { get; set; }
     }
 }

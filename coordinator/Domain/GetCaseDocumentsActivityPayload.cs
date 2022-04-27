@@ -1,6 +1,6 @@
 ﻿namespace coordinator.Domain
 {
-    public class GetCaseDocumentsByIdActivityPayload
+    public class GetCaseDocumentsActivityPayload
     {
         public int CaseId { get; set; }
 

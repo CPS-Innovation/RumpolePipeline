@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -40,7 +40,7 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterDocumentIds(IEnumerable<int> documentIds)
+        public Task RegisterDocumentIds(IEnumerable<string> documentIds)
         {
             Documents = documentIds
                 .Select(documentId => new TrackerDocument { DocumentId = documentId })
@@ -53,7 +53,7 @@ namespace coordinator.Domain.Tracker
 
         public Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg)
         {
-            var document = Documents.Find(document => document.DocumentId == arg.DocumentId);
+            var document = Documents.Find(document => document.DocumentId.Equals(arg.DocumentId, StringComparison.OrdinalIgnoreCase));
             document.PdfBlobName = arg.BlobName;
 
             Log(LogType.RegisteredPdfBlobName, arg.DocumentId);
@@ -79,7 +79,7 @@ namespace coordinator.Domain.Tracker
             return Task.FromResult(IsComplete);
         }
 
-        private void Log(LogType status, int? documentId = null)
+        private void Log(LogType status, string documentId = null)
         {
             Logs.Add(new Log
             {

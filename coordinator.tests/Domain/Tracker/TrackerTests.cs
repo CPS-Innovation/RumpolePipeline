@@ -17,7 +17,7 @@ namespace coordinator.tests.Domain.Tracker
     {
         private Fixture _fixture;
         private string _transactionId;
-        private IEnumerable<int> _documentIds;
+        private IEnumerable<string> _documentIds;
         private RegisterPdfBlobNameArg _pdfBlobNameArg;
         private List<TrackerDocument> _trackerDocuments;
         private string _caseId;
@@ -33,7 +33,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             _fixture = new Fixture();
             _transactionId = _fixture.Create<string>();
-            _documentIds = _fixture.Create<IEnumerable<int>>();
+            _documentIds = _fixture.Create<IEnumerable<string>>();
             _pdfBlobNameArg = _fixture.Build<RegisterPdfBlobNameArg>()
                                 .With(a => a.DocumentId, _documentIds.First())
                                 .Create();
