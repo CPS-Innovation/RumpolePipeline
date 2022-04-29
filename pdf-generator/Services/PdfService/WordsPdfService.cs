@@ -7,7 +7,9 @@ namespace pdf_generator.Services.PdfService
 {
     public class WordsPdfService : IPdfService
     {
-        public WordsPdfService()
+        private readonly IAsposeItemFactory _asposeItemFactory;
+
+        public WordsPdfService(IAsposeItemFactory asposeItemFactory)
         {
             try
             {
@@ -18,11 +20,13 @@ namespace pdf_generator.Services.PdfService
             {
                 throw new AsposeLicenseException(exception.Message);
             }
+
+            _asposeItemFactory = asposeItemFactory;
         }
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
-            var doc = new Document(inputStream);
+            var doc = _asposeItemFactory.CreateWordsDocument(inputStream);
             doc.Save(pdfStream, SaveFormat.Pdf);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }

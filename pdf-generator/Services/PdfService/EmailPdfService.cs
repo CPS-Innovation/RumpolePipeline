@@ -9,7 +9,9 @@ namespace pdf_generator.Services.PdfService
 {
     public class EmailPdfService : IPdfService
     {
-        public EmailPdfService()
+        private readonly IAsposeItemFactory _asposeItemFactory;
+
+        public EmailPdfService(IAsposeItemFactory asposeItemFactory)
         {
             try
             {
@@ -20,17 +22,19 @@ namespace pdf_generator.Services.PdfService
             {
                 throw new AsposeLicenseException(exception.Message);
             }
+
+            _asposeItemFactory = asposeItemFactory;
         }
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
-            var mailMsg = MailMessage.Load(inputStream);
+            var mailMsg = _asposeItemFactory.CreateMailMessage(inputStream);
             using var memoryStream = new MemoryStream();
             memoryStream.Seek(0, SeekOrigin.Begin);
             mailMsg.Save(memoryStream, SaveOptions.DefaultMhtml);
 
             //// load the MTHML from memoryStream into a document
-            var document = new Document(memoryStream, new Aspose.Words.Loading.LoadOptions { LoadFormat = LoadFormat.Mhtml });
+            var document = _asposeItemFactory.CreateMhtmlDocument(inputStream);
             document.Save(pdfStream, SaveFormat.Pdf);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }

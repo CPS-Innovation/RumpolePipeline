@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Aspose.Email;
 using pdf_generator.Domain;
 using pdf_generator.Domain.Exceptions;
 
@@ -80,7 +79,7 @@ namespace pdf_generator.Services.PdfService
             }
             catch(Exception exception)
             {
-                throw new FailedToConvertToPdfException(documentId, exception.Message);
+                throw new PdfConversionException(documentId, exception.Message);
             }
         }
     }

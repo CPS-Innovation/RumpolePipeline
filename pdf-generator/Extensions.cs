@@ -10,7 +10,7 @@ namespace pdf_generator
         {   
             if(!Enum.TryParse(typeof(FileType), fileType, true, out var type))
             {
-                throw new FileTypeNotSupportedException(fileType);
+                throw new UnsupportedFileTypeException(fileType);
             }
 
             return (FileType)type;

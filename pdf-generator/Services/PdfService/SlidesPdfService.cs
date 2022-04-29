@@ -8,7 +8,9 @@ namespace pdf_generator.Services.PdfService
 {
     public class SlidesPdfService : IPdfService
     {
-        public SlidesPdfService()
+        private readonly IAsposeItemFactory _asposeItemFactory;
+
+        public SlidesPdfService(IAsposeItemFactory asposeItemFactory)
         {
             try
             {
@@ -19,11 +21,13 @@ namespace pdf_generator.Services.PdfService
             {
                 throw new AsposeLicenseException(exception.Message);
             }
+
+            _asposeItemFactory = asposeItemFactory;
         }
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
-            using var presentation = new Presentation(inputStream);
+            using var presentation = _asposeItemFactory.CreatePresentation(inputStream);
             presentation.Save(pdfStream, SaveFormat.Pdf);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }

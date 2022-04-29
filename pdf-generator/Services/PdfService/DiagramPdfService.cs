@@ -7,7 +7,9 @@ namespace pdf_generator.Services.PdfService
 {
     public class DiagramPdfService : IPdfService
     {
-        public DiagramPdfService()
+        private readonly IAsposeItemFactory _asposeItemFactory;
+
+        public DiagramPdfService(IAsposeItemFactory asposeItemFactory)
         {
             try
             {
@@ -18,11 +20,13 @@ namespace pdf_generator.Services.PdfService
             {
                 throw new AsposeLicenseException(exception.Message);
             }
+
+            _asposeItemFactory = asposeItemFactory;
         }
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
-            var doc = new Diagram(inputStream);
+            var doc = _asposeItemFactory.CreateDiagram(inputStream);
             doc.Save(pdfStream, SaveFileFormat.Pdf);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }

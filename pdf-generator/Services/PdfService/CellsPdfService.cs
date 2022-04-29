@@ -7,7 +7,9 @@ namespace pdf_generator.Services.PdfService
 {
     public class CellsPdfService : IPdfService
     {
-        public CellsPdfService()
+        private readonly IAsposeItemFactory _asposeItemFactory;
+
+        public CellsPdfService(IAsposeItemFactory asposeItemFactory)
         {
             try
             {
@@ -18,11 +20,13 @@ namespace pdf_generator.Services.PdfService
             {
                 throw new AsposeLicenseException(exception.Message);
             }
+
+            _asposeItemFactory = asposeItemFactory;
         }
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
-            using var workbook = new Workbook(inputStream);
+            using var workbook = _asposeItemFactory.CreateWorkbook(inputStream);
             workbook.Save(pdfStream, new PdfSaveOptions { OnePagePerSheet = true });
             pdfStream.Seek(0, SeekOrigin.Begin);
         }

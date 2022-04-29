@@ -8,7 +8,9 @@ namespace pdf_generator.Services.PdfService
 {
     public class HtmlPdfService : IPdfService
     {
-        public HtmlPdfService()
+        private readonly IAsposeItemFactory _asposeItemFactory;
+
+        public HtmlPdfService(IAsposeItemFactory asposeItemFactory)
         {
             try
             {
@@ -19,11 +21,13 @@ namespace pdf_generator.Services.PdfService
             {
                 throw new AsposeLicenseException(exception.Message);
             }
+
+            _asposeItemFactory = asposeItemFactory;
         }
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
-            using var doc = new Document(inputStream, new HtmlLoadOptions());
+            using var doc = _asposeItemFactory.CreateHtmlDocument(inputStream);
             doc.Save(pdfStream);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }

@@ -43,7 +43,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsBadRequestWhenFileTypeNotSupportedExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new FileTypeNotSupportedException("Test file type"));
+            var httpResponseMessage = ExceptionHandler.HandleException(new UnsupportedFileTypeException("Test file type"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }

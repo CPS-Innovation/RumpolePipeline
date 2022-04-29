@@ -48,7 +48,7 @@ namespace pdf_generator.Functions
         {
             try
             {
-                //TODO add back in once access token stuff from coordinator sorted
+                //TODO add back in once access token stuff from coordinator sorted, and add test
                 //if (!request.Headers.TryGetValues("Authorization", out var values) ||
                 //    string.IsNullOrWhiteSpace(values.FirstOrDefault()))
                 //{
@@ -63,7 +63,6 @@ namespace pdf_generator.Functions
 
                 var pdfRequest = _jsonConvertWrapper.DeserializeObject<GeneratePdfRequest>(content);
 
-                //TODO test filename for realz
                 var results = _validatorWrapper.Validate(pdfRequest);
                 if (results.Any())
                 {
