@@ -44,10 +44,12 @@ namespace coordinator.Functions
 
                 await tracker.Initialise(context.InstanceId);
 
-                var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
+                //TODO do we need this token exchange for cde?
+                //var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
+
                 var documents = await context.CallActivityAsync<CaseDocument[]>(
                     nameof(GetCaseDocuments),
-                    new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = accessToken });
+                    new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = "accessToken" });
 
                 if (documents.Count() == 0)
                 {
@@ -55,13 +57,18 @@ namespace coordinator.Functions
                     return new List<TrackerDocument>();
                 }
 
-                var documentIds = documents.Select(item => item.DocumentId);
-                await tracker.RegisterDocumentIds(documentIds);
+                await tracker.RegisterDocumentIds(documents.Select(item => item.DocumentId));
 
-                var caseDocumentTasks = documentIds.Select(id =>
-                    context.CallSubOrchestratorAsync(
-                            nameof(CaseDocumentOrchestrator),
-                            new CaseDocumentOrchestrationPayload { CaseId = payload.CaseId, DocumentId = id }));
+                var caseDocumentTasks = new List<Task>();
+                for (var documentIndex = 0; documentIndex < documents.Length; documentIndex++)
+                {
+                    caseDocumentTasks.Add(context.CallSubOrchestratorAsync(
+                        nameof(CaseDocumentOrchestrator),
+                        new CaseDocumentOrchestrationPayload {
+                            CaseId = payload.CaseId,
+                            DocumentId = documents[documentIndex].DocumentId,
+                            FileName = documents[documentIndex].FileName }));
+                }
 
                 await Task.WhenAll(caseDocumentTasks.Select(t => BufferCall(t)));
 

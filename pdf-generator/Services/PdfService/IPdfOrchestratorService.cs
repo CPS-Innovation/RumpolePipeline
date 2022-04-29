@@ -5,6 +5,6 @@ namespace pdf_generator.Services.PdfService
 {
     public interface IPdfOrchestratorService
     {
-        Stream ReadToPdfStream(Stream inputStream, FileType fileType);
+        Stream ReadToPdfStream(Stream inputStream, FileType fileType, string documentId);
     }
 }

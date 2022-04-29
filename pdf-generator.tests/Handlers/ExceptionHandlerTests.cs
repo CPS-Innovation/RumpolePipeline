@@ -41,19 +41,18 @@ namespace pdf_generator.tests.Handlers
         }
 
         [Fact]
+        public void HandleException_ReturnsBadRequestWhenFileTypeNotSupportedExceptionOccurs()
+        {
+            var httpResponseMessage = ExceptionHandler.HandleException(new FileTypeNotSupportedException("Test file type"));
+
+            httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenHttpExceptionWithBadRequestOccurs()
         {
             var httpResponseMessage = ExceptionHandler.HandleException(
                 new HttpException(HttpStatusCode.BadRequest, new HttpRequestException()));
-
-            httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        }
-
-        [Fact]
-        public void HandleException_ReturnsInternalServerErrorWhenHttpExceptionWithNotFoundOccurs()
-        {
-            var httpResponseMessage = ExceptionHandler.HandleException(
-                new HttpException(HttpStatusCode.NotFound, new HttpRequestException()));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
@@ -94,6 +93,14 @@ namespace pdf_generator.tests.Handlers
                 new RequestFailedException((int)expectedStatusCode, "Test request failed exception"));
 
             httpResponseMessage.StatusCode.Should().Be(expectedStatusCode);
+        }
+
+        [Fact]
+        public void HandleException_ReturnsnotImplementedWhenFailedToConvertToPdfExceptionOccurs()
+        {
+            var httpResponseMessage = ExceptionHandler.HandleException(new FailedToConvertToPdfException("Test id", "Test message"));
+
+            httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.NotImplemented);
         }
 
         [Fact]

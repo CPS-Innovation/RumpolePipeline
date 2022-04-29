@@ -33,7 +33,7 @@ namespace pdf_generator.tests.Wrappers
         public void Validate_GeneratePdfRequest_ReturnsNonEmptyValidationResultsWhenCaseIdIsMissing()
         {
             var request = _fixture.Build<GeneratePdfRequest>()
-                            .With(r => r.CaseId, null)
+                            .With(r => r.CaseId, default(int?))
                             .With(r => r.FileName, "TestFile.doc")
                             .Create();
 

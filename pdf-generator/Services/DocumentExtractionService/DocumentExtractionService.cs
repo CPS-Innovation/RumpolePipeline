@@ -21,6 +21,7 @@ namespace pdf_generator.Services.DocumentExtractionService
 
         public async Task<Stream> GetDocumentAsync(string documentId, string fileName, string accessToken)
         {
+            //TODO ive assumed here that CDE will return 404 not found when document cant be found. Test this when hooked up properly
             var content = await GetHttpContentAsync($"doc-fetch/{documentId}/{fileName}", accessToken);
             return await content.ReadAsStreamAsync();
         }

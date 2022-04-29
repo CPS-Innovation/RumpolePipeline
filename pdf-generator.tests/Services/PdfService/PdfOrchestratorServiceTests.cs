@@ -1,6 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using AutoFixture;
 using Moq;
 using pdf_generator.Domain;
+using pdf_generator.Domain.Exceptions;
 using pdf_generator.Services.PdfService;
 using Xunit;
 
@@ -8,8 +11,9 @@ namespace pdf_generator.tests.Services.PdfService
 {
 	public class PdfOrchestratorServiceTests
 	{
+		private Fixture _fixture;
 		private Stream _inputStream;
-		private FileType _fileType;
+		private string _documentId;
 
 		private Mock<IPdfService> _mockWordsPdfService;
 		private Mock<IPdfService> _mockCellsPdfService;
@@ -23,7 +27,9 @@ namespace pdf_generator.tests.Services.PdfService
 
 		public PdfOrchestratorServiceTests()
 		{
+			_fixture = new Fixture();
 			_inputStream = new MemoryStream();
+			_documentId = _fixture.Create<string>();
 
 			_mockWordsPdfService = new Mock<IPdfService>();
 			_mockCellsPdfService = new Mock<IPdfService>();
@@ -46,7 +52,7 @@ namespace pdf_generator.tests.Services.PdfService
 		[Fact]
 		public void ReadToPdfStream_CallsWordsServiceWhenFileTypeIsDoc()
         {
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.DOC);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.DOC, _documentId);
 
 			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
         }
@@ -54,7 +60,7 @@ namespace pdf_generator.tests.Services.PdfService
 		[Fact]
 		public void ReadToPdfStream_CallsWordsServiceWhenFileTypeIsDocx()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.DOCX);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.DOCX, _documentId);
 
 			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
@@ -62,7 +68,7 @@ namespace pdf_generator.tests.Services.PdfService
 		[Fact]
 		public void ReadToPdfStream_CallsWordsServiceWhenFileTypeIsDocm()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.DOCM);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.DOCM, _documentId);
 
 			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
@@ -70,7 +76,7 @@ namespace pdf_generator.tests.Services.PdfService
 		[Fact]
 		public void ReadToPdfStream_CallsWordsServiceWhenFileTypeIsRtf()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.RTF);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.RTF, _documentId);
 
 			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
@@ -78,7 +84,7 @@ namespace pdf_generator.tests.Services.PdfService
 		[Fact]
 		public void ReadToPdfStream_CallsWordsServiceWhenFileTypeIsTxt()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.TXT);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.TXT, _documentId);
 
 			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
@@ -86,113 +92,122 @@ namespace pdf_generator.tests.Services.PdfService
 		[Fact]
 		public void ReadToPdfStream_CallsCellsServiceWhenFileTypeIsXls()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.XLS);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.XLS, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockCellsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsCellsServiceWhenFileTypeIsXlsx()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.XLSX);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.XLSX, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockCellsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsSlidesServiceWhenFileTypeIsPpt()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.PPT);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.PPT, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockSlidesPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsSlidesServiceWhenFileTypeIsPptx()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.PPTX);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.PPTX, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockSlidesPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsImagingServiceWhenFileTypeIsBmp()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.BMP);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.BMP, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockImagingPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsImagingServiceWhenFileTypeIsGif()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.GIF);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.GIF, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockImagingPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsImagingServiceWhenFileTypeIsJpg()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.JPG);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.JPG, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockImagingPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsImagingServiceWhenFileTypeIsJpeg()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.JPEG);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.JPEG, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockImagingPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsImagingServiceWhenFileTypeIsTif()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.TIF);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.TIF, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockImagingPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsImagingServiceWhenFileTypeIsTiff()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.TIFF);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.TIFF, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockImagingPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsImagingServiceWhenFileTypeIsPng()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.PNG);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.PNG, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockImagingPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsDiagramServiceWhenFileTypeIsVsd()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.VSD);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.VSD, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockDiagramPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsHtmlServiceWhenFileTypeIsHtml()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.HTML);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.HTML, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockHtmlPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
 		}
 
 		[Fact]
 		public void ReadToPdfStream_CallsEmailServiceWhenFileTypeIsMsg()
 		{
-			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.MSG);
+			PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.MSG, _documentId);
 
-			_mockWordsPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+			_mockEmailPdfService.Verify(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()));
+		}
+
+		[Fact]
+		public void ReadToPdfStream_ThrowsFailedToConvertToPdfExceptionWhenExceptionOccurs()
+		{
+			_mockEmailPdfService.Setup(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()))
+				.Throws(new Exception());
+
+			Assert.Throws<FailedToConvertToPdfException>(() => PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.MSG, _documentId));
 		}
 	}
 }

@@ -1,20 +1,30 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 
 namespace pdf_generator.Services.DocumentExtractionService
 {
 	public class DocumentExtractionServiceStub : IDocumentExtractionService
 	{
-		public DocumentExtractionServiceStub()
-		{
-		}
+        private readonly string _blobStorageConnectionString;
 
-        public Task<Stream> GetDocumentAsync(string documentId, string fileName, string accessToken)
+        public DocumentExtractionServiceStub(string blobStorageConnectionString)
+		{
+            _blobStorageConnectionString = blobStorageConnectionString;
+        }
+
+        public async Task<Stream> GetDocumentAsync(string documentId, string fileName, string accessToken)
         {
-            //TODO get documents from cms blob storage
-            //TODO upload documents to blob storage
-            throw new NotImplementedException();
+            var blobClient = new BlobClient(_blobStorageConnectionString, "cms-documents", fileName);
+
+            if (!await blobClient.ExistsAsync())
+            {
+                return null;
+            }
+
+            var blob = await blobClient.DownloadContentAsync();
+
+            return blob.Value.Content.ToStream();
         }
     }
 }

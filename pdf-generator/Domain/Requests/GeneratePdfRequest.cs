@@ -5,7 +5,7 @@ namespace pdf_generator.Domain.Requests
     public class GeneratePdfRequest
     {
         [Required]
-        public int CaseId { get; set; }
+        public int? CaseId { get; set; }
 
         [Required]
         public string DocumentId { get; set; }

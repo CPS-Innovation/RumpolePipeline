@@ -1,16 +1,18 @@
 ﻿using System;
 using pdf_generator.Domain;
+using pdf_generator.Domain.Exceptions;
 
 namespace pdf_generator
 {
     public static class Extensions
     {
-        public static FileType ToFileType(this string fileName)
-        {
-            //TODO test
-            var fileType = fileName.Split('.')[1];
-            
-            Enum.TryParse(typeof(FileType), fileType, true, out var type);
+        public static FileType ToFileType(this string fileType)
+        {   
+            if(!Enum.TryParse(typeof(FileType), fileType, true, out var type))
+            {
+                throw new FileTypeNotSupportedException(fileType);
+            }
+
             return (FileType)type;
         }
     }

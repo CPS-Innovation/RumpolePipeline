@@ -22,3 +22,7 @@ variable "core_data_api_details" {
     api_scope = string
   })
 }
+
+variable "stub_blob_storage_connection_string" {
+  type = string
+}

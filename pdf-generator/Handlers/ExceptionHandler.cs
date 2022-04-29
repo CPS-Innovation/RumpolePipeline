@@ -24,15 +24,12 @@ namespace pdf_generator.Handlers
             var baseErrorMessage = "An unhandled exception occurred";
             var statusCode = HttpStatusCode.InternalServerError;
 
-            //TODO exception handling for aspose
-            //TODO think about what to return to coordinator and when
-
             if (exception is UnauthorizedException)
             {
                 baseErrorMessage = "Unauthorized";
-                statusCode = HttpStatusCode.BadRequest;
+                statusCode = HttpStatusCode.Unauthorized;
             }
-            else if (exception is BadRequestException)
+            else if (exception is BadRequestException or FileTypeNotSupportedException)
             {
                 baseErrorMessage = "Invalid request";
                 statusCode = HttpStatusCode.BadRequest;
@@ -41,7 +38,7 @@ namespace pdf_generator.Handlers
             {
                 baseErrorMessage = "An http exception occurred";
                 statusCode =
-                    httpException.StatusCode == HttpStatusCode.BadRequest || httpException.StatusCode == HttpStatusCode.NotFound
+                    httpException.StatusCode == HttpStatusCode.BadRequest
                     ? statusCode
                     : httpException.StatusCode;
             }
@@ -53,6 +50,11 @@ namespace pdf_generator.Handlers
                     requestFailedStatusCode == HttpStatusCode.BadRequest || requestFailedStatusCode == HttpStatusCode.NotFound
                     ? statusCode
                     : requestFailedStatusCode;
+            }
+            else if(exception is FailedToConvertToPdfException)
+            {
+                statusCode = HttpStatusCode.NotImplemented;
+                baseErrorMessage = "A failed to convert to pdf exception occurred";
             }
 
             return ErrorResponse(baseErrorMessage, exception, statusCode);

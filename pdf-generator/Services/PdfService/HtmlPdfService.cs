@@ -24,8 +24,6 @@ namespace pdf_generator.Services.PdfService
         {
             using var doc = new Document(inputStream, new HtmlLoadOptions());
             doc.Save(pdfStream);
-            //using var document = new HTMLDocument(inputStream, ".");
-            //Converter.ConvertHTML(document, new PdfSaveOptions(), pdfStream);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }
     }

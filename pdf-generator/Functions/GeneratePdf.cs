@@ -10,6 +10,7 @@ using common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using pdf_generator.Domain;
+using pdf_generator.Domain.Exceptions;
 using pdf_generator.Domain.Requests;
 using pdf_generator.Domain.Responses;
 using pdf_generator.Handlers;
@@ -43,15 +44,16 @@ namespace pdf_generator.Functions
         }
 
         [FunctionName("generate-pdf")]
-        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "generate")] HttpRequestMessage request)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "generate")] HttpRequestMessage request)
         {
             try
             {
-                if (!request.Headers.TryGetValues("Authorization", out var values) ||
-                    string.IsNullOrWhiteSpace(values.FirstOrDefault()))
-                {
-                    throw new UnauthorizedException("No authorization token supplied.");
-                }
+                //TODO add back in once access token stuff from coordinator sorted
+                //if (!request.Headers.TryGetValues("Authorization", out var values) ||
+                //    string.IsNullOrWhiteSpace(values.FirstOrDefault()))
+                //{
+                //    throw new UnauthorizedException("No authorization token supplied.");
+                //}
 
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
@@ -61,6 +63,7 @@ namespace pdf_generator.Functions
 
                 var pdfRequest = _jsonConvertWrapper.DeserializeObject<GeneratePdfRequest>(content);
 
+                //TODO test filename for realz
                 var results = _validatorWrapper.Validate(pdfRequest);
                 if (results.Any())
                 {
@@ -68,18 +71,18 @@ namespace pdf_generator.Functions
                 }
 
                 //TODO exchange access token via on behalf of?
-                var accessToken = values.First().Replace("Bearer ", "");
+                //var accessToken = values.First().Replace("Bearer ", "");
                 var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.DocumentId, pdfRequest.FileName, "onBehalfOfAccessToken");
 
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
-                var fileType = pdfRequest.FileName.ToFileType();
+                var fileType = pdfRequest.FileName.Split('.')[1].ToFileType();
                 if (fileType == FileType.PDF)
                 {
                     await _blobStorageService.UploadDocumentAsync(documentStream, blobName);
                 }
                 else
                 {
-                    var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, fileType);
+                    var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, fileType, pdfRequest.DocumentId);
                     await _blobStorageService.UploadDocumentAsync(pdfStream, blobName);
                 }
 

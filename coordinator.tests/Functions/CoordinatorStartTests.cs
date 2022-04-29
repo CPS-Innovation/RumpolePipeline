@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AutoFixture;
+using common.Domain.Exceptions;
 using coordinator.Domain;
 using coordinator.Domain.Exceptions;
 using coordinator.Functions;

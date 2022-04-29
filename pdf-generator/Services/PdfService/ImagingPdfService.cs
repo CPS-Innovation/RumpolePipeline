@@ -24,7 +24,7 @@ namespace pdf_generator.Services.PdfService
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
         {
             using var image = Image.Load(inputStream);
-            image.Save(pdfStream, new PdfOptions { PdfDocumentInfo = new PdfDocumentInfo() }); //TODO need options?
+            image.Save(pdfStream, new PdfOptions { PdfDocumentInfo = new PdfDocumentInfo() });
             pdfStream.Seek(0, System.IO.SeekOrigin.Begin);
         }
     }

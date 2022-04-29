@@ -55,7 +55,6 @@ namespace pdf_generator
                     wordsPdfService, cellsPdfService, slidesPdfService, imagingPdfService, diagramPdfService, htmlPdfService, emailPdfService);
             });
 
-            builder.Services.AddTransient<IDocumentExtractionService, MockDocumentExtractionService>();
             builder.Services.AddTransient<IValidatorWrapper<GeneratePdfRequest>, ValidatorWrapper<GeneratePdfRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IDocumentExtractionHttpRequestFactory, DocumentExtractionHttpRequestFactory>();
@@ -71,6 +70,11 @@ namespace pdf_generator
                 return new BlobStorageService(
                     serviceProvider.GetRequiredService<BlobServiceClient>(),
                     configuration["BlobServiceContainerName"]);
+            });
+            builder.Services.AddTransient<IDocumentExtractionService>(serviceProvider =>
+            {
+                return new DocumentExtractionServiceStub(
+                    configuration["StubBlobStorageConnectionString"]);
             });
         }
     }

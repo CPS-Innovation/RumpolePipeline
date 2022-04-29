@@ -60,7 +60,7 @@ namespace pdf_generator.tests.Services.BlobStorageService
 		{
 			await BlobStorageService.UploadDocumentAsync(_stream, _blobName);
 
-			_mockBlobClient.Verify(client => client.UploadAsync(_stream));
+			_mockBlobClient.Verify(client => client.UploadAsync(_stream, true, It.IsAny<CancellationToken>()));
 		}
 	}
 }

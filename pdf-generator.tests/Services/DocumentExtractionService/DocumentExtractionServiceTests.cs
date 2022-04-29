@@ -63,7 +63,7 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
         {
             var documentStream = await DocumentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
 
-            documentStream.Should().BeSameAs(_documentStream);
+            documentStream.Should().NotBeNull();
         }
 
         [Fact]
