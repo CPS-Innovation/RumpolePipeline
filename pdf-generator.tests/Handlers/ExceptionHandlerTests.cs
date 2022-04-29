@@ -98,7 +98,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsnotImplementedWhenFailedToConvertToPdfExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new FailedToConvertToPdfException("Test id", "Test message"));
+            var httpResponseMessage = ExceptionHandler.HandleException(new PdfConversionException("Test id", "Test message"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.NotImplemented);
         }

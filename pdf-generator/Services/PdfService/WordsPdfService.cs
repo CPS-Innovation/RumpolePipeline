@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Aspose.Words;
+using pdf_generator.Domain.Exceptions;
 
 namespace pdf_generator.Services.PdfService
 {
@@ -10,13 +11,12 @@ namespace pdf_generator.Services.PdfService
         {
             try
             {
-                //TODO do we only need 1 license for all pdf services, and can it go in the orchestrator instead?
                 var license = new License();
                 license.SetLicense("Aspose.Total.NET.lic");
             }
             catch (Exception exception)
             {
-                //throw new Exception($"Failed to set Aspose License: {exception.Message}");
+                throw new AsposeLicenseException(exception.Message);
             }
         }
 

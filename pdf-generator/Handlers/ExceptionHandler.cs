@@ -29,7 +29,7 @@ namespace pdf_generator.Handlers
                 baseErrorMessage = "Unauthorized";
                 statusCode = HttpStatusCode.Unauthorized;
             }
-            else if (exception is BadRequestException or FileTypeNotSupportedException)
+            else if (exception is BadRequestException or UnsupportedFileTypeException)
             {
                 baseErrorMessage = "Invalid request";
                 statusCode = HttpStatusCode.BadRequest;
@@ -51,7 +51,7 @@ namespace pdf_generator.Handlers
                     ? statusCode
                     : requestFailedStatusCode;
             }
-            else if(exception is FailedToConvertToPdfException)
+            else if(exception is PdfConversionException)
             {
                 statusCode = HttpStatusCode.NotImplemented;
                 baseErrorMessage = "A failed to convert to pdf exception occurred";

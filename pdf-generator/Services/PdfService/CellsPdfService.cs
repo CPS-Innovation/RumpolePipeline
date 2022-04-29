@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Aspose.Cells;
+using pdf_generator.Domain.Exceptions;
 
 namespace pdf_generator.Services.PdfService
 {
@@ -15,7 +16,7 @@ namespace pdf_generator.Services.PdfService
             }
             catch (Exception exception)
             {
-                //throw new Exception($"Failed to set Aspose License: {exception.Message}");
+                throw new AsposeLicenseException(exception.Message);
             }
         }
 

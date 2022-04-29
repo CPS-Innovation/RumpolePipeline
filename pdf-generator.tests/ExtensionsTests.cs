@@ -41,7 +41,7 @@ namespace pdf_generator.tests
 		public void ToFileType_ThrowsWhenUnsupportedFileType()
 		{
 			var fileType = "Unsupported file type";
-			Assert.Throws<FileTypeNotSupportedException>(() => fileType.ToFileType());
+			Assert.Throws<UnsupportedFileTypeException>(() => fileType.ToFileType());
 		}
 	}
 }

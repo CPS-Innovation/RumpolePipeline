@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Aspose.Email;
 using pdf_generator.Domain;
 using pdf_generator.Domain.Exceptions;
 

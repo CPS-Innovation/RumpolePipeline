@@ -207,7 +207,7 @@ namespace pdf_generator.tests.Services.PdfService
 			_mockEmailPdfService.Setup(service => service.ReadToPdfStream(_inputStream, It.IsAny<MemoryStream>()))
 				.Throws(new Exception());
 
-			Assert.Throws<FailedToConvertToPdfException>(() => PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.MSG, _documentId));
+			Assert.Throws<PdfConversionException>(() => PdfOrchestratorService.ReadToPdfStream(_inputStream, FileType.MSG, _documentId));
 		}
 	}
 }
