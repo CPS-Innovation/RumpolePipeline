@@ -2,6 +2,7 @@
 using System.IO;
 using Aspose.Pdf;
 using pdf_generator.Domain.Exceptions;
+using pdf_generator.Factories;
 using License = Aspose.Pdf.License;
 
 namespace pdf_generator.Services.PdfService

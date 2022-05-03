@@ -59,6 +59,7 @@ namespace pdf_generator
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IDocumentExtractionHttpRequestFactory, DocumentExtractionHttpRequestFactory>();
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
+            builder.Services.AddTransient<IAsposeItemFactory, AsposeItemFactory>();
 
             builder.Services.AddAzureClients(builder =>
             {

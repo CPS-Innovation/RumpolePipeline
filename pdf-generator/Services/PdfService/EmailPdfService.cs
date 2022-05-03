@@ -3,6 +3,7 @@ using System.IO;
 using Aspose.Email;
 using Aspose.Words;
 using pdf_generator.Domain.Exceptions;
+using pdf_generator.Factories;
 using License = Aspose.Email.License;
 
 namespace pdf_generator.Services.PdfService

@@ -6,7 +6,7 @@ using Aspose.Slides;
 using Aspose.Words;
 using LoadFormat = Aspose.Words.LoadFormat;
 
-namespace pdf_generator.Services.PdfService
+namespace pdf_generator.Factories
 {
 	public class AsposeItemFactory : IAsposeItemFactory
 	{

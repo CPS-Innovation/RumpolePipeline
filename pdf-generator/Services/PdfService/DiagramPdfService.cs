@@ -2,6 +2,7 @@
 using System.IO;
 using Aspose.Diagram;
 using pdf_generator.Domain.Exceptions;
+using pdf_generator.Factories;
 
 namespace pdf_generator.Services.PdfService
 {
