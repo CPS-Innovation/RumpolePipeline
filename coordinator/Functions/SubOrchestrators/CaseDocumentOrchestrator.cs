@@ -43,7 +43,7 @@ namespace coordinator.Functions.SubOrchestrators
 
                 var tracker = GetTracker(context, payload.CaseId);
 
-                var response = await CallHttpAsync(context, payload);
+                var response = await CallHttpAsync(context, payload, tracker);
 
                 await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = payload.DocumentId, BlobName = response.BlobName });
             }
@@ -54,7 +54,7 @@ namespace coordinator.Functions.SubOrchestrators
             }
         }
 
-        private async Task<GeneratePdfResponse> CallHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload)
+        private async Task<GeneratePdfResponse> CallHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, ITracker tracker)
         {
             var content = _jsonConvertWrapper.SerializeObject(
                 new GeneratePdfRequest { CaseId = payload.CaseId, DocumentId = payload.DocumentId, FileName = payload.FileName });
@@ -63,10 +63,18 @@ namespace coordinator.Functions.SubOrchestrators
             var request = new DurableHttpRequest(HttpMethod.Post, new Uri(_functionEndpoints.GeneratePdf), content: content);
             var response = await context.CallHttpAsync(request);
 
-            //TODO set tracker status on 501 and 404
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'.");
+                if(response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    await tracker.RegisterDocumentNotFoundInCDE(payload.DocumentId);
+                }
+                else if(response.StatusCode == HttpStatusCode.NotImplemented)
+                {
+                    await tracker.RegisterFailedToConvertToPdf(payload.DocumentId);
+                }
+
+                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
             }
 
             return _jsonConvertWrapper.DeserializeObject<GeneratePdfResponse>(response.Content);

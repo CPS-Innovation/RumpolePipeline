@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace coordinator.Domain.Tracker
 {
@@ -9,5 +10,9 @@ namespace coordinator.Domain.Tracker
 
         [JsonProperty("pdfBlobName")]
         public string PdfBlobName { get; set; }
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty("status")]
+        public DocumentStatus Status { get; set; }
     }
 }

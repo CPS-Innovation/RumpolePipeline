@@ -9,6 +9,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace coordinator.Domain.Tracker
 {
@@ -22,18 +23,19 @@ namespace coordinator.Domain.Tracker
         [JsonProperty("documents")]
         public List<TrackerDocument> Documents { get; set; }
 
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty("status")]
+        public TrackerStatus Status { get; set; }
+
         [JsonProperty("logs")]
         public List<Log> Logs { get; set; }
-
-        [JsonProperty("IsComplete")]
-        public bool IsComplete { get; set; }
 
         public Task Initialise(string transactionId)
         {
             TransactionId = transactionId;
             Documents = new List<TrackerDocument>();
+            Status = TrackerStatus.Running;
             Logs = new List<Log>();
-            IsComplete = false;
 
             Log(LogType.Initialised);
 
@@ -55,16 +57,45 @@ namespace coordinator.Domain.Tracker
         {
             var document = Documents.Find(document => document.DocumentId.Equals(arg.DocumentId, StringComparison.OrdinalIgnoreCase));
             document.PdfBlobName = arg.BlobName;
+            document.Status = DocumentStatus.PdfUploadedToBlob;
 
             Log(LogType.RegisteredPdfBlobName, arg.DocumentId);
 
             return Task.CompletedTask;
         }
 
+        public Task RegisterDocumentNotFoundInCDE(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document.Status = DocumentStatus.NotFoundInCDE;
+
+            Log(LogType.DocumentNotFoundInCDE, documentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterFailedToConvertToPdf(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document.Status = DocumentStatus.FailedToConvertToPdf;
+
+            Log(LogType.FailedToConvertToPdf, documentId);
+
+            return Task.CompletedTask;
+        }
+
         public Task RegisterCompleted()
         {
+            Status = TrackerStatus.Completed;
             Log(LogType.Completed);
-            IsComplete = true;
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterFailed()
+        {
+            Status = TrackerStatus.Failed;
+            Log(LogType.Failed);
 
             return Task.CompletedTask;
         }
@@ -76,7 +107,7 @@ namespace coordinator.Domain.Tracker
 
         public Task<bool> IsAlreadyProcessed()
         {
-            return Task.FromResult(IsComplete);
+            return Task.FromResult(Status == TrackerStatus.Completed);
         }
 
         private void Log(LogType status, string documentId = null)

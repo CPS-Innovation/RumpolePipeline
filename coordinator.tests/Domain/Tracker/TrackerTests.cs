@@ -62,7 +62,7 @@ namespace coordinator.tests.Domain.Tracker
             Tracker.TransactionId.Should().Be(_transactionId);
             Tracker.Documents.Should().NotBeNull();
             Tracker.Logs.Should().NotBeNull();
-            Tracker.IsComplete.Should().BeFalse();
+            Tracker.Status.Should().Be(TrackerStatus.Running);
 
             Tracker.Logs.Count().Should().Be(1);
         }
@@ -87,6 +87,33 @@ namespace coordinator.tests.Domain.Tracker
 
             var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
             document.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
+            document.Status.Should().Be(DocumentStatus.PdfUploadedToBlob);
+
+            Tracker.Logs.Count().Should().Be(3);
+        }
+
+        [Fact]
+        public async Task RegisterDocumentNotFoundInCDE_Registers()
+        {
+            await Tracker.Initialise(_transactionId);
+            await Tracker.RegisterDocumentIds(_documentIds);
+            await Tracker.RegisterDocumentNotFoundInCDE(_pdfBlobNameArg.DocumentId);
+
+            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document.Status.Should().Be(DocumentStatus.NotFoundInCDE);
+
+            Tracker.Logs.Count().Should().Be(3);
+        }
+
+        [Fact]
+        public async Task RegisterFailedToConvertToPdf_Registers()
+        {
+            await Tracker.Initialise(_transactionId);
+            await Tracker.RegisterDocumentIds(_documentIds);
+            await Tracker.RegisterFailedToConvertToPdf(_pdfBlobNameArg.DocumentId);
+
+            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document.Status.Should().Be(DocumentStatus.FailedToConvertToPdf);
 
             Tracker.Logs.Count().Should().Be(3);
         }
@@ -95,15 +122,22 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterCompleted_RegistersCompleted()
         {
             await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterPdfBlobName(_pdfBlobNameArg);
             await Tracker.RegisterCompleted();
 
-            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
-            Tracker.IsComplete.Should().BeTrue();
+            Tracker.Status.Should().Be(TrackerStatus.Completed);
 
-            Tracker.Logs.Count().Should().Be(4);
+            Tracker.Logs.Count().Should().Be(2);
+        }
+
+        [Fact]
+        public async Task RegisterFailed_RegistersFailed()
+        {
+            await Tracker.Initialise(_transactionId);
+            await Tracker.RegisterFailed();
+
+            Tracker.Status.Should().Be(TrackerStatus.Failed);
+
+            Tracker.Logs.Count().Should().Be(2);
         }
 
         [Fact]
@@ -118,7 +152,7 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsCompleted()
         {
-            Tracker.IsComplete = true;
+            Tracker.Status = TrackerStatus.Completed;
 
             var isAlreadyProcessed = await Tracker.IsAlreadyProcessed();
 
@@ -128,7 +162,7 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsFalseIfStatusIsNotCompleted()
         {
-            Tracker.IsComplete = false;
+            Tracker.Status = TrackerStatus.NotStarted;
 
             var isAlreadyProcessed = await Tracker.IsAlreadyProcessed();
 

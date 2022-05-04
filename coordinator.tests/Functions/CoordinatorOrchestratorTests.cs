@@ -198,5 +198,22 @@ namespace coordinator.tests.Functions
                 .ThrowsAsync(new Exception("Test Exception"));
             await Assert.ThrowsAsync<Exception>(() => CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object));
         }
+
+        [Fact]
+        public async Task Run_Tracker_RegistersFailedWhenExceptionOccurs()
+        {
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == "accessToken")))
+                .ThrowsAsync(new Exception("Test Exception"));
+
+            try
+            {
+                await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                Assert.False(true);
+            }
+            catch
+            {
+                _mockTracker.Verify(tracker => tracker.RegisterFailed());
+            }
+        }
     }
 }

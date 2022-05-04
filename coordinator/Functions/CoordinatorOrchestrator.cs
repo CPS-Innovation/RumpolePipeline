@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using coordinator.Domain;
-using coordinator.Domain.CoreDataApi;
 using coordinator.Domain.DocumentExtraction;
 using coordinator.Domain.Tracker;
 using coordinator.Functions.ActivityFunctions;
@@ -27,16 +26,15 @@ namespace coordinator.Functions
         public async Task<List<TrackerDocument>> Run(
         [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
+            var payload = context.GetInput<CoordinatorOrchestrationPayload>();
+            if (payload == null)
+            {
+                throw new ArgumentException("Orchestration payload cannot be null.", nameof(CoordinatorOrchestrationPayload));
+            }
+
+            var tracker = GetTracker(context, payload.CaseId);
             try
             {
-                var payload = context.GetInput<CoordinatorOrchestrationPayload>();
-                if (payload == null)
-                {
-                    throw new ArgumentException("Orchestration payload cannot be null.", nameof(CoordinatorOrchestrationPayload));
-                }
-
-                var tracker = GetTracker(context, payload.CaseId);
-
                 if (!payload.ForceRefresh && await tracker.IsAlreadyProcessed())
                 {
                     return await tracker.GetDocuments();
@@ -53,7 +51,7 @@ namespace coordinator.Functions
 
                 if (documents.Count() == 0)
                 {
-                    await tracker.RegisterCompleted();
+                    await tracker.RegisterCompleted(); //TODO have status as no documents found - ask Stef
                     return new List<TrackerDocument>();
                 }
 
@@ -64,10 +62,12 @@ namespace coordinator.Functions
                 {
                     caseDocumentTasks.Add(context.CallSubOrchestratorAsync(
                         nameof(CaseDocumentOrchestrator),
-                        new CaseDocumentOrchestrationPayload {
+                        new CaseDocumentOrchestrationPayload
+                        {
                             CaseId = payload.CaseId,
                             DocumentId = documents[documentIndex].DocumentId,
-                            FileName = documents[documentIndex].FileName }));
+                            FileName = documents[documentIndex].FileName
+                        }));
                 }
 
                 await Task.WhenAll(caseDocumentTasks.Select(t => BufferCall(t)));
@@ -78,6 +78,7 @@ namespace coordinator.Functions
             }
             catch (Exception exception)
             {
+                await tracker.RegisterFailed();
                 _log.LogError(exception, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration.");
                 throw;
             }
