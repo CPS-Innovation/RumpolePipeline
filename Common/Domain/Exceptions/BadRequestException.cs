@@ -1,6 +1,5 @@
-using System;
-
-namespace coordinator.Domain.Exceptions
+﻿using System;
+namespace common.Domain.Exceptions
 {
     public class BadRequestException : ArgumentException
     {

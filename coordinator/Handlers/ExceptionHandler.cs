@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
+using common.Domain.Exceptions;
 using coordinator.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
@@ -45,11 +46,6 @@ namespace coordinator.Handlers
             {
                 Content = new StringContent(errorMessage, Encoding.UTF8, MediaTypeNames.Application.Json)
             };
-        }
-
-        private HttpResponseMessage OkResponse()
-        {
-            return new HttpResponseMessage(HttpStatusCode.OK);
         }
     }
 }

@@ -60,8 +60,8 @@ namespace coordinator.tests.Functions.SubOrchestrators
             _mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<GeneratePdfResponse>(_content)).Returns(_pdfResponse);
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CaseDocumentOrchestrationPayload>()).Returns(_payload);
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(HttpMethod.Post, It.Is<Uri>(u => u.OriginalString == _functionEndpoints.GeneratePdf), _serializedRequest)).
-                ReturnsAsync(_durableResponse);
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+                .ReturnsAsync(_durableResponse);
             _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
                 .Returns(_mockTracker.Object);
 
@@ -87,10 +87,44 @@ namespace coordinator.tests.Functions.SubOrchestrators
         [Fact]
         public async Task Run_ThrowsExceptionWhenCallToGeneratePdfReturnsNonOkResponse()
         {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(HttpMethod.Post, It.Is<Uri>(u => u.OriginalString == _functionEndpoints.GeneratePdf), _serializedRequest)).
-                ReturnsAsync(new DurableHttpResponse(HttpStatusCode.InternalServerError, content: _content));
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.InternalServerError, content: _content));
 
             await Assert.ThrowsAsync<HttpRequestException>(() => CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object));
+        }
+
+        [Fact]
+        public async Task Run_Tracker_RegistersDocumentNotFoundInCDEWhenNotFoundStatusCodeReturned()
+        {
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotFound, content: _content));
+
+            try
+            {
+                await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                Assert.False(true);
+            }
+            catch
+            {
+                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInCDE(_payload.DocumentId));
+            }
+        }
+
+        [Fact]
+        public async Task Run_Tracker_RegistersFailedToConvertToPdfWhenNotFoundStatusCodeReturned()
+        {
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotImplemented, content: _content));
+
+            try
+            {
+                await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                Assert.False(true);
+            }
+            catch
+            {
+                _mockTracker.Verify(tracker => tracker.RegisterFailedToConvertToPdf(_payload.DocumentId));
+            }
         }
     }
 }

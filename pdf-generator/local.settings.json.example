@@ -1,11 +1,11 @@
-{
+﻿{
   "IsEncrypted": false,
   "Values": {
     "_AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=sacpsdevrumpolepipeline;AccountKey=g8PLInLf+MIOMd3eVbvZLOAfxxGc4GoISdOtecNzejYvPNSNe8mNIc/co87qy0scx+SagO1VZJZoIzVUIGi6ZA==;EndpointSuffix=core.windows.net",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "blobStorage:ConnectionString": "DefaultEndpointsProtocol=https;AccountName=sacpsdevrumpolepipeline;AccountKey=g8PLInLf+MIOMd3eVbvZLOAfxxGc4GoISdOtecNzejYvPNSNe8mNIc/co87qy0scx+SagO1VZJZoIzVUIGi6ZA==;EndpointSuffix=core.windows.net",
-    "blobStorage:ContainerName": "documents"
+    "BlobServiceUrl": "https://sacpsdevrumpolepipeline.blob.core.windows.net/",
+    "BlobServiceContainerName": "documents"
   },
   "Host": {
     "LocalHttpPort": 7072

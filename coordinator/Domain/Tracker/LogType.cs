@@ -5,6 +5,9 @@
         Initialised,
         RegisteredDocumentIds,
         RegisteredPdfBlobName,
-        Completed
+        FailedToConvertToPdf,
+        DocumentNotFoundInCDE,
+        Completed,
+        Failed
     }
 }

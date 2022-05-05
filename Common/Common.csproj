@@ -7,9 +7,13 @@
   <ItemGroup>
     <None Remove="Wrappers\" />
     <None Remove="Newtonsoft.Json" />
+    <None Remove="Domain\" />
+    <None Remove="Domain\Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Wrappers\" />
+    <Folder Include="Domain\" />
+    <Folder Include="Domain\Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
