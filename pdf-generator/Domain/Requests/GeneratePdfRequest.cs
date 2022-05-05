@@ -11,7 +11,7 @@ namespace pdf_generator.Domain.Requests
         public string DocumentId { get; set; }
 
         [Required]
-        [RegularExpression(@"^[\w,\s-]+\.[A-Za-z]{3,4}$")] //TODO test
+        [RegularExpression(@"^[\w,\s-]+\.[A-Za-z]{3,4}$")]
         public string FileName { get; set; }
     }
 }

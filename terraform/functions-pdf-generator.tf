@@ -7,8 +7,7 @@ resource "azurerm_function_app" "fa_pdf_generator" {
   app_service_plan_id        = azurerm_app_service_plan.aspw.id 
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
-  #os_type                    = "linux"
-  version                    = "~3"
+  version                    = "~4"
   app_settings = {
     "AzureWebJobsStorage"                     = azurerm_storage_account.sa.primary_connection_string
     "FUNCTIONS_WORKER_RUNTIME"                = "dotnet"
