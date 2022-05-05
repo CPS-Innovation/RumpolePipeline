@@ -72,6 +72,8 @@ namespace coordinator.Functions
 
                 await Task.WhenAll(caseDocumentTasks.Select(t => BufferCall(t)));
 
+                //TODO throw if all fail
+
                 await tracker.RegisterCompleted();
 
                 return await tracker.GetDocuments();
