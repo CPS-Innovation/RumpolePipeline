@@ -72,7 +72,7 @@ namespace coordinator.Functions
                 }
 
                 await Task.WhenAll(caseDocumentTasks.Select(t => BufferCall(t)));
-
+                
                 if (await tracker.AllDocumentsFailed())
                 {
                     throw new CoordinatorOrchestrationException("All documents failed to process during orchestration.");
