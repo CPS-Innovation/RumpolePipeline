@@ -1,6 +1,7 @@
 ﻿using System;
 namespace pdf_generator.Domain.Exceptions
 {
+	[Serializable]
 	public class PdfConversionException : Exception
 	{
 		public PdfConversionException(string documentId, string message) :

@@ -9,6 +9,7 @@ namespace coordinator.Clients
         {
             return caseId switch
             {
+                "18846" => McLoveCase(caseId),
                 "1000000" => McLoveCase(caseId),
                 "1000001" => MultipleFileTypeCase(caseId),
                 _ => null

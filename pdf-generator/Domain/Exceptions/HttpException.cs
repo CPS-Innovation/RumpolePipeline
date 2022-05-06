@@ -4,6 +4,7 @@ using System.Net.Http;
 
 namespace pdf_generator.Domain.Exceptions
 {
+    [Serializable]
     public class HttpException : Exception
     {
         public HttpStatusCode StatusCode { get; private set; }

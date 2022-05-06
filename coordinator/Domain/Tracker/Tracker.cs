@@ -74,12 +74,30 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterFailedToConvertToPdf(string documentId)
+        public Task RegisterUnableToConvertDocumentToPdf(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document.Status = DocumentStatus.FailedToConvertToPdf;
+            document.Status = DocumentStatus.UnableToConvertToPdf;
 
-            Log(LogType.FailedToConvertToPdf, documentId);
+            Log(LogType.UnableToConvertDocumentToPdf, documentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterUnexpectedDocumentFailure(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document.Status = DocumentStatus.UnexpectedFailure;
+
+            Log(LogType.UnexpectedDocumentFailure, documentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterNoDocumentsFoundInCDE()
+        {
+            Status = TrackerStatus.NoDocumentsFoundInCDE;
+            Log(LogType.NoDocumentsFoundInCDE);
 
             return Task.CompletedTask;
         }
@@ -105,9 +123,17 @@ namespace coordinator.Domain.Tracker
             return Task.FromResult(Documents);
         }
 
+        public Task<bool> AllDocumentsFailed()
+        {
+            return Task.FromResult(
+                Documents.All(d => d.Status == DocumentStatus.NotFoundInCDE ||
+                                   d.Status == DocumentStatus.UnableToConvertToPdf ||
+                                   d.Status == DocumentStatus.UnexpectedFailure));
+        }
+
         public Task<bool> IsAlreadyProcessed()
         {
-            return Task.FromResult(Status == TrackerStatus.Completed);
+            return Task.FromResult(Status == TrackerStatus.Completed || Status == TrackerStatus.NoDocumentsFoundInCDE);
         }
 
         private void Log(LogType status, string documentId = null)

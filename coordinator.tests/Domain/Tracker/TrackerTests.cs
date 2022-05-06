@@ -110,12 +110,36 @@ namespace coordinator.tests.Domain.Tracker
         {
             await Tracker.Initialise(_transactionId);
             await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterFailedToConvertToPdf(_pdfBlobNameArg.DocumentId);
+            await Tracker.RegisterUnableToConvertDocumentToPdf(_pdfBlobNameArg.DocumentId);
 
             var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document.Status.Should().Be(DocumentStatus.FailedToConvertToPdf);
+            document.Status.Should().Be(DocumentStatus.UnableToConvertToPdf);
 
             Tracker.Logs.Count().Should().Be(3);
+        }
+
+        [Fact]
+        public async Task RegisterUnexpectedDocumentFailure_Registers()
+        {
+            await Tracker.Initialise(_transactionId);
+            await Tracker.RegisterDocumentIds(_documentIds);
+            await Tracker.RegisterUnexpectedDocumentFailure(_pdfBlobNameArg.DocumentId);
+
+            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document.Status.Should().Be(DocumentStatus.UnexpectedFailure);
+
+            Tracker.Logs.Count().Should().Be(3);
+        }
+
+        [Fact]
+        public async Task RegisterNoDocumentsFoundInCDE_RegistersNoDocumentsFoundInCDE()
+        {
+            await Tracker.Initialise(_transactionId);
+            await Tracker.RegisterNoDocumentsFoundInCDE();
+
+            Tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCDE);
+
+            Tracker.Logs.Count().Should().Be(2);
         }
 
         [Fact]
@@ -150,6 +174,35 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
+        public async Task AllDocumentsFailed_ReturnsTrueIfAllDocumentsFailed()
+        {
+            Tracker.Documents = new List<TrackerDocument> {
+                new TrackerDocument { Status = DocumentStatus.NotFoundInCDE},
+                new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
+                new TrackerDocument { Status = DocumentStatus.UnexpectedFailure}
+            };
+
+            var output = await Tracker.AllDocumentsFailed();
+
+            output.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task AllDocumentsFailed_ReturnsFalseIfAllDocumentsHaveNotFailed()
+        {
+            Tracker.Documents = new List<TrackerDocument> {
+                new TrackerDocument { Status = DocumentStatus.NotFoundInCDE},
+                new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
+                new TrackerDocument { Status = DocumentStatus.UnexpectedFailure},
+                new TrackerDocument { Status = DocumentStatus.PdfUploadedToBlob},
+            };
+
+            var output = await Tracker.AllDocumentsFailed();
+
+            output.Should().BeFalse();
+        }
+
+        [Fact]
         public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsCompleted()
         {
             Tracker.Status = TrackerStatus.Completed;
@@ -160,7 +213,17 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
-        public async Task IsAlreadyProcessed_ReturnsFalseIfStatusIsNotCompleted()
+        public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsNoDocumentsFoundInCDE()
+        {
+            Tracker.Status = TrackerStatus.NoDocumentsFoundInCDE;
+
+            var isAlreadyProcessed = await Tracker.IsAlreadyProcessed();
+
+            isAlreadyProcessed.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task IsAlreadyProcessed_ReturnsFalseIfStatusIsNotCompletedAndNotNoDocumentsFoundInCDE()
         {
             Tracker.Status = TrackerStatus.NotStarted;
 

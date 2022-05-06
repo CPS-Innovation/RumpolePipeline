@@ -5,6 +5,7 @@ namespace coordinator.Domain.Tracker
 	{
 		NotStarted,
 		Running,
+		NoDocumentsFoundInCDE,
 		Completed,
 		Failed
 	}

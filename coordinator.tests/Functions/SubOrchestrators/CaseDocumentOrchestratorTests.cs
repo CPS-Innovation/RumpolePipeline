@@ -123,7 +123,24 @@ namespace coordinator.tests.Functions.SubOrchestrators
             }
             catch
             {
-                _mockTracker.Verify(tracker => tracker.RegisterFailedToConvertToPdf(_payload.DocumentId));
+                _mockTracker.Verify(tracker => tracker.RegisterUnableToConvertDocumentToPdf(_payload.DocumentId));
+            }
+        }
+
+        [Fact]
+        public async Task Run_RegistersUnexpectedDocumentFailureWhenCallToGeneratePdfReturnsNonOkResponse()
+        {
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.InternalServerError, content: _content));
+
+            try
+            {
+                await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                Assert.False(true);
+            }
+            catch
+            {
+                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedDocumentFailure(_payload.DocumentId));
             }
         }
     }

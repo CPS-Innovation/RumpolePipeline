@@ -1,12 +1,12 @@
-﻿using System;
-namespace coordinator.Domain.Tracker
+﻿namespace coordinator.Domain.Tracker
 {
 	public enum DocumentStatus
 	{
 		None,
 		PdfUploadedToBlob,
 		NotFoundInCDE,
-		FailedToConvertToPdf
+		UnableToConvertToPdf,
+		UnexpectedFailure
 	}
 }
 
