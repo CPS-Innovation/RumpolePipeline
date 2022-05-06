@@ -5,8 +5,10 @@
         Initialised,
         RegisteredDocumentIds,
         RegisteredPdfBlobName,
-        FailedToConvertToPdf,
+        UnableToConvertDocumentToPdf,
         DocumentNotFoundInCDE,
+        UnexpectedDocumentFailure,
+        NoDocumentsFoundInCDE,
         Completed,
         Failed
     }

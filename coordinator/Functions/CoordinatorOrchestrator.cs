@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using coordinator.Domain;
 using coordinator.Domain.DocumentExtraction;
+using coordinator.Domain.Exceptions;
 using coordinator.Domain.Tracker;
 using coordinator.Functions.ActivityFunctions;
 using coordinator.Functions.SubOrchestrators;
@@ -51,7 +52,7 @@ namespace coordinator.Functions
 
                 if (documents.Count() == 0)
                 {
-                    await tracker.RegisterCompleted(); //TODO have status as no documents found - ask Stef
+                    await tracker.RegisterNoDocumentsFoundInCDE();
                     return new List<TrackerDocument>();
                 }
 
@@ -72,7 +73,10 @@ namespace coordinator.Functions
 
                 await Task.WhenAll(caseDocumentTasks.Select(t => BufferCall(t)));
 
-                //TODO throw if all fail
+                if (await tracker.AllDocumentsFailed())
+                {
+                    throw new CoordinatorOrchestrationException("All documents failed to process during orchestration.");
+                }
 
                 await tracker.RegisterCompleted();
 

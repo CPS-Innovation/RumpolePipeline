@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using coordinator.Domain;
-using coordinator.Domain.CoreDataApi;
 using coordinator.Domain.DocumentExtraction;
+using coordinator.Domain.Exceptions;
 using coordinator.Domain.Tracker;
 using coordinator.Functions;
 using coordinator.Functions.ActivityFunctions;
@@ -113,14 +113,14 @@ namespace coordinator.tests.Functions
         }
 
         [Fact]
-        public async Task Run_Tracker_RegistersCompletedWhenCaseDocumentsIsEmpty()
+        public async Task Run_Tracker_RegistersDocumentsNotFoundInCDEWhenCaseDocumentsIsEmpty()
         {
-            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _accessToken)))
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == "accessToken")))
                 .ReturnsAsync(new CaseDocument[] { });
 
             await CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            _mockTracker.Verify(tracker => tracker.RegisterCompleted());
+            _mockTracker.Verify(tracker => tracker.RegisterNoDocumentsFoundInCDE());
         }
 
 
@@ -173,6 +173,14 @@ namespace coordinator.tests.Functions
             {
                 Assert.True(false);
             }
+        }
+
+        [Fact]
+        public async Task Run_ThrowsCoordinatorOrchestrationExceptionWhenAllDocumentsHaveFailed()
+        {
+            _mockTracker.Setup(t => t.AllDocumentsFailed()).ReturnsAsync(true);
+
+            await Assert.ThrowsAsync<CoordinatorOrchestrationException>(() => CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object));
         }
 
         [Fact]

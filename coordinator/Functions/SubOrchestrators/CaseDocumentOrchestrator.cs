@@ -71,9 +71,10 @@ namespace coordinator.Functions.SubOrchestrators
                 }
                 else if(response.StatusCode == HttpStatusCode.NotImplemented)
                 {
-                    await tracker.RegisterFailedToConvertToPdf(payload.DocumentId);
+                    await tracker.RegisterUnableToConvertDocumentToPdf(payload.DocumentId);
                 }
 
+                await tracker.RegisterUnexpectedDocumentFailure(payload.DocumentId);
                 throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
             }
 

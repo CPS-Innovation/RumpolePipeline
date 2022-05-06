@@ -18,6 +18,9 @@ namespace pdf_generator.tests.Wrappers
         [Theory]
         [InlineData("Test.doc")]
         [InlineData("Test2.xlsx")]
+        [InlineData("UNUSED 1 - STORM LOG 1881 01.6.20 - EDITED 2020-11-23 MCLOVE.docx")]
+        [InlineData("SDC items to be Disclosed (1-6) MCLOVE.docx")]
+        [InlineData("!@£$%^&*().docx")]
         public void Validate_GeneratePdfRequest_ReturnsNonEmptyValidationResultsWhenFileNameIsValid(string fileName)
         {
             var request = _fixture.Build<GeneratePdfRequest>()
