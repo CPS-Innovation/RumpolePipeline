@@ -74,7 +74,7 @@ namespace pdf_generator.Functions
                 var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.DocumentId, pdfRequest.FileName, "onBehalfOfAccessToken");
 
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
-                var fileType = pdfRequest.FileName.Split('.')[1].ToFileType();
+                var fileType = pdfRequest.FileName.Split('.').Last().ToFileType();
                 if (fileType == FileType.PDF)
                 {
                     await _blobStorageService.UploadDocumentAsync(documentStream, blobName);

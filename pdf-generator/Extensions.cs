@@ -8,7 +8,7 @@ namespace pdf_generator
     {
         public static FileType ToFileType(this string fileType)
         {   
-            if(!Enum.TryParse(typeof(FileType), fileType, true, out var type))
+            if(int.TryParse(fileType, out var _) || !Enum.TryParse(typeof(FileType), fileType, true, out var type))
             {
                 throw new UnsupportedFileTypeException(fileType);
             }

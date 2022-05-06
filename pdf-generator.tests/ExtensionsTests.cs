@@ -38,6 +38,13 @@ namespace pdf_generator.tests
         }
 
 		[Fact]
+		public void ToFileType_ThrowsWhenFileTypeIsInteger()
+		{
+			var fileType = "6";
+			Assert.Throws<UnsupportedFileTypeException>(() => fileType.ToFileType());
+		}
+
+		[Fact]
 		public void ToFileType_ThrowsWhenUnsupportedFileType()
 		{
 			var fileType = "Unsupported file type";
