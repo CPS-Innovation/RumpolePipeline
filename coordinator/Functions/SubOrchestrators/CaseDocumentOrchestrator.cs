@@ -65,16 +65,19 @@ namespace coordinator.Functions.SubOrchestrators
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                if(response.StatusCode == HttpStatusCode.NotFound)
+                switch (response.StatusCode)
                 {
-                    await tracker.RegisterDocumentNotFoundInCDE(payload.DocumentId);
+                    case HttpStatusCode.NotFound:
+                        await tracker.RegisterDocumentNotFoundInCDE(payload.DocumentId);
+                        break;
+                    case HttpStatusCode.NotImplemented:
+                        await tracker.RegisterUnableToConvertDocumentToPdf(payload.DocumentId);
+                        break;
+                    default:
+                        await tracker.RegisterUnexpectedDocumentFailure(payload.DocumentId);
+                        break;
                 }
-                else if(response.StatusCode == HttpStatusCode.NotImplemented)
-                {
-                    await tracker.RegisterUnableToConvertDocumentToPdf(payload.DocumentId);
-                }
-
-                await tracker.RegisterUnexpectedDocumentFailure(payload.DocumentId);
+                
                 throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
             }
 
