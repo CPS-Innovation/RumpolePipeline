@@ -26,3 +26,7 @@ variable "core_data_api_details" {
 variable "stub_blob_storage_connection_string" {
   type = string
 }
+
+variable "fa_rumpole_gateway_identity_principal_id" {
+  type = string
+}
