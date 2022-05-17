@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Clients\" />
     <None Remove="Factories\" />
     <None Remove="Functions\" />
     <None Remove="Functions\ActivityFunctions\" />
@@ -21,7 +20,6 @@
     <None Remove="Domain\Tracker\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Clients\" />
     <Folder Include="Factories\" />
     <Folder Include="Functions\" />
     <Folder Include="Functions\ActivityFunctions\" />

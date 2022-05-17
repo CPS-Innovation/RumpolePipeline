@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using common.Domain.Exceptions;
@@ -23,6 +24,7 @@ namespace pdf_generator.Functions
 {
     public class GeneratePdf
     {
+        private readonly IAuthorizationHandler _authorizationHandler;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
         private readonly IValidatorWrapper<GeneratePdfRequest> _validatorWrapper;
         private readonly IDocumentExtractionService _documentExtractionService;
@@ -31,10 +33,11 @@ namespace pdf_generator.Functions
         private readonly IExceptionHandler _exceptionHandler;
 
         public GeneratePdf(
-            IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<GeneratePdfRequest> validatorWrapper,
-            IDocumentExtractionService documentExtractionService, IBlobStorageService blobStorageService,
-            IPdfOrchestratorService pdfOrchestratorService, IExceptionHandler exceptionHandler)
+             IAuthorizationHandler authorizationHandler, IJsonConvertWrapper jsonConvertWrapper,
+             IValidatorWrapper<GeneratePdfRequest> validatorWrapper, IDocumentExtractionService documentExtractionService,
+             IBlobStorageService blobStorageService, IPdfOrchestratorService pdfOrchestratorService, IExceptionHandler exceptionHandler)
         {
+            _authorizationHandler = authorizationHandler;
             _jsonConvertWrapper = jsonConvertWrapper;
             _validatorWrapper = validatorWrapper;
             _documentExtractionService = documentExtractionService;
@@ -44,16 +47,14 @@ namespace pdf_generator.Functions
         }
 
         [FunctionName("generate-pdf")]
-        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "generate")] HttpRequestMessage request)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "generate")] HttpRequestMessage request, ClaimsPrincipal claimsPrincipal)
         {
             try
             {
-                //TODO add back in once access token stuff from coordinator sorted, and add test
-                //if (!request.Headers.TryGetValues("Authorization", out var values) ||
-                //    string.IsNullOrWhiteSpace(values.FirstOrDefault()))
-                //{
-                //    throw new UnauthorizedException("No authorization token supplied.");
-                //}
+                if (!_authorizationHandler.IsAuthorized(request.Headers, claimsPrincipal, out var errorMessage))
+                {
+                    throw new UnauthorizedException(errorMessage);
+                }
 
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))

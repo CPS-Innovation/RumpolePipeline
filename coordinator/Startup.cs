@@ -50,8 +50,15 @@ namespace ServerlessPDFConversionDemo
                 return ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(appOptions).WithAuthority(authority).Build();
             });
             builder.Services.AddSingleton<IGraphQLClient>(s => new GraphQLHttpClient(GetValueFromConfig(configuration, "CoreDataApiUrl"), new NewtonsoftJsonSerializer()));
-            builder.Services.AddTransient<IAuthenticatedGraphQLHttpRequestFactory, AuthenticatedGraphQLHttpRequestFactory>();
+            builder.Services.AddTransient<IDefaultAzureCredentialFactory, DefaultAzureCredentialFactory>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
+            builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory>(serviceProvider =>
+            {
+                return new GeneratePdfHttpRequestFactory(
+                    serviceProvider.GetRequiredService<IDefaultAzureCredentialFactory>(),
+                    serviceProvider.GetRequiredService<IJsonConvertWrapper>(),
+                    configuration["PdfGeneratorScope"]);
+            });
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
         }
 
