@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoFixture;
 using common.Domain.Exceptions;
@@ -35,7 +36,10 @@ namespace pdf_generator.tests.Functions
 		private string _serializedGeneratePdfResponse;
 		private HttpResponseMessage _httpResponseMessage;
 		private HttpResponseMessage _errorHttpResponseMessage;
+		private string _errorMessage;
 
+		private Mock<IAuthorizationHandler> _mockAuthorizationHandler;
+		private Mock<ClaimsPrincipal> _mockClaimsPrincipal;
 		private Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
 		private Mock<IValidatorWrapper<GeneratePdfRequest>> _mockValidatorWrapper;
 		private Mock<IDocumentExtractionService> _mockDocumentExtractionService;
@@ -61,7 +65,10 @@ namespace pdf_generator.tests.Functions
 			_pdfStream = new MemoryStream();
 			_serializedGeneratePdfResponse = _fixture.Create<string>();
 			_httpResponseMessage = new HttpResponseMessage();
+			_errorMessage = _fixture.Create<string>();
 
+			_mockAuthorizationHandler = new Mock<IAuthorizationHandler>();
+			_mockClaimsPrincipal = new Mock<ClaimsPrincipal>();
 			_mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
 			_mockValidatorWrapper = new Mock<IValidatorWrapper<GeneratePdfRequest>>();
 			_mockDocumentExtractionService = new Mock<IDocumentExtractionService>();
@@ -69,6 +76,8 @@ namespace pdf_generator.tests.Functions
 			_mockPdfOrchestratorService = new Mock<IPdfOrchestratorService>();
 			_mockExceptionHandler = new Mock<IExceptionHandler>();
 
+			_mockAuthorizationHandler.Setup(handler => handler.IsAuthorized(_httpRequestMessage.Headers, _mockClaimsPrincipal.Object, out _errorMessage))
+				.Returns(true);
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<GeneratePdfRequest>(_serializedGeneratePdfRequest))
 				.Returns(_generatePdfRequest);
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfResponse>(r => r.BlobName == _blobName)))
@@ -80,12 +89,28 @@ namespace pdf_generator.tests.Functions
 				.Returns(_pdfStream);
 
 			GeneratePdf = new GeneratePdf(
+								_mockAuthorizationHandler.Object,
 								_mockJsonConvertWrapper.Object,
 								_mockValidatorWrapper.Object,
 								_mockDocumentExtractionService.Object,
 								_mockBlobStorageService.Object,
 								_mockPdfOrchestratorService.Object,
 								_mockExceptionHandler.Object);
+		}
+
+		[Fact]
+		public async Task Run_ReturnsUnauthorizedWhenUnauthorized()
+		{
+			_mockAuthorizationHandler.Setup(handler => handler.IsAuthorized(_httpRequestMessage.Headers, _mockClaimsPrincipal.Object, out _errorMessage))
+				.Returns(false);
+			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
+			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
+				.Returns(_errorHttpResponseMessage);
+			_httpRequestMessage.Content = new StringContent(" ");
+
+			var response = await GeneratePdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+
+			response.Should().Be(_errorHttpResponseMessage);
 		}
 
 		[Fact]
@@ -96,7 +121,7 @@ namespace pdf_generator.tests.Functions
 				.Returns(_errorHttpResponseMessage);
 			_httpRequestMessage.Content = new StringContent(" ");
 
-			var response = await GeneratePdf.Run(_httpRequestMessage);
+			var response = await GeneratePdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
 
 			response.Should().Be(_errorHttpResponseMessage);
 		}
@@ -108,7 +133,7 @@ namespace pdf_generator.tests.Functions
 			_mockDocumentExtractionService.Setup(service => service.GetDocumentAsync(_generatePdfRequest.DocumentId, _generatePdfRequest.FileName, It.IsAny<string>()))
 				.ReturnsAsync(_documentStream);
 
-			await GeneratePdf.Run(_httpRequestMessage);
+			await GeneratePdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
 
 			_mockBlobStorageService.Verify(service => service.UploadDocumentAsync(_documentStream, _blobName));
 		}
@@ -116,7 +141,7 @@ namespace pdf_generator.tests.Functions
 		[Fact]
 		public async Task Run_UploadsPdfStreamWhenFileTypeIsNotPdf()
 		{
-			await GeneratePdf.Run(_httpRequestMessage);
+			await GeneratePdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
 
 			_mockBlobStorageService.Verify(service => service.UploadDocumentAsync(_pdfStream, _blobName));
 		}
@@ -124,7 +149,7 @@ namespace pdf_generator.tests.Functions
 		[Fact]
 		public async Task Run_ReturnsOk()
 		{
-			var response = await GeneratePdf.Run(_httpRequestMessage);
+			var response = await GeneratePdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
 
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
@@ -132,7 +157,7 @@ namespace pdf_generator.tests.Functions
 		[Fact]
 		public async Task Run_ReturnsExpectedContent()
 		{
-			var response = await GeneratePdf.Run(_httpRequestMessage);
+			var response = await GeneratePdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
 
 			var content = await response.Content.ReadAsStringAsync();
 			content.Should().Be(_serializedGeneratePdfResponse);
@@ -148,7 +173,7 @@ namespace pdf_generator.tests.Functions
 			_mockExceptionHandler.Setup(handler => handler.HandleException(exception))
 				.Returns(_errorHttpResponseMessage);
 
-			var response = await GeneratePdf.Run(_httpRequestMessage);
+			var response = await GeneratePdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
 
 			response.Should().Be(_errorHttpResponseMessage);
 		}

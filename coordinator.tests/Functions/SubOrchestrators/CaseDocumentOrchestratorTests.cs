@@ -8,6 +8,7 @@ using coordinator.Domain;
 using coordinator.Domain.Requests;
 using coordinator.Domain.Responses;
 using coordinator.Domain.Tracker;
+using coordinator.Factories;
 using coordinator.Functions.SubOrchestrators;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -22,11 +23,12 @@ namespace coordinator.tests.Functions.SubOrchestrators
         private Fixture _fixture;
         private FunctionEndpointOptions _functionEndpoints;
         private CaseDocumentOrchestrationPayload _payload;
-        private string _serializedRequest;
+        private DurableHttpRequest _durableRequest;
         private DurableHttpResponse _durableResponse;
         private string _content;
         private GeneratePdfResponse _pdfResponse;
 
+        private Mock<IGeneratePdfHttpRequestFactory> _mockGeneratePdfRequestFactory;
         private Mock<IOptions<FunctionEndpointOptions>> _mockOptions;
         private Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
         private Mock<ILogger<CaseDocumentOrchestrator>> _mockLogger;
@@ -43,29 +45,29 @@ namespace coordinator.tests.Functions.SubOrchestrators
                 .With(o => o.GeneratePdf, "https://www.test.co.uk")
                 .Create();
             _payload = _fixture.Create<CaseDocumentOrchestrationPayload>();
-            _serializedRequest = _fixture.Create<string>();
+            _durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("http://www.google.co.uk"));
             _content = _fixture.Create<string>();
             _durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: _content);
             _pdfResponse = _fixture.Create<GeneratePdfResponse>();
 
+            _mockGeneratePdfRequestFactory = new Mock<IGeneratePdfHttpRequestFactory>();
             _mockOptions = new Mock<IOptions<FunctionEndpointOptions>>();
             _mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
             _mockLogger = new Mock<ILogger<CaseDocumentOrchestrator>>();
             _mockDurableOrchestrationContext = new Mock<IDurableOrchestrationContext>();
             _mockTracker = new Mock<ITracker>();
 
+            _mockGeneratePdfRequestFactory.Setup(factory => factory.Create(_payload.CaseId, _payload.DocumentId, _payload.FileName, It.IsAny<Uri>()))
+                .ReturnsAsync(_durableRequest);
             _mockOptions.Setup(options => options.Value).Returns(_functionEndpoints);
-            _mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfRequest>(r => r.CaseId == _payload.CaseId && r.DocumentId == _payload.DocumentId)))
-                .Returns(_serializedRequest);
             _mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<GeneratePdfResponse>(_content)).Returns(_pdfResponse);
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CaseDocumentOrchestrationPayload>()).Returns(_payload);
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
-                .ReturnsAsync(_durableResponse);
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest)).ReturnsAsync(_durableResponse);
             _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
                 .Returns(_mockTracker.Object);
 
-            CaseDocumentOrchestrator = new CaseDocumentOrchestrator(_mockOptions.Object, _mockJsonConvertWrapper.Object, _mockLogger.Object);
+            CaseDocumentOrchestrator = new CaseDocumentOrchestrator(_mockGeneratePdfRequestFactory.Object, _mockOptions.Object, _mockJsonConvertWrapper.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -87,7 +89,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
         [Fact]
         public async Task Run_ThrowsExceptionWhenCallToGeneratePdfReturnsNonOkResponse()
         {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest))
                 .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.InternalServerError, content: _content));
 
             await Assert.ThrowsAsync<HttpRequestException>(() => CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object));
@@ -96,7 +98,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
         [Fact]
         public async Task Run_Tracker_RegistersDocumentNotFoundInCDEWhenNotFoundStatusCodeReturned()
         {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest))
                 .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotFound, content: _content));
 
             try
@@ -113,7 +115,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
         [Fact]
         public async Task Run_Tracker_RegistersFailedToConvertToPdfWhenNotFoundStatusCodeReturned()
         {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest))
                 .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotImplemented, content: _content));
 
             try
@@ -130,7 +132,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
         [Fact]
         public async Task Run_RegistersUnexpectedDocumentFailureWhenCallToGeneratePdfReturnsNonOkResponse()
         {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(It.Is<DurableHttpRequest>(r => r.Method == HttpMethod.Post && r.Uri.OriginalString == _functionEndpoints.GeneratePdf && r.Content == _serializedRequest)))
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest))
                 .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.InternalServerError, content: _content));
 
             try
