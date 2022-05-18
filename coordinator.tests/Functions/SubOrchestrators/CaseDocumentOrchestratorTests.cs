@@ -145,5 +145,22 @@ namespace coordinator.tests.Functions.SubOrchestrators
                 _mockTracker.Verify(tracker => tracker.RegisterUnexpectedDocumentFailure(_payload.DocumentId));
             }
         }
+
+        [Fact]
+        public async Task Run_RegistersUnexpectedDocumentFailureWhenUnhandledExceptionOccurs()
+        {
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest))
+                .ThrowsAsync(new Exception());
+
+            try
+            {
+                await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                Assert.False(true);
+            }
+            catch
+            {
+                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedDocumentFailure(_payload.DocumentId));
+            }
+        }
     }
 }
