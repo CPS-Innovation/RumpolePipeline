@@ -1,12 +1,8 @@
 ﻿using System;
 using common.Wrappers;
 using coordinator.Clients;
-using coordinator.Domain;
 using coordinator.Factories;
 using coordinator.Handlers;
-using GraphQL.Client.Abstractions;
-using GraphQL.Client.Http;
-using GraphQL.Client.Serializer.Newtonsoft;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,11 +19,6 @@ namespace ServerlessPDFConversionDemo
                 .AddEnvironmentVariables()
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .Build();
-
-            builder.Services.AddOptions<FunctionEndpointOptions>().Configure<IConfiguration>((setttings, configuration) =>
-            {
-                configuration.GetSection("functionEndpoints").Bind(setttings);
-            });
 
             builder.Services.AddTransient<IDocumentExtractionClient, DocumentExtractionClientStub>();
             builder.Services.AddTransient<IOnBehalfOfTokenClient, OnBehalfOfTokenClient>();
@@ -49,16 +40,9 @@ namespace ServerlessPDFConversionDemo
 
                 return ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(appOptions).WithAuthority(authority).Build();
             });
-            builder.Services.AddSingleton<IGraphQLClient>(s => new GraphQLHttpClient(GetValueFromConfig(configuration, "CoreDataApiUrl"), new NewtonsoftJsonSerializer()));
             builder.Services.AddTransient<IDefaultAzureCredentialFactory, DefaultAzureCredentialFactory>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
-            builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory>(serviceProvider =>
-            {
-                return new GeneratePdfHttpRequestFactory(
-                    serviceProvider.GetRequiredService<IDefaultAzureCredentialFactory>(),
-                    serviceProvider.GetRequiredService<IJsonConvertWrapper>(),
-                    configuration["PdfGeneratorScope"]);
-            });
+            builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory, GeneratePdfHttpRequestFactory>();
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
         }
 

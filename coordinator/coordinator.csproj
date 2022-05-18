@@ -11,8 +11,6 @@
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.5.1" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.1" />
-    <PackageReference Include="GraphQL.Client" Version="4.0.2" />
-    <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="4.0.2" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Functions\SubOrchestrators\" />
@@ -21,7 +19,6 @@
     <None Remove="Domain\Tracker\" />
     <None Remove="Clients\" />
     <None Remove="GraphQL.Client" />
-    <None Remove="Domain\CoreDataApi\" />
     <None Remove="Factories\" />
     <None Remove="Domain\Exceptions\" />
     <None Remove="Handlers\" />
@@ -44,7 +41,6 @@
     <Folder Include="Domain\Responses\" />
     <Folder Include="Domain\Tracker\" />
     <Folder Include="Clients\" />
-    <Folder Include="Domain\CoreDataApi\" />
     <Folder Include="Factories\" />
     <Folder Include="Domain\Exceptions\" />
     <Folder Include="Handlers\" />

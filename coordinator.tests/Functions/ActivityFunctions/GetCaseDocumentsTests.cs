@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
 using coordinator.Clients;
 using coordinator.Domain;
-using coordinator.Domain.CoreDataApi;
 using coordinator.Domain.DocumentExtraction;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;

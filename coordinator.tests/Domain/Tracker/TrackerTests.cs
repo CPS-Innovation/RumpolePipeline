@@ -235,7 +235,7 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task Run_Tracker_Dispatches()
         {
-            await Tracker.Run(_mockDurableEntityContext.Object);
+            await coordinator.Domain.Tracker.Tracker.Run(_mockDurableEntityContext.Object);
 
             _mockDurableEntityContext.Verify(context => context.DispatchAsync<coordinator.Domain.Tracker.Tracker>());
         }

@@ -16,7 +16,8 @@ resource "azurerm_function_app" "fa_coordinator" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
-    "functionEndpoints__GeneratePdf"          = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
+    "PdfGeneratorUrl"                         = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
+    "PdfGeneratorScope"                       = "api://fa-${local.resource_name}-pdf-generator"
     "CoreDataApiUrl"                          = var.core_data_api_details.api_url
     "CoreDataApiScope"                        = var.core_data_api_details.api_scope
     "OnBehalfOfTokenTenantId"                 = data.azurerm_client_config.current.tenant_id

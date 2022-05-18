@@ -8,6 +8,7 @@ using coordinator.Domain.Requests;
 using coordinator.Domain.Responses;
 using coordinator.Domain.Tracker;
 using coordinator.Factories;
+using coordinator.Functions.ActivityFunctions;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -17,19 +18,13 @@ namespace coordinator.Functions.SubOrchestrators
 {
     public class CaseDocumentOrchestrator
     {
-        private readonly IGeneratePdfHttpRequestFactory _generatePdfHttpRequestFactory;
-        private readonly FunctionEndpointOptions _functionEndpoints;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
         private readonly ILogger<CaseDocumentOrchestrator> _log;
 
         public CaseDocumentOrchestrator(
-            IGeneratePdfHttpRequestFactory generatePdfHttpRequestFactory,
-            IOptions<FunctionEndpointOptions> functionEndpointOptions,
             IJsonConvertWrapper jsonConvertWrapper,
             ILogger<CaseDocumentOrchestrator> log)
         {
-            _generatePdfHttpRequestFactory = generatePdfHttpRequestFactory;
-            _functionEndpoints = functionEndpointOptions.Value;
             _jsonConvertWrapper = jsonConvertWrapper;
             _log = log;
         }
@@ -60,7 +55,9 @@ namespace coordinator.Functions.SubOrchestrators
 
         private async Task<GeneratePdfResponse> CallHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, ITracker tracker)
         {
-            var request = await _generatePdfHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.FileName, new Uri(_functionEndpoints.GeneratePdf));
+            var request = await context.CallActivityAsync<DurableHttpRequest>(
+                nameof(CreateGeneratePdfHttpRequest),
+                new CreateGeneratePdfHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, FileName = payload.FileName });
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
