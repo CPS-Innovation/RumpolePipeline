@@ -18,7 +18,7 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "BlobServiceUrl"                          = "https://sacps${var.env != "prod" ? var.env : ""}rumpolepipeline.blob.core.windows.net/"
     "BlobServiceContainerName"                = "documents"
     "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string,
-    "AuthorizationClaim"                      = azuread_application_app_role.ar_pdf_generator_creator.value
+    "AuthorizationClaim"                      = "application.create" //TODO reference app role value
   }
   site_config {
     always_on      = true
