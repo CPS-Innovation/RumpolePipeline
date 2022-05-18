@@ -147,8 +147,8 @@ namespace coordinator.Domain.Tracker
         }
 
         [FunctionName("Tracker")]
-        public Task Run([EntityTrigger] IDurableEntityContext context)
-        { 
+        public static Task Run([EntityTrigger] IDurableEntityContext context)
+        {
             return context.DispatchAsync<Tracker>();
         }
 

@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using coordinator.Clients;
 using coordinator.Domain;
-using coordinator.Domain.CoreDataApi;
 using coordinator.Domain.DocumentExtraction;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
