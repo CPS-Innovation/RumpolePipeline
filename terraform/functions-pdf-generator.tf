@@ -63,6 +63,7 @@ resource "azuread_application" "fa_pdf_generator" {
     description          = "Creators have the ability to create resources"
     display_name         = "Create"
     enabled              = true
+    id                   = "86CD7E91-7949-47EB-A148-9B81C249C55C"
     value                = "application.create"
   }
 }
