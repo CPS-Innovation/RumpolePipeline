@@ -37,22 +37,22 @@ namespace coordinator.Functions.SubOrchestrators
         [FunctionName("CaseDocumentOrchestrator")]
         public async Task Run([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
+            var payload = context.GetInput<CaseDocumentOrchestrationPayload>();
+            if (payload == null)
+            {
+                throw new ArgumentException("Orchestration payload cannot be null.", nameof(CaseDocumentOrchestrationPayload));
+            }
+
+            var tracker = GetTracker(context, payload.CaseId);
             try
             {
-                var payload = context.GetInput<CaseDocumentOrchestrationPayload>();
-                if (payload == null)
-                {
-                    throw new ArgumentException("Orchestration payload cannot be null.", nameof(CaseDocumentOrchestrationPayload));
-                }
-
-                var tracker = GetTracker(context, payload.CaseId);
-
                 var response = await CallHttpAsync(context, payload, tracker);
 
                 await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = payload.DocumentId, BlobName = response.BlobName });
             }
             catch (Exception exception)
             {
+                await tracker.RegisterUnexpectedDocumentFailure(payload.DocumentId);
                 _log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
                 throw;
             }
@@ -72,9 +72,6 @@ namespace coordinator.Functions.SubOrchestrators
                         break;
                     case HttpStatusCode.NotImplemented:
                         await tracker.RegisterUnableToConvertDocumentToPdf(payload.DocumentId);
-                        break;
-                    default:
-                        await tracker.RegisterUnexpectedDocumentFailure(payload.DocumentId);
                         break;
                 }
                 
