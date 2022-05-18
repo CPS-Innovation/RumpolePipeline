@@ -57,14 +57,14 @@ resource "azuread_application" "fa_pdf_generator" {
       id_token_issuance_enabled     = true
     }
   }
-}
 
-resource "azuread_application_app_role" "ar_pdf_generator_creator" {
-  application_object_id = azuread_application.fa_pdf_generator.id
-  allowed_member_types  = ["Application", "User"]
-  description           = "Creators have the ability to create resources"
-  display_name          = "Create"
-  value                 = "application.create"
+  app_role {
+    allowed_member_types  = ["Application", "User"]
+    description          = "Creators have the ability to create resources"
+    display_name         = "Create"
+    enabled              = true
+    value                = "application.create"
+  }
 }
 
 data "azurerm_function_app_host_keys" "ak_pdf_generator" {
