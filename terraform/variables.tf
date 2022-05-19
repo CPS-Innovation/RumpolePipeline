@@ -16,13 +16,6 @@ variable "app_service_plan_sku" {
   })
 }
 
-variable "core_data_api_details" {
-  type = object({
-    api_url = string
-    api_scope = string
-  })
-}
-
 variable "stub_blob_storage_connection_string" {
   type = string
 }

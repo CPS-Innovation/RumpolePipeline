@@ -35,9 +35,9 @@ namespace coordinator.Factories
                 var credential = _defaultAzureCredentialFactory.Create();
                 var accessToken = await credential.GetTokenAsync(new TokenRequestContext(new[] { _configuration["PdfGeneratorScope"] }));
                 var headers = new Dictionary<string, StringValues>() {
-                { "Content-Type", "application/json" },
-                { "Authorization", $"Bearer {accessToken}"}
-            };
+                    { "Content-Type", "application/json" },
+                    { "Authorization", $"Bearer {accessToken}"}
+                };
                 var content = _jsonConvertWrapper.SerializeObject(
                     new GeneratePdfRequest { CaseId = caseId, DocumentId = documentId, FileName = fileName });
 
