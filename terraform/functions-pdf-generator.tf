@@ -68,6 +68,10 @@ resource "azuread_application" "fa_pdf_generator" {
   }
 }
 
+resource "azuread_service_principal" "fa_pdf_generator" {
+  application_id = azuread_application.fa_pdf_generator.application_id
+}
+
 data "azurerm_function_app_host_keys" "ak_pdf_generator" {
   name                = "fa-${local.resource_name}-pdf-generator"
   resource_group_name = azurerm_resource_group.rg.name
