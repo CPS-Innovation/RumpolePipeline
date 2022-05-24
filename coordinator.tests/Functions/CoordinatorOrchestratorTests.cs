@@ -12,6 +12,7 @@ using coordinator.Functions.ActivityFunctions;
 using coordinator.Functions.SubOrchestrators;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -27,6 +28,7 @@ namespace coordinator.tests.Functions
         private string _transactionId;
         private List<TrackerDocument> _trackerDocuments;
 
+        private Mock<IConfiguration> _mockConfiguration;
         private Mock<ILogger<CoordinatorOrchestrator>> _mockLogger;
         private Mock<IDurableOrchestrationContext> _mockDurableOrchestrationContext;
         private Mock<ITracker> _mockTracker;
@@ -44,9 +46,12 @@ namespace coordinator.tests.Functions
             _transactionId = _fixture.Create<string>();
             _trackerDocuments = _fixture.Create<List<TrackerDocument>>();
 
+            _mockConfiguration = new Mock<IConfiguration>();
             _mockLogger = new Mock<ILogger<CoordinatorOrchestrator>>();
             _mockDurableOrchestrationContext = new Mock<IDurableOrchestrationContext>();
             _mockTracker = new Mock<ITracker>();
+
+            _mockConfiguration.Setup(config => config["CoordinatorOrchestratorTimeoutSecs"]).Returns("300");
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CoordinatorOrchestrationPayload>())
                 .Returns(_payload);
@@ -61,7 +66,7 @@ namespace coordinator.tests.Functions
 
             _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
 
-            CoordinatorOrchestrator = new CoordinatorOrchestrator(_mockLogger.Object);
+            CoordinatorOrchestrator = new CoordinatorOrchestrator(_mockConfiguration.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -204,6 +209,7 @@ namespace coordinator.tests.Functions
         {
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == "accessToken")))
                 .ThrowsAsync(new Exception("Test Exception"));
+
             await Assert.ThrowsAsync<Exception>(() => CoordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object));
         }
 
