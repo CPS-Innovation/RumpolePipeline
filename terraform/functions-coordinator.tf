@@ -21,6 +21,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     "OnBehalfOfTokenTenantId"                 = data.azurerm_client_config.current.tenant_id
     "OnBehalfOfTokenClientId"                 = azuread_application.fa_coordinator.application_id
     "OnBehalfOfTokenClientSecret"             = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_coordinator_client_secret.id})"
+    "CoordinatorOrchestratorTimeoutSecs"      = "600"
   }
   site_config {
     always_on      = true

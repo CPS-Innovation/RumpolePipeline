@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Azure.Core;
 using common.Wrappers;
+using coordinator.Domain.Exceptions;
 using coordinator.Domain.Requests;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
@@ -29,14 +30,13 @@ namespace coordinator.Factories
 
         public async Task<DurableHttpRequest> Create(int caseId, string documentId, string fileName)
         {
-            //TODO test
             try
             {
                 var credential = _defaultAzureCredentialFactory.Create();
                 var accessToken = await credential.GetTokenAsync(new TokenRequestContext(new[] { _configuration["PdfGeneratorScope"] }));
                 var headers = new Dictionary<string, StringValues>() {
                     { "Content-Type", "application/json" },
-                    { "Authorization", $"Bearer {accessToken}"}
+                    { "Authorization", $"Bearer {accessToken.Token}"}
                 };
                 var content = _jsonConvertWrapper.SerializeObject(
                     new GeneratePdfRequest { CaseId = caseId, DocumentId = documentId, FileName = fileName });
@@ -45,8 +45,7 @@ namespace coordinator.Factories
             }
             catch(Exception ex)
             {
-                //TODO change to custom exception
-                throw new Exception(ex.Message);
+                throw new GeneratePdfHttpRequestFactoryException(ex.Message);
             }
         }
 	}

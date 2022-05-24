@@ -19,7 +19,6 @@ namespace coordinator.Functions.ActivityFunctions
         [FunctionName("CreateGeneratePdfHttpRequest")]
         public async Task<DurableHttpRequest> Run([ActivityTrigger] IDurableActivityContext context)
         {
-            //TODO test
             var payload = context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>();
             if (payload == null)
             {
