@@ -70,8 +70,6 @@ data "azurerm_function_app_host_keys" "ak_coordinator" {
   depends_on = [azurerm_function_app.fa_coordinator]
 }
 
-resource "random_uuid" "user_impersonation_scope_id" {}
-
 resource "azuread_application" "fa_coordinator" {
   display_name               = "fa-${local.resource_name}-coordinator"
   identifier_uris            = ["api://fa-${local.resource_name}-coordinator"]
@@ -81,7 +79,7 @@ resource "azuread_application" "fa_coordinator" {
         admin_consent_description  = "Allow an application to access function app on behalf of the signed-in user."
         admin_consent_display_name = "Access function app"
         enabled                    = true
-        id                         = random_uuid.user_impersonation_scope_id.result
+        id                         = var.coordinator_user_impersonation_scope_id
         type                       = "Admin"
         value                      = "user_impersonation"
     }
