@@ -29,6 +29,7 @@ resource "azurerm_key_vault_access_policy" "kvap_fa_pdf_generator" {
     "Get",
   ]
 }
+
 resource "azurerm_key_vault_access_policy" "kvap_terraform_sp" {
   key_vault_id = azurerm_key_vault.kv.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
