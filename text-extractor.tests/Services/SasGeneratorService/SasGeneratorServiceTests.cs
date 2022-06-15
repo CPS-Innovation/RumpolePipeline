@@ -1,4 +1,7 @@
-﻿using AutoFixture;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using AutoFixture;
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -65,7 +68,7 @@ namespace text_extractor.tests.Services.SasGeneratorService
         [Fact]
         public async Task GenerateSasUrl_ReturnsExpectedUri()
         {
-            var response = await SasGeneratorService.GenerateSasUrl(_blobName);
+            var response = await SasGeneratorService.GenerateSasUrlAsync(_blobName);
 
             response.Should().Be(_blobUriBuilder.ToUri().ToString());
         }

@@ -34,7 +34,7 @@ namespace text_extractor.Handlers
                 baseErrorMessage = "Invalid request";
                 statusCode = HttpStatusCode.BadRequest;
             }
-            //this exception is thrown either when generating a sas link or when uploading to search index
+            //this exception is thrown when generating a sas link
             else if (exception is RequestFailedException requestFailedException)
             {
                 baseErrorMessage = "A service request failed exception occurred";

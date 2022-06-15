@@ -4,6 +4,6 @@ namespace text_extractor.Services.SasGeneratorService
 {
     public interface ISasGeneratorService
     {
-        Task<string> GenerateSasUrl(string blobName);
+        Task<string> GenerateSasUrlAsync(string blobName);
     }
 }

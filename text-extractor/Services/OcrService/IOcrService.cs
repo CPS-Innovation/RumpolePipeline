@@ -5,7 +5,7 @@ namespace text_extractor.Services.OcrService
 {
 	public interface IOcrService
 	{
-		Task<AnalyzeResults> GetOcrResults(string blobName);
+		Task<AnalyzeResults> GetOcrResultsAsync(string blobName);
 	}
 }
 

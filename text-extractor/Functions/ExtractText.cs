@@ -62,8 +62,8 @@ namespace text_extractor.Functions.ProcessDocument
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
                 }
 
-                var ocrResults = await _ocrService.GetOcrResults(extractTextRequest.BlobName);
-                await _searchIndexService.StoreResults(ocrResults, extractTextRequest.CaseId, extractTextRequest.DocumentId);
+                var ocrResults = await _ocrService.GetOcrResultsAsync(extractTextRequest.BlobName);
+                await _searchIndexService.StoreResultsAsync(ocrResults, extractTextRequest.CaseId, extractTextRequest.DocumentId);
 
                 return new HttpResponseMessage(HttpStatusCode.OK);
             }

@@ -26,7 +26,7 @@ namespace text_extractor.Services.SasGeneratorService
             _blobOptions = blobOptions.Value;
         }
 
-        public async Task<string> GenerateSasUrl(string blobName)
+        public async Task<string> GenerateSasUrlAsync(string blobName)
         {
             var now = DateTimeOffset.UtcNow;
             var userDelegationKey = await _blobServiceClient.GetUserDelegationKeyAsync(now, now.AddSeconds(_blobOptions.UserDelegationKeyExpirySecs));

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using AutoFixture;
 using common.Domain.Exceptions;
 using common.Handlers;
@@ -65,7 +67,7 @@ namespace pdf_generator.tests.Functions
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<ExtractTextRequest>(_serializedExtractTextRequest))
 				.Returns(_extractTextRequest);
 			_mockValidatorWrapper.Setup(wrapper => wrapper.Validate(_extractTextRequest)).Returns(new List<ValidationResult>());
-			_mockOcrService.Setup(service => service.GetOcrResults(_extractTextRequest.BlobName))
+			_mockOcrService.Setup(service => service.GetOcrResultsAsync(_extractTextRequest.BlobName))
 				.ReturnsAsync(_mockAnalyzeResults.Object);
 
 			ExtractText = new ExtractText(
@@ -110,7 +112,7 @@ namespace pdf_generator.tests.Functions
 		{
 			await ExtractText.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
 
-			_mockSearchIndexService.Verify(service => service.StoreResults(_mockAnalyzeResults.Object, _extractTextRequest.CaseId, _extractTextRequest.DocumentId));
+			_mockSearchIndexService.Verify(service => service.StoreResultsAsync(_mockAnalyzeResults.Object, _extractTextRequest.CaseId, _extractTextRequest.DocumentId));
 		}
 
 		[Fact]

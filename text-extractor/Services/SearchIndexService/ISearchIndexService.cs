@@ -5,7 +5,7 @@ namespace text_extractor.Services.SearchIndexService
 {
 	public interface ISearchIndexService
 	{
-		Task StoreResults(AnalyzeResults analyzeresults, int caseId, string documentId);
+		Task StoreResultsAsync(AnalyzeResults analyzeresults, int caseId, string documentId);
 	}
 }
 

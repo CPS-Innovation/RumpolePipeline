@@ -9,61 +9,51 @@ using Azure;
 using Azure.Search.Documents;
 using Azure.Core.Serialization;
 using text_extractor.Domain;
+using text_extractor.Factories;
 
 namespace text_extractor.Services.SearchIndexService
 {
     public class SearchIndexService : ISearchIndexService
     {
         private readonly SearchIndexOptions _searchIndexOptions;
-        private readonly SearchIndexClient _indexClient;
+        private readonly SearchIndexClient _searchIndexClient;
+        private readonly ISearchLineFactory _searchLineFactory;
+        private readonly ISearchIndexingBufferedSenderFactory _searchIndexingBufferedSenderFactory;
 
-        public SearchIndexService(IOptions<SearchIndexOptions> indexOptions)
+        public SearchIndexService(
+            ISearchIndexClientFactory searchIndexClientFactory,
+            ISearchLineFactory searchLineFactory,
+            ISearchIndexingBufferedSenderFactory searchIndexingBufferedSenderFactory)
         {
-            _searchIndexOptions = indexOptions.Value;
-
-            _indexClient = new SearchIndexClient(
-                new Uri(_searchIndexOptions.EndpointUrl),
-                new AzureKeyCredential(_searchIndexOptions.AuthorizationKey),
-                new SearchClientOptions { Serializer = new NewtonsoftJsonObjectSerializer() });
-
+            _searchIndexClient = searchIndexClientFactory.Create();
+            _searchLineFactory = searchLineFactory;
+            _searchIndexingBufferedSenderFactory = searchIndexingBufferedSenderFactory;
         }
 
-        public async Task StoreResults(AnalyzeResults analyzeresults, int caseId, string documentId)
+        public async Task StoreResultsAsync(AnalyzeResults analyzeResults, int caseId, string documentId)
         {
             var lines = new List<SearchLine>();
-
-            foreach (var readResult in analyzeresults.ReadResults)
+            foreach (var readResult in analyzeResults.ReadResults)
             {
-                //TODO search line factory with tests
-                lines.AddRange(readResult.Lines.Select((line, index) => new SearchLine
-                {
-                    Id = $"{caseId}-{documentId}-{readResult.Page}-{index}",
-                    CaseId = caseId,
-                    DocumentId = documentId,
-                    PageIndex = readResult.Page,
-                    LineIndex = index,
-                    Language = line.Language,
-                    BoundingBox = line.BoundingBox,
-                    Appearance = line.Appearance,
-                    Text = line.Text,
-                    Words = line.Words
-                }));
+                lines.AddRange(readResult.Lines.Select((line, index) =>
+                                    _searchLineFactory.Create(caseId, documentId, readResult, line, index)));
             }
 
-            var searchClient = _indexClient.GetSearchClient(_searchIndexOptions.IndexName);
+            var searchClient = _searchIndexClient.GetSearchClient(_searchIndexOptions.IndexName);
+            using var indexer = _searchIndexingBufferedSenderFactory.Create(searchClient);
 
-            //TODO search indexing factory
-            using var indexer = new SearchIndexingBufferedSender<SearchLine>(searchClient, new SearchIndexingBufferedSenderOptions<SearchLine>
-            {
-                KeyFieldAccessor = searchLine => searchLine.Id
-            });
-
+            var failCount = 0;
             indexer.ActionFailed += async (arg) =>
             {
-                //TODO what to do here? just log?
+                failCount++;
+                //TODO what to do here? just log? fail completely if all fail? Speak to Stef
                 var exception = arg.Exception == null ? "No exception" : arg.Exception.Message;
                 var result = arg.Result == null ? "No result" : "Result";
                 await Console.Out.WriteLineAsync($"Failed {exception}, {result}");
+                //if (failCount == lines.Count)
+                //{
+                //    throw new RequestFailedException("All search index actions failed.");
+                //}
             };
 
             await indexer.UploadDocumentsAsync(lines);
