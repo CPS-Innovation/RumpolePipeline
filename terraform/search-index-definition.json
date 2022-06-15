@@ -31,7 +31,7 @@
     },
     {
       "name": "documentId",
-      "type": "Edm.Int64",
+      "type": "Edm.String",
       "facetable": false,
       "filterable": true,
       "retrievable": true,
@@ -188,37 +188,7 @@
       ]
     },
     {
-      "name": "rid",
-      "type": "Edm.String",
-      "facetable": false,
-      "filterable": false,
-      "key": false,
-      "retrievable": false,
-      "searchable": false,
-      "sortable": false,
-      "analyzer": null,
-      "indexAnalyzer": null,
-      "searchAnalyzer": null,
-      "synonymMaps": [],
-      "fields": []
-    },
-    {
       "name": "language",
-      "type": "Edm.String",
-      "facetable": false,
-      "filterable": false,
-      "key": false,
-      "retrievable": false,
-      "searchable": false,
-      "sortable": false,
-      "analyzer": null,
-      "indexAnalyzer": null,
-      "searchAnalyzer": null,
-      "synonymMaps": [],
-      "fields": []
-    },
-    {
-      "name": "transactionId",
       "type": "Edm.String",
       "facetable": false,
       "filterable": false,
