@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace pdf_generator.Wrappers
+namespace common.Wrappers
 {
     public class ValidatorWrapper<TRequest> : IValidatorWrapper<TRequest>
     {

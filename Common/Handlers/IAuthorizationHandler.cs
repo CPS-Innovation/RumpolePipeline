@@ -1,7 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Security.Claims;
 
-namespace pdf_generator.Handlers
+namespace common.Handlers
 {
     public interface IAuthorizationHandler
     {

@@ -7,18 +7,17 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using common.Domain.Exceptions;
+using common.Handlers;
 using common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using pdf_generator.Domain;
-using pdf_generator.Domain.Exceptions;
 using pdf_generator.Domain.Requests;
 using pdf_generator.Domain.Responses;
 using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
 using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.PdfService;
-using pdf_generator.Wrappers;
 
 namespace pdf_generator.Functions
 {

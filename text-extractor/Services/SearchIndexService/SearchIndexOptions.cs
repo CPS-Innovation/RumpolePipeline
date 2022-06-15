@@ -1,9 +1,7 @@
-namespace Services.SearchDataStorageService
+﻿namespace text_extractor.Services.SearchIndexService
 {
-    public class SearchDataIndexOptions
-    {
-        public bool Enabled { get; set; }
-        
+    public class SearchIndexOptions
+    {        
         public string EndpointUrl { get; set; }
 
         public string AuthorizationKey { get; set; }

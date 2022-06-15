@@ -1,16 +1,14 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
 using Azure;
 using common.Domain.Exceptions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using pdf_generator.Domain.Exceptions;
-using pdf_generator.Handlers;
+using text_extractor.Domain.Exceptions;
+using text_extractor.Handlers;
 using Xunit;
 
-namespace pdf_generator.tests.Handlers
+namespace text_extractor.tests.Handlers
 {
     public class ExceptionHandlerTests
     {
@@ -38,33 +36,6 @@ namespace pdf_generator.tests.Handlers
             var httpResponseMessage = ExceptionHandler.HandleException(new BadRequestException("Test bad request exception", "id"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        [Fact]
-        public void HandleException_ReturnsBadRequestWhenFileTypeNotSupportedExceptionOccurs()
-        {
-            var httpResponseMessage = ExceptionHandler.HandleException(new UnsupportedFileTypeException("Test file type"));
-
-            httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        [Fact]
-        public void HandleException_ReturnsInternalServerErrorWhenHttpExceptionWithBadRequestOccurs()
-        {
-            var httpResponseMessage = ExceptionHandler.HandleException(
-                new HttpException(HttpStatusCode.BadRequest, new HttpRequestException()));
-
-            httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        }
-
-        [Fact]
-        public void HandleException_ReturnsExpectedStatusCodeWhenHttpExceptionOccurs()
-        {
-            var expectedStatusCode = HttpStatusCode.ExpectationFailed;
-            var httpResponseMessage = ExceptionHandler.HandleException(
-                new HttpException(expectedStatusCode, new HttpRequestException()));
-
-            httpResponseMessage.StatusCode.Should().Be(expectedStatusCode);
         }
 
         [Fact]
@@ -96,11 +67,11 @@ namespace pdf_generator.tests.Handlers
         }
 
         [Fact]
-        public void HandleException_ReturnsNotImplementedWhenFailedToConvertToPdfExceptionOccurs()
+        public void HandleException_ReturnsInternalServerErrorWhenOcrServiceExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new PdfConversionException("Test id", "Test message"));
+            var httpResponseMessage = ExceptionHandler.HandleException(new OcrServiceException("Test message"));
 
-            httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.NotImplemented);
+            httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
 
         [Fact]

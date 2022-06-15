@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace pdf_generator.Wrappers
+namespace common.Wrappers
 {
     public interface IValidatorWrapper<TRequest>
     {

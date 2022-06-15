@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using Azure.Identity;
 using Azure.Storage.Blobs;
+using common.Handlers;
 using common.Wrappers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
@@ -14,7 +15,6 @@ using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
 using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.PdfService;
-using pdf_generator.Wrappers;
 
 [assembly: FunctionsStartup(typeof(pdf_generator.Startup))]
 namespace pdf_generator

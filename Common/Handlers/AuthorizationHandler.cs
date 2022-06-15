@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 
-namespace pdf_generator.Handlers
+namespace common.Handlers
 {
     public class AuthorizationHandler : IAuthorizationHandler
     {

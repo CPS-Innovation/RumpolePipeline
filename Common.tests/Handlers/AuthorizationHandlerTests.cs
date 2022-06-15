@@ -3,12 +3,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using AutoFixture;
+using common.Handlers;
 using FluentAssertions;
 using Moq;
-using pdf_generator.Handlers;
 using Xunit;
 
-namespace pdf_generator.tests.Handlers
+namespace common.tests.Handlers
 {
     public class AuthorizationHandlerTests
     {

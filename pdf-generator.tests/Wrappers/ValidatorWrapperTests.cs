@@ -1,7 +1,7 @@
 ﻿using AutoFixture;
+using common.Wrappers;
 using FluentAssertions;
 using pdf_generator.Domain.Requests;
-using pdf_generator.Wrappers;
 using Xunit;
 
 namespace pdf_generator.tests.Wrappers
@@ -21,7 +21,7 @@ namespace pdf_generator.tests.Wrappers
         [InlineData("UNUSED 1 - STORM LOG 1881 01.6.20 - EDITED 2020-11-23 MCLOVE.docx")]
         [InlineData("SDC items to be Disclosed (1-6) MCLOVE.docx")]
         [InlineData("!@£$%^&*().docx")]
-        public void Validate_GeneratePdfRequest_ReturnsNonEmptyValidationResultsWhenFileNameIsValid(string fileName)
+        public void Validate_GeneratePdfRequest_ReturnsEmptyValidationResultsWhenFileNameIsValid(string fileName)
         {
             var request = _fixture.Build<GeneratePdfRequest>()
                             .With(r => r.FileName, fileName)

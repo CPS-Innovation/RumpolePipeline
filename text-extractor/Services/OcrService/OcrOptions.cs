@@ -1,4 +1,4 @@
-namespace Services.OcrService
+﻿namespace text_extractor.Services.OcrService
 {
   public class OcrOptions
   {
