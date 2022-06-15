@@ -28,9 +28,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     ip_restriction = []
 
     cors {
-      allowed_origins = [
-        "https://${local.app_name}.azurewebsites.net"
-      ]
+      allowed_origins = []
     }
   }
 
