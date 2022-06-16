@@ -2,12 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using Microsoft.Extensions.Options;
 using System;
 using Azure.Search.Documents.Indexes;
-using Azure;
-using Azure.Search.Documents;
-using Azure.Core.Serialization;
 using text_extractor.Domain;
 using text_extractor.Factories;
 
@@ -46,7 +42,7 @@ namespace text_extractor.Services.SearchIndexService
             indexer.ActionFailed += async (arg) =>
             {
                 failCount++;
-                //TODO what to do here? just log? fail completely if all fail? Speak to Stef
+                //TODO what to do here? just log? fail completely if all fail?
                 var exception = arg.Exception == null ? "No exception" : arg.Exception.Message;
                 var result = arg.Result == null ? "No result" : "Result";
                 await Console.Out.WriteLineAsync($"Failed {exception}, {result}");
