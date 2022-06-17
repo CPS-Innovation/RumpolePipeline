@@ -3,25 +3,25 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using System;
-using Azure.Search.Documents.Indexes;
 using text_extractor.Domain;
 using text_extractor.Factories;
+using Azure.Search.Documents;
 
 namespace text_extractor.Services.SearchIndexService
 {
     public class SearchIndexService : ISearchIndexService
     {
         private readonly SearchIndexOptions _searchIndexOptions;
-        private readonly SearchIndexClient _searchIndexClient;
+        private readonly SearchClient _searchClient;
         private readonly ISearchLineFactory _searchLineFactory;
         private readonly ISearchIndexingBufferedSenderFactory _searchIndexingBufferedSenderFactory;
 
         public SearchIndexService(
-            ISearchIndexClientFactory searchIndexClientFactory,
+            ISearchClientFactory searchClientFactory,
             ISearchLineFactory searchLineFactory,
             ISearchIndexingBufferedSenderFactory searchIndexingBufferedSenderFactory)
         {
-            _searchIndexClient = searchIndexClientFactory.Create();
+            _searchClient = searchClientFactory.Create();
             _searchLineFactory = searchLineFactory;
             _searchIndexingBufferedSenderFactory = searchIndexingBufferedSenderFactory;
         }
@@ -35,8 +35,7 @@ namespace text_extractor.Services.SearchIndexService
                                     _searchLineFactory.Create(caseId, documentId, readResult, line, index)));
             }
 
-            var searchClient = _searchIndexClient.GetSearchClient(_searchIndexOptions.IndexName);
-            using var indexer = _searchIndexingBufferedSenderFactory.Create(searchClient);
+            using var indexer = _searchIndexingBufferedSenderFactory.Create(_searchClient);
 
             var failCount = 0;
             indexer.ActionFailed += async (arg) =>

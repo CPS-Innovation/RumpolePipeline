@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
+﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Extensions.Options;
 using text_extractor.Services.OcrService;
 
