@@ -18,13 +18,13 @@ namespace text_extractor.tests.Services.SearchIndexService
 	public class SearchIndexServiceTests
 	{
 		private Fixture _fixture;
-		private SearchIndexOptions _searchIndexOptions;
+		private Domain.SearchClientOptions _searchClientOptions;
 		private AnalyzeResults _analyzeResults;
 		private int _caseId;
 		private string _documentId;
 		private SearchLine _searchLine;
 
-		private Mock<IOptions<SearchIndexOptions>> _mockSearchIndexOptions;
+		private Mock<IOptions<Domain.SearchClientOptions>> _mockSearchClientOptions;
 		private Mock<ISearchClientFactory> _mockSearchClientFactory;
 		private Mock<ISearchLineFactory> _mockSearchLineFactory;
 		private Mock<ISearchIndexingBufferedSenderFactory> _mockSearchIndexingBufferedSenderFactory;
@@ -36,20 +36,20 @@ namespace text_extractor.tests.Services.SearchIndexService
 		public SearchIndexServiceTests()
 		{
 			_fixture = new Fixture();
-			_searchIndexOptions = _fixture.Create<SearchIndexOptions>();
+            _searchClientOptions = _fixture.Create<Domain.SearchClientOptions>();
 			_analyzeResults = new AnalyzeResults();//TODO
 			_caseId = _fixture.Create<int>();
 			_documentId = _fixture.Create<string>();
 			_searchLine = _fixture.Create<SearchLine>();
 
-			_mockSearchIndexOptions = new Mock<IOptions<SearchIndexOptions>>();
+            _mockSearchClientOptions = new Mock<IOptions<Domain.SearchClientOptions>>();
 			_mockSearchClientFactory = new Mock<ISearchClientFactory>();
 			_mockSearchLineFactory = new Mock<ISearchLineFactory>();
 			_mockSearchIndexingBufferedSenderFactory = new Mock<ISearchIndexingBufferedSenderFactory>();
 			_mockSearchClient = new Mock<SearchClient>();
 			_mockSearchIndexingBufferedSender = new Mock<SearchIndexingBufferedSender<SearchLine>>();
 
-			_mockSearchIndexOptions.Setup(options => options.Value).Returns(_searchIndexOptions);
+			_mockSearchClientOptions.Setup(options => options.Value).Returns(_searchClientOptions);
 			_mockSearchClientFactory.Setup(factory => factory.Create()).Returns(_mockSearchClient.Object);
 			_mockSearchLineFactory.Setup(factory => factory.Create(_caseId, _documentId, It.IsAny<ReadResult>(), It.IsAny<Line>(), It.IsAny<int>())) //TODO read result, line and index
 				.Returns(_searchLine);

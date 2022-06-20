@@ -3,15 +3,14 @@ using Azure;
 using Azure.Core.Serialization;
 using Azure.Search.Documents;
 using Microsoft.Extensions.Options;
-using text_extractor.Services.SearchIndexService;
 
 namespace text_extractor.Factories
 {
 	public class SearchClientFactory : ISearchClientFactory
 	{
-        private readonly SearchIndexOptions _options;
+        private readonly Domain.SearchClientOptions _options;
 
-        public SearchClientFactory(IOptions<SearchIndexOptions> options)
+        public SearchClientFactory(IOptions<Domain.SearchClientOptions> options)
         {
             _options = options.Value;
         }

@@ -1,14 +1,14 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Extensions.Options;
-using text_extractor.Services.OcrService;
+using text_extractor.Domain;
 
 namespace text_extractor.Factories
 {
 	public class ComputerVisionClientFactory : IComputerVisionClientFactory
 	{
-        private readonly OcrOptions _options;
+        private readonly ComputerVisionClientOptions _options;
 
-        public ComputerVisionClientFactory(IOptions<OcrOptions> options)
+        public ComputerVisionClientFactory(IOptions<ComputerVisionClientOptions> options)
         {
             _options = options.Value;
         }

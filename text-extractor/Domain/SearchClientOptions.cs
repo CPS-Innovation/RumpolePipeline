@@ -1,6 +1,6 @@
-﻿namespace text_extractor.Services.SearchIndexService
+﻿namespace text_extractor.Domain
 {
-    public class SearchIndexOptions
+    public class SearchClientOptions
     {        
         public string EndpointUrl { get; set; }
 

@@ -14,6 +14,7 @@ using text_extractor.Factories;
 using text_extractor.Wrappers;
 using Azure.Identity;
 using System;
+using text_extractor.Domain;
 
 [assembly: FunctionsStartup(typeof(text_extractor.Startup))]
 namespace text_extractor
@@ -27,11 +28,11 @@ namespace text_extractor
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            builder.Services.AddOptions<OcrOptions>().Configure<IConfiguration>((setttings, configuration) =>
+            builder.Services.AddOptions<ComputerVisionClientOptions>().Configure<IConfiguration>((setttings, configuration) =>
             {
                 configuration.GetSection("ocrService").Bind(setttings);
             });
-            builder.Services.AddOptions<SearchIndexOptions>().Configure<IConfiguration>((setttings, configuration) =>
+            builder.Services.AddOptions<SearchClientOptions>().Configure<IConfiguration>((setttings, configuration) =>
             {
                 configuration.GetSection("searchIndexService").Bind(setttings);
             });

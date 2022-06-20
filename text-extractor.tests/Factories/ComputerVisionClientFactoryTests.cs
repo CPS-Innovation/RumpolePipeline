@@ -3,8 +3,8 @@ using FluentAssertions;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Extensions.Options;
 using Moq;
+using text_extractor.Domain;
 using text_extractor.Factories;
-using text_extractor.Services.OcrService;
 using Xunit;
 
 namespace text_extractor.tests.Factories
@@ -12,22 +12,22 @@ namespace text_extractor.tests.Factories
 	public class ComputerVisionClientFactoryTests
 	{
 		private Fixture _fixture;
-		private OcrOptions _ocrOptions;
+		private ComputerVisionClientOptions _computerVisionClientOptions;
 
-		private Mock<IOptions<OcrOptions>> _mockOcrOptions;
+		private Mock<IOptions<ComputerVisionClientOptions>> _mockComputerVisionClientOptions;
 
 		private IComputerVisionClientFactory ComputerVisionClientFactory;
 
 		public ComputerVisionClientFactoryTests()
 		{
 			_fixture = new Fixture();
-			_ocrOptions = _fixture.Create<OcrOptions>();
+			_computerVisionClientOptions = _fixture.Create<ComputerVisionClientOptions>();
 
-			_mockOcrOptions = new Mock<IOptions<OcrOptions>>();
+			_mockComputerVisionClientOptions = new Mock<IOptions<ComputerVisionClientOptions>>();
 
-			_mockOcrOptions.Setup(options => options.Value).Returns(_ocrOptions);
+			_mockComputerVisionClientOptions.Setup(options => options.Value).Returns(_computerVisionClientOptions);
 
-			ComputerVisionClientFactory = new ComputerVisionClientFactory(_mockOcrOptions.Object);
+			ComputerVisionClientFactory = new ComputerVisionClientFactory(_mockComputerVisionClientOptions.Object);
 		}
 
         [Fact]
@@ -43,7 +43,7 @@ namespace text_extractor.tests.Factories
 		{
 			var client = ComputerVisionClientFactory.Create();
 
-			client.Endpoint.Should().Be(_ocrOptions.ServiceUrl);
+			client.Endpoint.Should().Be(_computerVisionClientOptions.ServiceUrl);
 		}
 	}
 }

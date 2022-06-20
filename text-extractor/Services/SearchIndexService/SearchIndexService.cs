@@ -11,7 +11,6 @@ namespace text_extractor.Services.SearchIndexService
 {
     public class SearchIndexService : ISearchIndexService
     {
-        private readonly SearchIndexOptions _searchIndexOptions;
         private readonly SearchClient _searchClient;
         private readonly ISearchLineFactory _searchLineFactory;
         private readonly ISearchIndexingBufferedSenderFactory _searchIndexingBufferedSenderFactory;

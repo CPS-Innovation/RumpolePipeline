@@ -4,7 +4,6 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
 using text_extractor.Factories;
-using text_extractor.Services.SearchIndexService;
 using Xunit;
 
 namespace text_extractor.tests.Factories
@@ -12,24 +11,24 @@ namespace text_extractor.tests.Factories
 	public class SearchClientFactoryTests
 	{
 		private Fixture _fixture;
-		private SearchIndexOptions _searchIndexOptions;
+		private Domain.SearchClientOptions _searchClientOptions;
 
-		private Mock<IOptions<SearchIndexOptions>> _mockSearchIndexOptions;
+		private Mock<IOptions<Domain.SearchClientOptions>> _mockSearchClientOptions;
 
 		private ISearchClientFactory SearchClientFactory;
 
 		public SearchClientFactoryTests()
 		{
 			_fixture = new Fixture();
-			_searchIndexOptions = _fixture.Build<SearchIndexOptions>()
+			_searchClientOptions = _fixture.Build<Domain.SearchClientOptions>()
 									.With(o => o.EndpointUrl, "https://www.google.co.uk")
 									.Create();
 
-			_mockSearchIndexOptions = new Mock<IOptions<SearchIndexOptions>>();
+            _mockSearchClientOptions = new Mock<IOptions<Domain.SearchClientOptions>>();
 
-			_mockSearchIndexOptions.Setup(options => options.Value).Returns(_searchIndexOptions);
+			_mockSearchClientOptions.Setup(options => options.Value).Returns(_searchClientOptions);
 
-			SearchClientFactory = new SearchClientFactory(_mockSearchIndexOptions.Object);
+			SearchClientFactory = new SearchClientFactory(_mockSearchClientOptions.Object);
 		}
 
 		[Fact]
@@ -45,7 +44,7 @@ namespace text_extractor.tests.Factories
 		{
 			var searchClient = SearchClientFactory.Create();
 
-			searchClient.Endpoint.Should().Be(_searchIndexOptions.EndpointUrl);
+			searchClient.Endpoint.Should().Be(_searchClientOptions.EndpointUrl);
 		}
 
 		[Fact]
@@ -53,7 +52,7 @@ namespace text_extractor.tests.Factories
 		{
 			var searchClient = SearchClientFactory.Create();
 
-			searchClient.IndexName.Should().Be(_searchIndexOptions.IndexName);
+			searchClient.IndexName.Should().Be(_searchClientOptions.IndexName);
 		}
 	}
 }
