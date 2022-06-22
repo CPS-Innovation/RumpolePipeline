@@ -17,8 +17,6 @@
     <None Remove="AutoFixture" />
     <None Remove="Handlers\" />
     <None Remove="Functions\" />
-    <None Remove="Services\OcrService\" />
-    <None Remove="Services\SearchIndexService\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
@@ -34,7 +32,5 @@
   <ItemGroup>
     <Folder Include="Handlers\" />
     <Folder Include="Functions\" />
-    <Folder Include="Services\OcrService\" />
-    <Folder Include="Services\SearchIndexService\" />
   </ItemGroup>
 </Project>

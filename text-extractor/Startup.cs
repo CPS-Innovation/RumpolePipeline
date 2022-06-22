@@ -30,11 +30,11 @@ namespace text_extractor
 
             builder.Services.AddOptions<ComputerVisionClientOptions>().Configure<IConfiguration>((setttings, configuration) =>
             {
-                configuration.GetSection("ocrService").Bind(setttings);
+                configuration.GetSection("computerVisionClient").Bind(setttings);
             });
             builder.Services.AddOptions<SearchClientOptions>().Configure<IConfiguration>((setttings, configuration) =>
             {
-                configuration.GetSection("searchIndexService").Bind(setttings);
+                configuration.GetSection("searchClient").Bind(setttings);
             });
             builder.Services.AddOptions<BlobOptions>().Configure<IConfiguration>((setttings, configuration) =>
             {

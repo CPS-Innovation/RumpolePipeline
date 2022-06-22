@@ -16,20 +16,15 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
-
-    "ocrService__ServiceUrl"                   = azurerm_cognitive_account.computer_vision_service.endpoint
-    "ocrService__ServiceKey"                   = azurerm_cognitive_account.computer_vision_service.primary_access_key
-
-    "searchDataStorage__EndpointUrl"           = azurerm_cosmosdb_account.cdba.endpoint
-    "searchDataStorage__AuthorizationKey"      = azurerm_cosmosdb_account.cdba.primary_key
-    "searchDataStorage__DatabaseName"          = azurerm_cosmosdb_sql_database.cdb.name
-    "searchDataStorage__ContainerName"         = azurerm_cosmosdb_sql_container.cdbdc.name
-    "searchDataStorage__Enabled"               = "false"
-
-    "searchDataIndex__EndpointUrl"             = "https://${azurerm_search_service.ss.name}.search.windows.net"
-    "searchDataIndex__AuthorizationKey"        = azurerm_search_service.ss.primary_key
-    "searchDataIndex__IndexName"               = jsondecode(file("search-index-definition.json")).name
-    "searchDataIndex__Enabled"                 = "true"
+    "computerVisionClient__ServiceUrl"         = azurerm_cognitive_account.computer_vision_service.endpoint
+    "computerVisionClient__ServiceKey"         = azurerm_cognitive_account.computer_vision_service.primary_access_key
+    "searchClient__EndpointUrl"                = "https://${azurerm_search_service.ss.name}.search.windows.net"
+    "searchClient__AuthorizationKey"           = azurerm_search_service.ss.primary_key
+    "searchClient__IndexName"                  = jsondecode(file("search-index-definition.json")).name
+    "BlobServiceClientUrl"                     = azurerm_storage_account.sa.primary_blob_endpoint
+    "blob__BlobContainerName"                  = azurerm_storage_container.container.name
+    "blob__BlobExpirySecs"                     = 3600
+    "blob__UserDelegationKeyExpirySecs"        = 3600
   }
   site_config {
     always_on      = true

@@ -30,7 +30,7 @@ namespace text_extractor.Services.OcrService
                 var textHeaders = await _computerVisionClient.ReadAsync(sasLink);
 
                 string operationLocation = textHeaders.OperationLocation;
-                await Task.Delay(500); //TODO do we need this?
+                await Task.Delay(500);
 
                 const int numberOfCharsInOperationId = 36;
                 string operationId = operationLocation.Substring(operationLocation.Length - numberOfCharsInOperationId);
