@@ -26,7 +26,6 @@
   <ItemGroup>
     <None Remove="Domain\Requests\" />
     <None Remove="Domain\Responses\" />
-    <None Remove="Wrappers\" />
     <None Remove="Handlers\" />
     <None Remove="Domain\Exceptions\" />
     <None Remove="Services\DocumentExtractionService\" />
@@ -55,7 +54,6 @@
   <ItemGroup>
     <Folder Include="Domain\Requests\" />
     <Folder Include="Domain\Responses\" />
-    <Folder Include="Wrappers\" />
     <Folder Include="Handlers\" />
     <Folder Include="Domain\Exceptions\" />
     <Folder Include="Services\DocumentExtractionService\" />

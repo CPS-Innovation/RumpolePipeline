@@ -1,58 +1,63 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using Microsoft.Extensions.Options;
+using text_extractor.Domain.Exceptions;
+using text_extractor.Factories;
+using text_extractor.Services.SasGeneratorService;
 
-namespace Services.OcrService
+namespace text_extractor.Services.OcrService
 {
-    public class OcrService
+    public class OcrService : IOcrService
     {
         private readonly ComputerVisionClient _computerVisionClient;
+        private readonly ISasGeneratorService _sasGeneratorService;
 
-        public OcrService(IOptions<OcrOptions> ocrOptions)
+        public OcrService(
+            IComputerVisionClientFactory computerVisionClientFactory,
+            ISasGeneratorService sasGeneratorService)
         {
-            _computerVisionClient = Authenticate(ocrOptions.Value.ServiceUrl, ocrOptions.Value.ServiceKey);
+            _computerVisionClient = computerVisionClientFactory.Create();
+            _sasGeneratorService = sasGeneratorService;
         }
 
-        private ComputerVisionClient Authenticate(string endpoint, string key)
+        public async Task<AnalyzeResults> GetOcrResultsAsync(string blobName)
         {
-            var client =
-              new ComputerVisionClient(new ApiKeyServiceClientCredentials(key))
-              { Endpoint = endpoint, };
-            return client;
-        }
+            var sasLink = await _sasGeneratorService.GenerateSasUrlAsync(blobName);
 
-        public async Task<AnalyzeResults> GetOcrResults(string url)
-        {
-            var textHeaders = await _computerVisionClient.ReadAsync(url);
-
-            string operationLocation = textHeaders.OperationLocation;
-            await Task.Delay(500);
-
-            const int numberOfCharsInOperationId = 36;
-            string operationId = operationLocation.Substring(operationLocation.Length - numberOfCharsInOperationId);
-
-            ReadOperationResult results;
-
-            while (true)
+            try
             {
-                results = await _computerVisionClient.GetReadResultAsync(Guid.Parse(operationId));
+                var textHeaders = await _computerVisionClient.ReadAsync(sasLink);
 
-                if (results.Status == OperationStatusCodes.Running ||
-                    results.Status == OperationStatusCodes.NotStarted)
+                string operationLocation = textHeaders.OperationLocation;
+                await Task.Delay(500);
+
+                const int numberOfCharsInOperationId = 36;
+                string operationId = operationLocation.Substring(operationLocation.Length - numberOfCharsInOperationId);
+
+                ReadOperationResult results;
+
+                while (true)
                 {
-                    await Task.Delay(500);
+                    results = await _computerVisionClient.GetReadResultAsync(Guid.Parse(operationId));
+
+                    if (results.Status == OperationStatusCodes.Running ||
+                        results.Status == OperationStatusCodes.NotStarted)
+                    {
+                        await Task.Delay(500);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
-                {
-                    break;
-                }
+
+                return results.AnalyzeResult;
             }
-
-
-            return results.AnalyzeResult;
+            catch(Exception ex)
+            {
+                throw new OcrServiceException(ex.Message);
+            }
         }
     }
 }

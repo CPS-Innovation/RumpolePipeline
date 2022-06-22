@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoFixture;
 using common.Domain.Exceptions;
+using common.Handlers;
 using common.Wrappers;
 using FluentAssertions;
 using Moq;
@@ -19,7 +20,6 @@ using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
 using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.PdfService;
-using pdf_generator.Wrappers;
 using Xunit;
 
 namespace pdf_generator.tests.Functions
@@ -34,7 +34,6 @@ namespace pdf_generator.tests.Functions
 		private Stream _documentStream;
 		private Stream _pdfStream;
 		private string _serializedGeneratePdfResponse;
-		private HttpResponseMessage _httpResponseMessage;
 		private HttpResponseMessage _errorHttpResponseMessage;
 		private string _errorMessage;
 
@@ -64,7 +63,6 @@ namespace pdf_generator.tests.Functions
 			_documentStream = new MemoryStream();
 			_pdfStream = new MemoryStream();
 			_serializedGeneratePdfResponse = _fixture.Create<string>();
-			_httpResponseMessage = new HttpResponseMessage();
 			_errorMessage = _fixture.Create<string>();
 
 			_mockAuthorizationHandler = new Mock<IAuthorizationHandler>();

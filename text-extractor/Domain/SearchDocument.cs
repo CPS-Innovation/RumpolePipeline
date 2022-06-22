@@ -1,17 +1,14 @@
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Newtonsoft.Json;
 
-namespace Domain
+namespace text_extractor.Domain
 {
     public class SearchDocument : AnalyzeResults
     {
-        [JsonProperty(PropertyName = "caseId")]
+        [JsonProperty("caseId")]
         public int CaseId { get; set; }
 
-        [JsonProperty(PropertyName = "id")]
+        [JsonProperty("id")]
         public string Id { get; set; }
-
-        [JsonProperty(PropertyName = "transactionId")]
-        public string TransactionId { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using Azure.Identity;
 using Azure.Storage.Blobs;
+using common.Handlers;
 using common.Wrappers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
@@ -14,7 +15,6 @@ using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
 using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.PdfService;
-using pdf_generator.Wrappers;
 
 [assembly: FunctionsStartup(typeof(pdf_generator.Startup))]
 namespace pdf_generator
@@ -34,14 +34,14 @@ namespace pdf_generator
                 client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
             });
 
-            builder.Services.AddTransient<IPdfService, WordsPdfService>();
-            builder.Services.AddTransient<IPdfService, CellsPdfService>();
-            builder.Services.AddTransient<IPdfService, SlidesPdfService>();
-            builder.Services.AddTransient<IPdfService, ImagingPdfService>();
-            builder.Services.AddTransient<IPdfService, DiagramPdfService>();
-            builder.Services.AddTransient<IPdfService, HtmlPdfService>();
-            builder.Services.AddTransient<IPdfService, EmailPdfService>();
-            builder.Services.AddTransient<IPdfOrchestratorService, PdfOrchestratorService>(provider =>
+            builder.Services.AddSingleton<IPdfService, WordsPdfService>();
+            builder.Services.AddSingleton<IPdfService, CellsPdfService>();
+            builder.Services.AddSingleton<IPdfService, SlidesPdfService>();
+            builder.Services.AddSingleton<IPdfService, ImagingPdfService>();
+            builder.Services.AddSingleton<IPdfService, DiagramPdfService>();
+            builder.Services.AddSingleton<IPdfService, HtmlPdfService>();
+            builder.Services.AddSingleton<IPdfService, EmailPdfService>();
+            builder.Services.AddSingleton<IPdfOrchestratorService, PdfOrchestratorService>(provider =>
             {
                 var pdfServices = provider.GetServices<IPdfService>();
                 var wordsPdfService = pdfServices.First(s => s.GetType() == typeof(WordsPdfService));
