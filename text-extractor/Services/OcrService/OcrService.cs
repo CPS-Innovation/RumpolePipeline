@@ -33,7 +33,6 @@ namespace text_extractor.Services.OcrService
             {
                 var textHeaders = await _computerVisionClient.ReadAsync(sasLink);
 
-
                 string operationLocation = textHeaders.OperationLocation;
                 await Task.Delay(500);
 
