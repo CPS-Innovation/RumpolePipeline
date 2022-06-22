@@ -36,20 +36,6 @@ namespace text_extractor.Services.SearchIndexService
 
             using var indexer = _searchIndexingBufferedSenderFactory.Create(_searchClient);
 
-            var failCount = 0;
-            indexer.ActionFailed += async (arg) =>
-            {
-                failCount++;
-                //TODO what to do here? just log? fail completely if all fail?
-                var exception = arg.Exception == null ? "No exception" : arg.Exception.Message;
-                var result = arg.Result == null ? "No result" : "Result";
-                await Console.Out.WriteLineAsync($"Failed {exception}, {result}");
-                //if (failCount == lines.Count)
-                //{
-                //    throw new RequestFailedException("All search index actions failed.");
-                //}
-            };
-
             await indexer.UploadDocumentsAsync(lines);
             await indexer.FlushAsync();
         }

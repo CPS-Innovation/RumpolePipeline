@@ -57,6 +57,7 @@ namespace text_extractor
             builder.Services.AddTransient<IBlobSasBuilderWrapperFactory, BlobSasBuilderWrapperFactory>();
             builder.Services.AddTransient<ISearchLineFactory, SearchLineFactory>();
             builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
+            builder.Services.AddTransient<IComputerVisionClientFactory, ComputerVisionClientFactory>();
             builder.Services.AddTransient<ISearchIndexingBufferedSenderFactory, SearchIndexingBufferedSenderFactory>();
         }
     }
