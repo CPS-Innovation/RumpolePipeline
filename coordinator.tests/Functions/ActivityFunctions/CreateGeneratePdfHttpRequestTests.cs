@@ -52,7 +52,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
         }
 
         [Fact]
-        public async Task Run_ReturnsCaseDocuments()
+        public async Task Run_ReturnsDurableRequest()
         {
             var durableRequest = await CreateGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object);
 
