@@ -17,7 +17,7 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
     "BlobServiceUrl"                          = "https://sacps${var.env != "prod" ? var.env : ""}rumpolepipeline.blob.core.windows.net/"
     "BlobServiceContainerName"                = "documents"
-    "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string,
+    "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
     "AuthorizationClaim"                      = "application.create"
   }
   site_config {
