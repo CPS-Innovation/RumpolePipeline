@@ -84,7 +84,7 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterUnexpectedDocumentFailure(string documentId)
+        public Task RegisterUnexpectedPdfDocumentFailure(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
             document.Status = DocumentStatus.UnexpectedFailure;
@@ -98,6 +98,26 @@ namespace coordinator.Domain.Tracker
         {
             Status = TrackerStatus.NoDocumentsFoundInCDE;
             Log(LogType.NoDocumentsFoundInCDE);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterIndexed(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document.Status = DocumentStatus.Indexed;
+
+            Log(LogType.Indexed, documentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterOcrAndIndexFailure(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document.Status = DocumentStatus.OcrAndIndexFailure;
+
+            Log(LogType.OcrAndIndexFailure, documentId);
 
             return Task.CompletedTask;
         }

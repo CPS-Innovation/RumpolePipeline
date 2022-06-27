@@ -25,6 +25,7 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "blob__BlobContainerName"                  = azurerm_storage_container.container.name
     "blob__BlobExpirySecs"                     = 3600
     "blob__UserDelegationKeyExpirySecs"        = 3600
+    "AuthorizationClaim"                      = "application.read"
   }
   site_config {
     always_on      = true
@@ -41,6 +42,41 @@ resource "azurerm_function_app" "fa_text_extractor" {
       app_settings["WEBSITE_ENABLE_SYNC_UPDATE_SITE"],
     ]
   }
+}
+
+resource "azuread_application" "fa_text_extractor" {
+  display_name               = "fa-${local.resource_name}-text-extractor"
+  identifier_uris            = ["api://fa-${local.resource_name}-text-extractor"]
+
+  required_resource_access {
+  resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+
+    resource_access {
+      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
+      type = "Scope"
+    }
+  }
+
+  web {
+  redirect_uris = ["https://fa-${local.resource_name}-text-extractor.azurewebsites.net/.auth/login/aad/callback"]
+
+    implicit_grant {
+      id_token_issuance_enabled     = true
+    }
+  }
+
+  app_role {
+    allowed_member_types  = ["Application", "User"]
+    description          = "Readers have the ability to read resources"
+    display_name         = "Read"
+    enabled              = true
+    id                   = "86CD7E91-7949-47EB-A148-9B81C249C55C"
+    value                = "application.read"
+  }
+}
+
+resource "azuread_service_principal" "fa_text_extractor" {
+  application_id = azuread_application.fa_text_extractor.application_id
 }
 
 data "azurerm_function_app_host_keys" "ak_text_extractor" {

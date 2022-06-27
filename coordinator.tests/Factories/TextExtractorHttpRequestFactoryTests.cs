@@ -17,34 +17,34 @@ using Xunit;
 
 namespace coordinator.tests.Factories
 {
-	public class GeneratePdfHttpRequestFactoryTests
+	public class TextExtractorHttpRequestFactoryTests
 	{
 		private Fixture _fixture;
 		private int _caseId;
 		private string _documentId;
-		private string _fileName;
+		private string _blobName;
 		private AccessToken _accessToken;
 		private string _content;
-		private string _pdfGeneratorScope;
-		private string _pdfGeneratorUrl;
+		private string _textExtractorScope;
+		private string _textExtractorUrl;
 
 		private Mock<IDefaultAzureCredentialFactory> _mockDefaultAzureCredentialFactory;
 		private Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
 		private Mock<IConfiguration> _mockConfiguration;
 		private Mock<DefaultAzureCredential> _mockDefaultAzureCredential;
 
-		private GeneratePdfHttpRequestFactory GeneratePdfHttpRequestFactory;
+		private ITextExtractorHttpRequestFactory TextExtractorHttpRequestFactory;
 
-		public GeneratePdfHttpRequestFactoryTests()
+		public TextExtractorHttpRequestFactoryTests()
 		{
 			_fixture = new Fixture();
 			_caseId = _fixture.Create<int>();
 			_documentId = _fixture.Create<string>();
-			_fileName = _fixture.Create<string>();
+			_blobName = _fixture.Create<string>();
 			_accessToken = _fixture.Create<AccessToken>();
 			_content = _fixture.Create<string>();
-			_pdfGeneratorScope = _fixture.Create<string>();
-			_pdfGeneratorUrl = "https://www.test.co.uk/";
+			_textExtractorScope = _fixture.Create<string>();
+			_textExtractorUrl = "https://www.test.co.uk/";
 
 			_mockDefaultAzureCredentialFactory = new Mock<IDefaultAzureCredentialFactory>();
 			_mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
@@ -53,22 +53,22 @@ namespace coordinator.tests.Factories
 
 			_mockDefaultAzureCredentialFactory.Setup(factory => factory.Create()).Returns(_mockDefaultAzureCredential.Object);
 
-			_mockDefaultAzureCredential.Setup(credential => credential.GetTokenAsync(It.Is<TokenRequestContext>(trc => trc.Scopes.Single().Equals(_pdfGeneratorScope)), It.IsAny<CancellationToken>()))
+			_mockDefaultAzureCredential.Setup(credential => credential.GetTokenAsync(It.Is<TokenRequestContext>(trc => trc.Scopes.Single().Equals(_textExtractorScope)), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(_accessToken);
 
-			_mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.FileName == _fileName)))
+			_mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<TextExtractorRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.BlobName == _blobName)))
 				.Returns(_content);
 
-			_mockConfiguration.Setup(config => config["PdfGeneratorScope"]).Returns(_pdfGeneratorScope);
-			_mockConfiguration.Setup(config => config["PdfGeneratorUrl"]).Returns(_pdfGeneratorUrl);
+			_mockConfiguration.Setup(config => config["TextExtractorScope"]).Returns(_textExtractorScope);
+			_mockConfiguration.Setup(config => config["TextExtractorUrl"]).Returns(_textExtractorUrl);
 
-			GeneratePdfHttpRequestFactory = new GeneratePdfHttpRequestFactory(_mockDefaultAzureCredentialFactory.Object, _mockJsonConvertWrapper.Object, _mockConfiguration.Object);
+			TextExtractorHttpRequestFactory = new TextExtractorHttpRequestFactory(_mockDefaultAzureCredentialFactory.Object, _mockJsonConvertWrapper.Object, _mockConfiguration.Object);
 		}
 
 		[Fact]
 		public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 		{
-			var durableRequest = await GeneratePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
+			var durableRequest = await TextExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
 
 			durableRequest.Method.Should().Be(HttpMethod.Post);
 		}
@@ -76,15 +76,15 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedUriOnDurableRequest()
 		{
-			var durableRequest = await GeneratePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
+			var durableRequest = await TextExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
 
-			durableRequest.Uri.AbsoluteUri.Should().Be(_pdfGeneratorUrl);
+			durableRequest.Uri.AbsoluteUri.Should().Be(_textExtractorUrl);
 		}
 
 		[Fact]
 		public async Task Create_SetsExpectedHeadersOnDurableRequest()
 		{
-			var durableRequest = await GeneratePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
+			var durableRequest = await TextExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
 			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_accessToken.Token}");
@@ -93,7 +93,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedContentOnDurableRequest()
 		{
-			var durableRequest = await GeneratePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
+			var durableRequest = await TextExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
 
 			durableRequest.Content.Should().Be(_content);
 		}
@@ -103,7 +103,7 @@ namespace coordinator.tests.Factories
 		{
 			_mockDefaultAzureCredentialFactory.Setup(factory => factory.Create()).Throws(new Exception());
 
-			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => GeneratePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName));
+			await Assert.ThrowsAsync<TextExtractorHttpRequestFactoryException>(() => TextExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName));
 		}
 	}
 }

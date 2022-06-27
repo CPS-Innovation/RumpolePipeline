@@ -27,7 +27,6 @@ namespace text_extractor.Services.OcrService
         public async Task<AnalyzeResults> GetOcrResultsAsync(string blobName)
         {
             var sasLink = await _sasGeneratorService.GenerateSasUrlAsync(blobName);
-            _log.LogInformation("SasLink is:" + sasLink);
 
             try
             {

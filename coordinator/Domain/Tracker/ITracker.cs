@@ -10,8 +10,10 @@ namespace coordinator.Domain.Tracker
         Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg);
         Task RegisterDocumentNotFoundInCDE(string documentId);
         Task RegisterUnableToConvertDocumentToPdf(string documentId);
-        Task RegisterUnexpectedDocumentFailure(string documentId);
+        Task RegisterUnexpectedPdfDocumentFailure(string documentId);
         Task RegisterNoDocumentsFoundInCDE();
+        Task RegisterIndexed(string documentId);
+        Task RegisterOcrAndIndexFailure(string documentId);
         Task RegisterCompleted();
         Task RegisterFailed();
         Task<List<TrackerDocument>> GetDocuments();

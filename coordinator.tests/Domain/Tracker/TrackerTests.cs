@@ -123,7 +123,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             await Tracker.Initialise(_transactionId);
             await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterUnexpectedDocumentFailure(_pdfBlobNameArg.DocumentId);
+            await Tracker.RegisterUnexpectedPdfDocumentFailure(_pdfBlobNameArg.DocumentId);
 
             var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
             document.Status.Should().Be(DocumentStatus.UnexpectedFailure);
@@ -140,6 +140,32 @@ namespace coordinator.tests.Domain.Tracker
             Tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCDE);
 
             Tracker.Logs.Count().Should().Be(2);
+        }
+
+        [Fact]
+        public async Task RegisterIndexed_RegistersIndexed()
+        {
+            await Tracker.Initialise(_transactionId);
+            await Tracker.RegisterDocumentIds(_documentIds);
+            await Tracker.RegisterIndexed(_documentIds.First());
+
+            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document.Status.Should().Be(DocumentStatus.Indexed);
+
+            Tracker.Logs.Count().Should().Be(3);
+        }
+
+        [Fact]
+        public async Task RegisterIndexed_RegistersOcrAndIndexFailure()
+        {
+            await Tracker.Initialise(_transactionId);
+            await Tracker.RegisterDocumentIds(_documentIds);
+            await Tracker.RegisterOcrAndIndexFailure(_documentIds.First());
+
+            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document.Status.Should().Be(DocumentStatus.OcrAndIndexFailure);
+
+            Tracker.Logs.Count().Should().Be(3);
         }
 
         [Fact]
