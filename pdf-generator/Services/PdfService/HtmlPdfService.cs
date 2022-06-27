@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Aspose.Pdf;
 using pdf_generator.Domain.Exceptions;
 using pdf_generator.Factories;
 using License = Aspose.Pdf.License;
@@ -13,15 +12,15 @@ namespace pdf_generator.Services.PdfService
 
         public HtmlPdfService(IAsposeItemFactory asposeItemFactory)
         {
-            //try
-            //{
+            try
+            {
                 var license = new License();
                 license.SetLicense("Aspose.Total.NET.lic");
-            //}
-            //catch (Exception exception)
-            //{
-            //    throw new AsposeLicenseException(exception.Message);
-            //}
+            }
+            catch (Exception exception)
+            {
+                throw new AsposeLicenseException(exception.Message);
+            }
 
             _asposeItemFactory = asposeItemFactory;
         }
