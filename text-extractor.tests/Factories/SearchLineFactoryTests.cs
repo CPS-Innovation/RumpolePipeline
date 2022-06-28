@@ -1,7 +1,8 @@
-﻿using AutoFixture;
+using System;
+using System.Text;
+using AutoFixture;
 using FluentAssertions;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using text_extractor.Domain;
 using text_extractor.Factories;
 using Xunit;
 
@@ -38,7 +39,11 @@ namespace text_extractor.tests.Factories
 		{
 			var factory = SearchLineFactory.Create(_caseId, _documentId, _readResult, _line, _index);
 
-			factory.Id.Should().Be($"{_caseId}-{_documentId}-{_readResult.Page}-{_index}");
+			var id = $"{_caseId}-{_documentId}-{_readResult.Page}-{_index}";
+			var bytes = Encoding.UTF8.GetBytes(id);
+			var base64Id = Convert.ToBase64String(bytes);
+
+			factory.Id.Should().Be(base64Id);
 		}
 
 		[Fact]
