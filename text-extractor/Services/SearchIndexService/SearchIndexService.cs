@@ -5,6 +5,7 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using text_extractor.Domain;
 using text_extractor.Factories;
 using Azure.Search.Documents;
+using Azure;
 
 namespace text_extractor.Services.SearchIndexService
 {
@@ -35,8 +36,33 @@ namespace text_extractor.Services.SearchIndexService
 
             using var indexer = _searchIndexingBufferedSenderFactory.Create(_searchClient);
 
+            var indexTaskCompletionSource = new TaskCompletionSource<bool>();
+            
+            indexer.ActionFailed += async (arg) =>
+            {
+                if (!indexTaskCompletionSource.Task.IsCompleted)
+                {
+                    indexTaskCompletionSource.SetResult(false);
+                }
+            };
+
+            var successCount = 0;
+            indexer.ActionCompleted += async (arg) =>
+            {
+                successCount++;
+                if (successCount == lines.Count)
+                {
+                    indexTaskCompletionSource.SetResult(true);
+                }
+            };
+
             await indexer.UploadDocumentsAsync(lines);
             await indexer.FlushAsync();
+
+            if(!await indexTaskCompletionSource.Task)
+            {
+                throw new RequestFailedException("At least one indexing action failed.");
+            }
         }
     }
 }
