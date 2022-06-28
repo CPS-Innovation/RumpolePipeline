@@ -1,4 +1,6 @@
-﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+﻿using System;
+using System.Text;
+using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using text_extractor.Domain;
 
 namespace text_extractor.Factories
@@ -7,9 +9,13 @@ namespace text_extractor.Factories
 	{
         public SearchLine Create(int caseId, string documentId, ReadResult readResult, Line line, int index)
         {
+            var id = $"{caseId}-{documentId}-{readResult.Page}-{index}";
+            var bytes = Encoding.UTF8.GetBytes(id);
+            var base64Id = Convert.ToBase64String(bytes);
+
             return new SearchLine
             {
-                Id = $"{caseId}-{documentId}-{readResult.Page}-{index}",
+                Id = base64Id,
                 CaseId = caseId,
                 DocumentId = documentId,
                 PageIndex = readResult.Page,
