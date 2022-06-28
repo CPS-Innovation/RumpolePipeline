@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using System;
 using text_extractor.Domain;
 using text_extractor.Factories;
 using Azure.Search.Documents;

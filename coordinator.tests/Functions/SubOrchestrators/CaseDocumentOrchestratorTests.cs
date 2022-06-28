@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 using AutoFixture;
 using common.Wrappers;
 using coordinator.Domain;
-using coordinator.Domain.Requests;
 using coordinator.Domain.Responses;
 using coordinator.Domain.Tracker;
-using coordinator.Factories;
 using coordinator.Functions.ActivityFunctions;
 using coordinator.Functions.SubOrchestrators;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -55,6 +53,10 @@ namespace coordinator.tests.Functions.SubOrchestrators
                 nameof(CreateGeneratePdfHttpRequest),
                 It.Is<CreateGeneratePdfHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.FileName == _payload.FileName)))
                     .ReturnsAsync(_durableRequest);
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
+                nameof(CreateTextExtractorHttpRequest),
+                It.Is<CreateTextExtractorHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.BlobName == _pdfResponse.BlobName)))
+                    .ReturnsAsync(_durableRequest);
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest)).ReturnsAsync(_durableResponse);
             _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
                 .Returns(_mockTracker.Object);
@@ -76,6 +78,14 @@ namespace coordinator.tests.Functions.SubOrchestrators
             await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
             _mockTracker.Verify(tracker => tracker.RegisterPdfBlobName(It.Is<RegisterPdfBlobNameArg>(a => a.DocumentId == _payload.DocumentId && a.BlobName == _pdfResponse.BlobName)));
+        }
+
+        [Fact]
+        public async Task Run_Tracker_RegistersIndexed()
+        {
+            await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+
+            _mockTracker.Verify(tracker => tracker.RegisterIndexed(_payload.DocumentId));
         }
 
         [Fact]
@@ -134,7 +144,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
             }
             catch
             {
-                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedDocumentFailure(_payload.DocumentId));
+                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedPdfDocumentFailure(_payload.DocumentId));
             }
         }
 
@@ -151,7 +161,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
             }
             catch
             {
-                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedDocumentFailure(_payload.DocumentId));
+                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedPdfDocumentFailure(_payload.DocumentId));
             }
         }
     }

@@ -9,6 +9,8 @@
         DocumentNotFoundInCDE,
         UnexpectedDocumentFailure,
         NoDocumentsFoundInCDE,
+        Indexed,
+        OcrAndIndexFailure,
         Completed,
         Failed
     }

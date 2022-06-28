@@ -4,15 +4,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using common.Wrappers;
 using coordinator.Domain;
-using coordinator.Domain.Requests;
 using coordinator.Domain.Responses;
 using coordinator.Domain.Tracker;
-using coordinator.Factories;
 using coordinator.Functions.ActivityFunctions;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace coordinator.Functions.SubOrchestrators
 {
@@ -39,21 +36,30 @@ namespace coordinator.Functions.SubOrchestrators
             }
 
             var tracker = GetTracker(context, payload.CaseId);
+            var pdfGeneratorResponse = await CallPdfGeneratorAsync(context, payload, tracker);
+            await CallTextExtractorAsync(context, payload, pdfGeneratorResponse.BlobName, tracker);
+
+        }
+
+        private async Task<GeneratePdfResponse> CallPdfGeneratorAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, ITracker tracker)
+        {
             try
             {
-                var response = await CallHttpAsync(context, payload, tracker);
+                var response = await CallPdfGeneratorHttpAsync(context, payload, tracker);
 
                 await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = payload.DocumentId, BlobName = response.BlobName });
+
+                return response;
             }
             catch (Exception exception)
             {
-                await tracker.RegisterUnexpectedDocumentFailure(payload.DocumentId);
+                await tracker.RegisterUnexpectedPdfDocumentFailure(payload.DocumentId);
                 _log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
                 throw;
             }
         }
 
-        private async Task<GeneratePdfResponse> CallHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, ITracker tracker)
+        private async Task<GeneratePdfResponse> CallPdfGeneratorHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, ITracker tracker)
         {
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
@@ -76,6 +82,35 @@ namespace coordinator.Functions.SubOrchestrators
             }
 
             return _jsonConvertWrapper.DeserializeObject<GeneratePdfResponse>(response.Content);
+        }
+
+        private async Task CallTextExtractorAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, string blobName, ITracker tracker)
+        {
+            try
+            {
+                await CallTextExtractorHttpAsync(context, payload, blobName, tracker);
+
+                await tracker.RegisterIndexed(payload.DocumentId);
+            }
+            catch (Exception exception)
+            {
+                await tracker.RegisterOcrAndIndexFailure(payload.DocumentId);
+                _log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
+                throw;
+            }
+        }
+
+        private async Task CallTextExtractorHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, string blobName, ITracker tracker)
+        {
+            var request = await context.CallActivityAsync<DurableHttpRequest>(
+                nameof(CreateTextExtractorHttpRequest),
+                new CreateTextExtractorHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, BlobName = blobName });
+            var response = await context.CallHttpAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new HttpRequestException($"Failed to ocr/index document with id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
+            }
         }
 
         private ITracker GetTracker(IDurableOrchestrationContext context, int caseId)

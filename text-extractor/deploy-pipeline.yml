@@ -23,11 +23,12 @@ steps:
       arguments: "--configuration $(buildConfiguration)"
     displayName: "Build"
 
-  # - task: DotNetCoreCLI@2
-  #   inputs:
-  #     command: "test"
-  #     projects: "$(functionName)*tests/$(functionName)*tests.csproj"
-  #   displayName: "Run tests"
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: "test"
+      projects: "$(functionName)*tests/$(functionName)*tests.csproj"
+      arguments: "--configuration $(buildConfiguration)"
+    displayName: "Run tests"
 
   - task: DotNetCoreCLI@2
     inputs:

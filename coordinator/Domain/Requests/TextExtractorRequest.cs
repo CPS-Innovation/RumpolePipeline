@@ -1,6 +1,6 @@
-﻿namespace coordinator.Domain
+﻿namespace coordinator.Domain.Requests
 {
-    public class CreateTextExtractorHttpRequestActivityPayload
+    public class TextExtractorRequest
     {
         public int CaseId { get; set; }
 
