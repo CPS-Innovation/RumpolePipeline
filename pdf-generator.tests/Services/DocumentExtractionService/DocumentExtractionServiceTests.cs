@@ -17,51 +17,45 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
 {
 	public class DocumentExtractionServiceTests
 	{
-        private Fixture _fixture;
-        private string _documentId;
-        private string _fileName;
-        private string _accessToken;
-        private HttpRequestMessage _httpRequestMessage;
-        private HttpResponseMessage _httpResponseMessage;
-        private Stream _documentStream;
+        private readonly string _documentId;
+        private readonly string _fileName;
+        private readonly string _accessToken;
+        private readonly HttpResponseMessage _httpResponseMessage;
 
-        private HttpClient _httpClient;
-        private Mock<IDocumentExtractionHttpRequestFactory> _mockHttpRequestFactory;
-
-        private IDocumentExtractionService DocumentExtractionService;
+        private readonly IDocumentExtractionService _documentExtractionService;
 
         public DocumentExtractionServiceTests()
         {
-            _fixture = new Fixture();
-            _documentId = _fixture.Create<string>();
-            _fileName = _fixture.Create<string>();
-            _accessToken = _fixture.Create<string>();
-            _httpRequestMessage = new HttpRequestMessage();
-            _documentStream = new MemoryStream();
+            var fixture = new Fixture();
+            _documentId = fixture.Create<string>();
+            _fileName = fixture.Create<string>();
+            _accessToken = fixture.Create<string>();
+            var httpRequestMessage = new HttpRequestMessage();
+            Stream documentStream = new MemoryStream();
             _httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StreamContent(_documentStream)
+                Content = new StreamContent(documentStream)
             };
             
 
             var mockHttpMessageHandler = new Mock<HttpMessageHandler>();
             mockHttpMessageHandler.Protected()
-                .Setup<Task<HttpResponseMessage>>("SendAsync", _httpRequestMessage, ItExpr.IsAny<CancellationToken>())
+                .Setup<Task<HttpResponseMessage>>("SendAsync", httpRequestMessage, ItExpr.IsAny<CancellationToken>())
                 .ReturnsAsync(_httpResponseMessage);
-            _httpClient = new HttpClient(mockHttpMessageHandler.Object) { BaseAddress = new Uri("https://testUrl") };
+            var httpClient = new HttpClient(mockHttpMessageHandler.Object) { BaseAddress = new Uri("https://testUrl") };
 
-            _mockHttpRequestFactory = new Mock<IDocumentExtractionHttpRequestFactory>();
+            var mockHttpRequestFactory = new Mock<IDocumentExtractionHttpRequestFactory>();
 
-            _mockHttpRequestFactory.Setup(factory => factory.Create($"doc-fetch/{_documentId}/{_fileName}", _accessToken))
-                .Returns(_httpRequestMessage);
+            mockHttpRequestFactory.Setup(factory => factory.Create($"doc-fetch/{_documentId}/{_fileName}", _accessToken))
+                .Returns(httpRequestMessage);
 
-            DocumentExtractionService = new pdf_generator.Services.DocumentExtractionService.DocumentExtractionService(_httpClient, _mockHttpRequestFactory.Object);
+            _documentExtractionService = new pdf_generator.Services.DocumentExtractionService.DocumentExtractionService(httpClient, mockHttpRequestFactory.Object);
         }
 
         [Fact]
         public async Task GetDocumentAsync_ReturnsExpectedStream()
         {
-            var documentStream = await DocumentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
+            var documentStream = await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
 
             documentStream.Should().NotBeNull();
         }
@@ -71,18 +65,18 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
         {
             _httpResponseMessage.StatusCode = HttpStatusCode.NotFound;
 
-            await Assert.ThrowsAsync<HttpException>(() => DocumentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken));
+            await Assert.ThrowsAsync<HttpException>(() => _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken));
         }
 
         [Fact]
         public async Task GetDocumentAsync_HttpExceptionHasExpectedStatusCodeWhenResponseStatusCodeIsNotSuccess()
         {
-            var expectedStatusCode = HttpStatusCode.NotFound;
+            const HttpStatusCode expectedStatusCode = HttpStatusCode.NotFound;
             _httpResponseMessage.StatusCode = expectedStatusCode;
 
             try
             {
-                await DocumentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
+                await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
             }
             catch (HttpException exception)
             {
@@ -98,7 +92,7 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
 
             try
             {
-                await DocumentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
+                await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
             }
             catch (HttpException exception)
             {

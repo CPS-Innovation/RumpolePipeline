@@ -5,7 +5,7 @@ namespace Common.tests.Wrappers
 	public class StubRequest
 	{
 		[Required]
-		public string StubString { get; set; }
+		public string StubString { get; set; } = string.Empty;
 	}
 }
 

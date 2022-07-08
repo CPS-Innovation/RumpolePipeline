@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using common.Domain.Exceptions;
-using coordinator.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace coordinator.Handlers

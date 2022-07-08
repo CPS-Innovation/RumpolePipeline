@@ -1,5 +1,4 @@
-﻿using System;
-namespace coordinator.Domain.Tracker
+﻿namespace coordinator.Domain.Tracker
 {
 	public enum TrackerStatus
 	{

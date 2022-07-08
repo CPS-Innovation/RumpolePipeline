@@ -8,25 +8,24 @@ namespace pdf_generator.tests.Factories
 {
 	public class DocumentExtractionHttpRequestFactoryTests
 	{
-        private Fixture _fixture;
-        private string _requestUri;
-        private string _accessToken;
+        private readonly string _requestUri;
+        private readonly string _accessToken;
 
-        private IDocumentExtractionHttpRequestFactory DocumentExtractionHttpRequestFactory;
+        private readonly IDocumentExtractionHttpRequestFactory _documentExtractionHttpRequestFactory;
 
         public DocumentExtractionHttpRequestFactoryTests()
         {
-            _fixture = new Fixture();
-            _requestUri = _fixture.Create<string>();
-            _accessToken = _fixture.Create<string>();
+            var fixture = new Fixture();
+            _requestUri = fixture.Create<string>();
+            _accessToken = fixture.Create<string>();
 
-            DocumentExtractionHttpRequestFactory = new DocumentExtractionHttpRequestFactory();
+            _documentExtractionHttpRequestFactory = new DocumentExtractionHttpRequestFactory();
         }
 
         [Fact]
         public void Create_SetsHttpMethodToGetOnRequestMessage()
         {
-            var message = DocumentExtractionHttpRequestFactory.Create(_requestUri, _accessToken);
+            var message = _documentExtractionHttpRequestFactory.Create(_requestUri, _accessToken);
 
             message.Method.Should().Be(HttpMethod.Get);
         }
@@ -34,7 +33,7 @@ namespace pdf_generator.tests.Factories
         [Fact]
         public void Create_SetsRequestUriOnRequestMessage()
         {
-            var message = DocumentExtractionHttpRequestFactory.Create(_requestUri, _accessToken);
+            var message = _documentExtractionHttpRequestFactory.Create(_requestUri, _accessToken);
 
             message.RequestUri.Should().Be(_requestUri);
         }
@@ -42,9 +41,9 @@ namespace pdf_generator.tests.Factories
         [Fact]
         public void Create_SetsAccessTokenOnRequestMessageAuthorizationHeader()
         {
-            var message = DocumentExtractionHttpRequestFactory.Create(_requestUri, _accessToken);
+            var message = _documentExtractionHttpRequestFactory.Create(_requestUri, _accessToken);
 
-            message.Headers.Authorization.ToString().Should().Be($"Bearer {_accessToken}");
+            message.Headers.Authorization?.ToString().Should().Be($"Bearer {_accessToken}");
         }
     }
 }

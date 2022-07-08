@@ -34,32 +34,36 @@ namespace text_extractor.Services.SearchIndexService
                                     _searchLineFactory.Create(caseId, documentId, readResult, line, index)));
             }
 
-            using var indexer = _searchIndexingBufferedSenderFactory.Create(_searchClient);
+            await using var indexer = _searchIndexingBufferedSenderFactory.Create(_searchClient);
 
             var indexTaskCompletionSource = new TaskCompletionSource<bool>();
             
-            indexer.ActionFailed += async (arg) =>
+            indexer.ActionFailed += _ =>
             {
                 if (!indexTaskCompletionSource.Task.IsCompleted)
                 {
                     indexTaskCompletionSource.SetResult(false);
                 }
+
+                return Task.CompletedTask;
             };
 
             var successCount = 0;
-            indexer.ActionCompleted += async (arg) =>
+            indexer.ActionCompleted += _ =>
             {
                 successCount++;
                 if (successCount == lines.Count)
                 {
                     indexTaskCompletionSource.SetResult(true);
                 }
+
+                return Task.CompletedTask;
             };
 
             await indexer.UploadDocumentsAsync(lines);
             await indexer.FlushAsync();
 
-            if(!await indexTaskCompletionSource.Task)
+            if (!await indexTaskCompletionSource.Task)
             {
                 throw new RequestFailedException("At least one indexing action failed.");
             }

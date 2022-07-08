@@ -13,6 +13,10 @@
     <None Remove="Services\BlobStorageService\" />
     <None Remove="Services\DocumentExtractionService\" />
     <None Remove="Services\PdfService\" />
+    <None Remove="TestResources\TestBook.xlsx" />
+    <None Remove="TestResources\TestDiagram.vsd" />
+    <None Remove="TestResources\TestImage.png" />
+    <None Remove="TestResources\TestPresentation.pptx" />
     <None Remove="Wrappers\" />
     <None Remove="xunit" />
     <None Remove="xunit.runner.visualstudio" />
@@ -21,14 +25,19 @@
     <None Remove="Moq" />
     <None Remove="AutoFixture" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="TestResources\TestBook.xlsx" />
+    <EmbeddedResource Include="TestResources\TestDiagram.vsd" />
+    <EmbeddedResource Include="TestResources\TestImage.png" />
+    <EmbeddedResource Include="TestResources\TestPresentation.pptx" />
+  </ItemGroup>
   <ItemGroup>
     <Folder Include="Factories\" />
     <Folder Include="Functions\" />
     <Folder Include="Handlers\" />
-    <Folder Include="Services\" />
     <Folder Include="Services\BlobStorageService\" />
     <Folder Include="Services\DocumentExtractionService\" />
-    <Folder Include="Services\PdfService\" />
     <Folder Include="Wrappers\" />
   </ItemGroup>
   <ItemGroup>

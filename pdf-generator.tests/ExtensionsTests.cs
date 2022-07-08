@@ -1,5 +1,4 @@
-﻿using System;
-using FluentAssertions;
+﻿using FluentAssertions;
 using pdf_generator.Domain;
 using pdf_generator.Domain.Exceptions;
 using Xunit;

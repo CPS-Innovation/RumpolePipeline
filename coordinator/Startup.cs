@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using common.Wrappers;
+using coordinator;
 using coordinator.Clients;
 using coordinator.Factories;
 using coordinator.Handlers;
@@ -8,10 +10,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
 
-[assembly: FunctionsStartup(typeof(ServerlessPDFConversionDemo.Startup))]
-namespace ServerlessPDFConversionDemo
+[assembly: FunctionsStartup(typeof(Startup))]
+namespace coordinator
 {
-    class Startup : FunctionsStartup
+    [ExcludeFromCodeCoverage]
+    internal class Startup : FunctionsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
@@ -24,7 +27,7 @@ namespace ServerlessPDFConversionDemo
             builder.Services.AddTransient<IOnBehalfOfTokenClient, OnBehalfOfTokenClient>();
             builder.Services.AddSingleton(serviceProvider =>
             {
-                var instance = "https://login.microsoftonline.com/";
+                const string instance = "https://login.microsoftonline.com/";
                 var onBehalfOfTokenTenantId = GetValueFromConfig(configuration, "OnBehalfOfTokenTenantId");
                 var onBehalfOfTokenClientId = GetValueFromConfig(configuration, "OnBehalfOfTokenClientId");
                 var onBehalfOfTokenClientSecret = GetValueFromConfig(configuration, "OnBehalfOfTokenClientSecret");

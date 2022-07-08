@@ -73,6 +73,11 @@ namespace pdf_generator.Services.PdfService
                     case FileType.MSG:
                         _emailPdfService.ReadToPdfStream(inputStream, pdfStream);
                         break;
+                    case FileType.PDF:
+                        inputStream.CopyTo(pdfStream);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(fileType), fileType, null);
                 }
 
                 return pdfStream;

@@ -1,5 +1,4 @@
-﻿
-using common.Handlers;
+﻿using common.Handlers;
 using common.Wrappers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
@@ -14,12 +13,14 @@ using text_extractor.Factories;
 using text_extractor.Wrappers;
 using Azure.Identity;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using text_extractor.Domain;
 
 [assembly: FunctionsStartup(typeof(text_extractor.Startup))]
 namespace text_extractor
 {
-    class Startup : FunctionsStartup
+    [ExcludeFromCodeCoverage]
+    internal class Startup : FunctionsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
@@ -28,24 +29,24 @@ namespace text_extractor
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            builder.Services.AddOptions<ComputerVisionClientOptions>().Configure<IConfiguration>((setttings, configuration) =>
+            builder.Services.AddOptions<ComputerVisionClientOptions>().Configure<IConfiguration>((settings, _) =>
             {
-                configuration.GetSection("computerVisionClient").Bind(setttings);
+                configuration.GetSection("computerVisionClient").Bind(settings);
             });
-            builder.Services.AddOptions<SearchClientOptions>().Configure<IConfiguration>((setttings, configuration) =>
+            builder.Services.AddOptions<SearchClientOptions>().Configure<IConfiguration>((settings, _) =>
             {
-                configuration.GetSection("searchClient").Bind(setttings);
+                configuration.GetSection("searchClient").Bind(settings);
             });
-            builder.Services.AddOptions<BlobOptions>().Configure<IConfiguration>((setttings, configuration) =>
+            builder.Services.AddOptions<BlobOptions>().Configure<IConfiguration>((settings, _) =>
             {
-                configuration.GetSection("blob").Bind(setttings);
+                configuration.GetSection("blob").Bind(settings);
             });
             builder.Services.AddSingleton<IOcrService, OcrService>();
             builder.Services.AddSingleton<ISearchIndexService, SearchIndexService>();
             builder.Services.AddTransient<ISasGeneratorService, SasGeneratorService>();
-            builder.Services.AddAzureClients(builder =>
+            builder.Services.AddAzureClients(azureClientFactoryBuilder =>
             {
-                builder.AddBlobServiceClient(new Uri($"{configuration["BlobServiceClientUrl"]}"))
+                azureClientFactoryBuilder.AddBlobServiceClient(new Uri($"{configuration["BlobServiceClientUrl"]}"))
                     .WithCredential(new DefaultAzureCredential());
             });
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();

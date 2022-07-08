@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using AutoFixture;
 using common.Domain.Exceptions;
 using coordinator.Domain;
-using coordinator.Domain.Exceptions;
 using coordinator.Functions;
 using coordinator.Handlers;
 using FluentAssertions;

@@ -19,56 +19,45 @@ namespace text_extractor.tests.Services.SasGeneratorService
 {
     public class SasGeneratorServiceTests
     {
-        private Fixture _fixture;
-        private BlobOptions _blobOptions;
-        private string _blobName;
-        private BlobUriBuilder _blobUriBuilder;
-        private BlobSasBuilder _blobSasBuilder;
+        private readonly string _blobName;
+        private readonly BlobUriBuilder _blobUriBuilder;
 
-        private Mock<BlobServiceClient> _mockBlobServiceClient;
-        private Mock<IBlobSasBuilderFactory> _mockBlobSasBuilderFactory;
-        private Mock<IBlobSasBuilderWrapperFactory> _mockBlobSasBuilderWrapperFactory;
-        private Mock<IOptions<BlobOptions>> _mockBlobOptions;
-        private Mock<Response<UserDelegationKey>> _mockResponse;
-        private Mock<UserDelegationKey> _mockUserDelegationKey;
-        private Mock<IBlobSasBuilderWrapper> _mockBlobSasBuilderWrapper;
-
-        private ISasGeneratorService SasGeneratorService;
+        private readonly ISasGeneratorService _sasGeneratorService;
 
         public SasGeneratorServiceTests()
         {
-            _fixture = new Fixture();
-            _blobOptions = _fixture.Create<BlobOptions>();
-            _blobName = _fixture.Create<string>();
-            _blobSasBuilder = _fixture.Create<BlobSasBuilder>();
+            var fixture = new Fixture();
+            var blobOptions = fixture.Create<BlobOptions>();
+            _blobName = fixture.Create<string>();
+            var blobSasBuilder = fixture.Create<BlobSasBuilder>();
 
-            _mockBlobServiceClient = new Mock<BlobServiceClient>();
-            _mockBlobSasBuilderFactory = new Mock<IBlobSasBuilderFactory>();
-            _mockBlobSasBuilderWrapperFactory = new Mock<IBlobSasBuilderWrapperFactory>();
-            _mockBlobOptions = new Mock<IOptions<BlobOptions>>();
-            _mockResponse = new Mock<Response<UserDelegationKey>>();
-            _mockUserDelegationKey = new Mock<UserDelegationKey>();
-            _mockBlobSasBuilderWrapper = new Mock<IBlobSasBuilderWrapper>();
+            var mockBlobServiceClient = new Mock<BlobServiceClient>();
+            var mockBlobSasBuilderFactory = new Mock<IBlobSasBuilderFactory>();
+            var mockBlobSasBuilderWrapperFactory = new Mock<IBlobSasBuilderWrapperFactory>();
+            var mockBlobOptions = new Mock<IOptions<BlobOptions>>();
+            var mockResponse = new Mock<Response<UserDelegationKey>>();
+            var mockUserDelegationKey = new Mock<UserDelegationKey>();
+            var mockBlobSasBuilderWrapper = new Mock<IBlobSasBuilderWrapper>();
 
-            _mockBlobOptions.Setup(options => options.Value).Returns(_blobOptions);
-            _mockResponse.Setup(response => response.Value).Returns(_mockUserDelegationKey.Object);
-            _mockBlobServiceClient.Setup(client => client.GetUserDelegationKeyAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(_mockResponse.Object);
-            _mockBlobServiceClient.Setup(client => client.Uri).Returns(_fixture.Create<Uri>());
+            mockBlobOptions.Setup(options => options.Value).Returns(blobOptions);
+            mockResponse.Setup(response => response.Value).Returns(mockUserDelegationKey.Object);
+            mockBlobServiceClient.Setup(client => client.GetUserDelegationKeyAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockResponse.Object);
+            mockBlobServiceClient.Setup(client => client.Uri).Returns(fixture.Create<Uri>());
 
-            _blobUriBuilder = new BlobUriBuilder(new Uri($"{_mockBlobServiceClient.Object.Uri}{_blobOptions.BlobContainerName}/{_blobName}"));
-            _mockBlobSasBuilderFactory.Setup(factory => factory.Create(_blobUriBuilder.BlobName)).Returns(_blobSasBuilder);
-            _mockBlobSasBuilderWrapper.Setup(wrapper => wrapper.ToSasQueryParameters(_mockUserDelegationKey.Object, _mockBlobServiceClient.Object.AccountName))
+            _blobUriBuilder = new BlobUriBuilder(new Uri($"{mockBlobServiceClient.Object.Uri}{blobOptions.BlobContainerName}/{_blobName}"));
+            mockBlobSasBuilderFactory.Setup(factory => factory.Create(_blobUriBuilder.BlobName)).Returns(blobSasBuilder);
+            mockBlobSasBuilderWrapper.Setup(wrapper => wrapper.ToSasQueryParameters(mockUserDelegationKey.Object, mockBlobServiceClient.Object.AccountName))
                 .Returns(new Mock<SasQueryParameters>().Object.As<BlobSasQueryParameters>());
-            _mockBlobSasBuilderWrapperFactory.Setup(factory => factory.Create(_blobSasBuilder)).Returns(_mockBlobSasBuilderWrapper.Object);
+            mockBlobSasBuilderWrapperFactory.Setup(factory => factory.Create(blobSasBuilder)).Returns(mockBlobSasBuilderWrapper.Object);
 
-            SasGeneratorService = new text_extractor.Services.SasGeneratorService.SasGeneratorService(_mockBlobServiceClient.Object, _mockBlobSasBuilderFactory.Object, _mockBlobSasBuilderWrapperFactory.Object, _mockBlobOptions.Object);
+            _sasGeneratorService = new text_extractor.Services.SasGeneratorService.SasGeneratorService(mockBlobServiceClient.Object, mockBlobSasBuilderFactory.Object, mockBlobSasBuilderWrapperFactory.Object, mockBlobOptions.Object);
         }
 
         [Fact]
         public async Task GenerateSasUrl_ReturnsExpectedUri()
         {
-            var response = await SasGeneratorService.GenerateSasUrlAsync(_blobName);
+            var response = await _sasGeneratorService.GenerateSasUrlAsync(_blobName);
 
             response.Should().Be(_blobUriBuilder.ToUri().ToString());
         }

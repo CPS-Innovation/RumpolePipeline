@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http.Headers;
 using Azure.Identity;
@@ -19,7 +20,8 @@ using pdf_generator.Services.PdfService;
 [assembly: FunctionsStartup(typeof(pdf_generator.Startup))]
 namespace pdf_generator
 {
-    class Startup : FunctionsStartup
+    [ExcludeFromCodeCoverage]
+    internal class Startup : FunctionsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
@@ -44,43 +46,32 @@ namespace pdf_generator
             builder.Services.AddSingleton<IPdfOrchestratorService, PdfOrchestratorService>(provider =>
             {
                 var pdfServices = provider.GetServices<IPdfService>();
-                var wordsPdfService = pdfServices.First(s => s.GetType() == typeof(WordsPdfService));
-                var cellsPdfService = pdfServices.First(s => s.GetType() == typeof(CellsPdfService));
-                var slidesPdfService = pdfServices.First(s => s.GetType() == typeof(SlidesPdfService));
-                var imagingPdfService = pdfServices.First(s => s.GetType() == typeof(ImagingPdfService));
-                var diagramPdfService = pdfServices.First(s => s.GetType() == typeof(DiagramPdfService));
-                var htmlPdfService = pdfServices.First(s => s.GetType() == typeof(HtmlPdfService));
-                var emailPdfService = pdfServices.First(s => s.GetType() == typeof(EmailPdfService));
-                return new PdfOrchestratorService(
-                    wordsPdfService, cellsPdfService, slidesPdfService, imagingPdfService, diagramPdfService, htmlPdfService, emailPdfService);
+                var servicesList = pdfServices.ToList();
+                var wordsPdfService = servicesList.First(s => s.GetType() == typeof(WordsPdfService));
+                var cellsPdfService = servicesList.First(s => s.GetType() == typeof(CellsPdfService));
+                var slidesPdfService = servicesList.First(s => s.GetType() == typeof(SlidesPdfService));
+                var imagingPdfService = servicesList.First(s => s.GetType() == typeof(ImagingPdfService));
+                var diagramPdfService = servicesList.First(s => s.GetType() == typeof(DiagramPdfService));
+                var htmlPdfService = servicesList.First(s => s.GetType() == typeof(HtmlPdfService));
+                var emailPdfService = servicesList.First(s => s.GetType() == typeof(EmailPdfService));
+
+                return new PdfOrchestratorService(wordsPdfService, cellsPdfService, slidesPdfService, imagingPdfService, diagramPdfService, htmlPdfService, emailPdfService);
             });
 
             builder.Services.AddTransient<IValidatorWrapper<GeneratePdfRequest>, ValidatorWrapper<GeneratePdfRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IDocumentExtractionHttpRequestFactory, DocumentExtractionHttpRequestFactory>();
-            builder.Services.AddTransient<IAuthorizationHandler>(_ =>
-            {
-                return new AuthorizationHandler(configuration["AuthorizationClaim"]);
-            });
+            builder.Services.AddTransient<IAuthorizationHandler>(_ => new AuthorizationHandler(configuration["AuthorizationClaim"]));
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
             builder.Services.AddTransient<IAsposeItemFactory, AsposeItemFactory>();
 
-            builder.Services.AddAzureClients(builder =>
+            builder.Services.AddAzureClients(azureClientFactoryBuilder =>
             {
-                builder.AddBlobServiceClient(new Uri(configuration["BlobServiceUrl"]))
+                azureClientFactoryBuilder.AddBlobServiceClient(new Uri(configuration["BlobServiceUrl"]))
                     .WithCredential(new DefaultAzureCredential());
             });
-            builder.Services.AddTransient<IBlobStorageService>(serviceProvider =>
-            {
-                return new BlobStorageService(
-                    serviceProvider.GetRequiredService<BlobServiceClient>(),
-                    configuration["BlobServiceContainerName"]);
-            });
-            builder.Services.AddTransient<IDocumentExtractionService>(serviceProvider =>
-            {
-                return new DocumentExtractionServiceStub(
-                    configuration["StubBlobStorageConnectionString"]);
-            });
+            builder.Services.AddTransient<IBlobStorageService>(serviceProvider => new BlobStorageService(serviceProvider.GetRequiredService<BlobServiceClient>(), configuration["BlobServiceContainerName"]));
+            builder.Services.AddTransient<IDocumentExtractionService>(_ => new DocumentExtractionServiceStub(configuration["StubBlobStorageConnectionString"]));
         }
     }
 }

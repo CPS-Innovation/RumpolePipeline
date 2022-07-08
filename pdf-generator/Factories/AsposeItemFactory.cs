@@ -8,7 +8,7 @@ using LoadFormat = Aspose.Words.LoadFormat;
 
 namespace pdf_generator.Factories
 {
-	public class AsposeItemFactory : IAsposeItemFactory
+    public class AsposeItemFactory : IAsposeItemFactory
 	{
 		public Workbook CreateWorkbook(Stream inputStream)
         {

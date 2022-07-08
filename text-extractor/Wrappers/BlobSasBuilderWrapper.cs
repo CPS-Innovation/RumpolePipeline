@@ -5,7 +5,7 @@ namespace text_extractor.Wrappers
 {
     public class BlobSasBuilderWrapper : IBlobSasBuilderWrapper
     {
-        private BlobSasBuilder _blobSasBuilder;
+        private readonly BlobSasBuilder _blobSasBuilder;
 
         public BlobSasBuilderWrapper(BlobSasBuilder blobSasBuilder)
         {

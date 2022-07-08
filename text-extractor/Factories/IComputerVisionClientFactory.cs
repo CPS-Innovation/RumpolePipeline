@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
+﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 
 namespace text_extractor.Factories
 {

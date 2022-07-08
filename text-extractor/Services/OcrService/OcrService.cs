@@ -32,11 +32,11 @@ namespace text_extractor.Services.OcrService
             {
                 var textHeaders = await _computerVisionClient.ReadAsync(sasLink);
 
-                string operationLocation = textHeaders.OperationLocation;
+                var operationLocation = textHeaders.OperationLocation;
                 await Task.Delay(500);
 
                 const int numberOfCharsInOperationId = 36;
-                string operationId = operationLocation.Substring(operationLocation.Length - numberOfCharsInOperationId);
+                var operationId = operationLocation[^numberOfCharsInOperationId..];
 
                 ReadOperationResult results;
 
@@ -44,8 +44,7 @@ namespace text_extractor.Services.OcrService
                 {
                     results = await _computerVisionClient.GetReadResultAsync(Guid.Parse(operationId));
 
-                    if (results.Status == OperationStatusCodes.Running ||
-                        results.Status == OperationStatusCodes.NotStarted)
+                    if (results.Status is OperationStatusCodes.Running or OperationStatusCodes.NotStarted)
                     {
                         await Task.Delay(500);
                     }

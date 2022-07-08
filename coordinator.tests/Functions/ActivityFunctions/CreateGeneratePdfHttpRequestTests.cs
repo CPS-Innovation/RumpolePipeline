@@ -2,7 +2,6 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture;
-using coordinator.Clients;
 using coordinator.Domain;
 using coordinator.Factories;
 using coordinator.Functions.ActivityFunctions;

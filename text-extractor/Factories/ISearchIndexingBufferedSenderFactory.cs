@@ -1,5 +1,4 @@
-﻿using System;
-using Azure.Search.Documents;
+﻿using Azure.Search.Documents;
 using text_extractor.Domain;
 
 namespace text_extractor.Factories

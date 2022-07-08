@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using Newtonsoft.Json;
 
 namespace pdf_generator.Domain.Responses
 {
+    [ExcludeFromCodeCoverage]
     public class DocumentExtractionResponse
     {
         [JsonProperty("caseId")]

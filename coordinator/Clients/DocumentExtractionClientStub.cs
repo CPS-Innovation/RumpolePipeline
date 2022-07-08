@@ -5,18 +5,18 @@ namespace coordinator.Clients
 {
 	public class DocumentExtractionClientStub : IDocumentExtractionClient
 	{
-        public async Task<Case> GetCaseDocumentsAsync(string caseId, string accessToken)
+        public Task<Case> GetCaseDocumentsAsync(string caseId, string accessToken)
         {
-            return caseId switch
+            return Task.FromResult(caseId switch
             {
                 "18846" => McLoveCase(caseId),
                 "1000000" => McLoveCase(caseId),
                 "1000001" => MultipleFileTypeCase(caseId),
                 _ => null
-            };
+            });
         }
 
-        private Case McLoveCase(string caseId)
+        private static Case McLoveCase(string caseId)
         {
             return new Case
             {

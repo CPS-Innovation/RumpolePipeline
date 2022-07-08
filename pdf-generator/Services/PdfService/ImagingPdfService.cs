@@ -24,7 +24,7 @@ namespace pdf_generator.Services.PdfService
                 throw new AsposeLicenseException(exception.Message);
             }
 
-            _asposeItemFactory = asposeItemFactory;
+            _asposeItemFactory = asposeItemFactory ?? throw new ArgumentNullException(nameof(asposeItemFactory));
         }
 
         public void ReadToPdfStream(Stream inputStream, Stream pdfStream)

@@ -1,9 +1,11 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 
 namespace pdf_generator.Services.DocumentExtractionService
 {
+    [ExcludeFromCodeCoverage]
 	public class DocumentExtractionServiceStub : IDocumentExtractionService
 	{
         private readonly string _blobStorageConnectionString;

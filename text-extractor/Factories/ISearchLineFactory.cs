@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using text_extractor.Domain;
 
 namespace text_extractor.Factories

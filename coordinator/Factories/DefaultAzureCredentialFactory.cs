@@ -1,5 +1,4 @@
-﻿using System;
-using Azure.Identity;
+﻿using Azure.Identity;
 
 namespace coordinator.Factories
 {
