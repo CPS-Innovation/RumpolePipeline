@@ -19,5 +19,11 @@ namespace text_extractor.Domain
 
         [JsonProperty("lineIndex")]
         public int LineIndex { get; set; }
+
+        [JsonProperty("pageHeight")]
+        public double PageHeight { get; set; }
+
+        [JsonProperty("pageWidth")]
+        public double PageWidth { get; set; }
     }
 }

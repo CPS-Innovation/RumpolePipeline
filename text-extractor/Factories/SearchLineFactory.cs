@@ -24,7 +24,9 @@ namespace text_extractor.Factories
                 BoundingBox = line.BoundingBox,
                 Appearance = line.Appearance,
                 Text = line.Text,
-                Words = line.Words
+                Words = line.Words,
+                PageHeight = readResult.Height,
+                PageWidth = readResult.Width
             };
         }
 	}

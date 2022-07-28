@@ -57,6 +57,32 @@
       "fields": []
     },
     {
+      "name": "pageHeight",
+      "type": "Edm.Double",
+      "facetable": false,
+      "filterable": false,
+      "retrievable": true,
+      "sortable": false,
+      "analyzer": null,
+      "indexAnalyzer": null,
+      "searchAnalyzer": null,
+      "synonymMaps": [],
+      "fields": []
+    },
+    {
+      "name": "pageWidth",
+      "type": "Edm.Double",
+      "facetable": false,
+      "filterable": false,
+      "retrievable": true,
+      "sortable": false,
+      "analyzer": null,
+      "indexAnalyzer": null,
+      "searchAnalyzer": null,
+      "synonymMaps": [],
+      "fields": []
+    },
+    {
       "name": "lineIndex",
       "type": "Edm.Int64",
       "facetable": false,
