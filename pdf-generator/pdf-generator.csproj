@@ -8,6 +8,8 @@
 
     <PackageReference Include="Aspose.Words" Version="22.2.0" />
 
+    <PackageReference Include="FluentValidation" Version="11.2.0" />
+
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.5.1" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.1" />
@@ -52,8 +54,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Domain\Requests\" />
-    <Folder Include="Domain\Responses\" />
     <Folder Include="Handlers\" />
     <Folder Include="Domain\Exceptions\" />
     <Folder Include="Services\DocumentExtractionService\" />

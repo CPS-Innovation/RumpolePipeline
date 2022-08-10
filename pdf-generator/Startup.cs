@@ -15,6 +15,7 @@ using pdf_generator.Factories;
 using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
 using pdf_generator.Services.DocumentExtractionService;
+using pdf_generator.Services.DocumentRedactionService;
 using pdf_generator.Services.PdfService;
 
 [assembly: FunctionsStartup(typeof(pdf_generator.Startup))]
@@ -72,6 +73,7 @@ namespace pdf_generator
             });
             builder.Services.AddTransient<IBlobStorageService>(serviceProvider => new BlobStorageService(serviceProvider.GetRequiredService<BlobServiceClient>(), configuration["BlobServiceContainerName"]));
             builder.Services.AddTransient<IDocumentExtractionService>(_ => new DocumentExtractionServiceStub(configuration["StubBlobStorageConnectionString"]));
+            builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionServiceStub>();
         }
     }
 }

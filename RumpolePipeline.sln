@@ -1,29 +1,29 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30114.105
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "coordinator", "coordinator", "{EE3C3368-3FC2-4D31-A172-FD2C50B0A1B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "coordinator", "coordinator\coordinator.csproj", "{99C23CD1-B31C-4A47-97AE-42D8E5A9D8B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "coordinator", "coordinator\coordinator.csproj", "{99C23CD1-B31C-4A47-97AE-42D8E5A9D8B8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pdf-generator", "pdf-generator", "{AC4C7297-D7A1-42A3-9720-E98C04771886}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pdf-generator", "pdf-generator\pdf-generator.csproj", "{EC3B7119-D13A-453B-8406-9B9DA2D93590}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pdf-generator", "pdf-generator\pdf-generator.csproj", "{EC3B7119-D13A-453B-8406-9B9DA2D93590}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "text-extractor", "text-extractor", "{ED864099-3446-4E5C-900B-6A20790D3632}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "text-extractor", "text-extractor\text-extractor.csproj", "{5A692CFA-B116-480A-A910-EB4762C291C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "text-extractor", "text-extractor\text-extractor.csproj", "{5A692CFA-B116-480A-A910-EB4762C291C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pdf-generator.tests", "pdf-generator.tests\pdf-generator.tests.csproj", "{BBA95B70-D652-4440-9B3D-D9D73847F962}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pdf-generator.tests", "pdf-generator.tests\pdf-generator.tests.csproj", "{BBA95B70-D652-4440-9B3D-D9D73847F962}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{09BCE3B3-1C3D-4952-9E10-2BEC09D0BB6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{09BCE3B3-1C3D-4952-9E10-2BEC09D0BB6C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "coordinator.tests", "coordinator.tests\coordinator.tests.csproj", "{B4EA8C3F-F4DA-4A1E-AEA2-34B6D95A872A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "coordinator.tests", "coordinator.tests\coordinator.tests.csproj", "{B4EA8C3F-F4DA-4A1E-AEA2-34B6D95A872A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.tests", "Common.tests\Common.tests.csproj", "{DF873A71-84A3-415D-83B8-594DF5A6CA4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common.tests", "Common.tests\Common.tests.csproj", "{DF873A71-84A3-415D-83B8-594DF5A6CA4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "text-extractor.tests", "text-extractor.tests\text-extractor.tests.csproj", "{7118044D-9181-4171-8580-92C195779901}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "text-extractor.tests", "text-extractor.tests\text-extractor.tests.csproj", "{7118044D-9181-4171-8580-92C195779901}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,9 +33,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{99C23CD1-B31C-4A47-97AE-42D8E5A9D8B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -135,6 +132,9 @@ Global
 		{7118044D-9181-4171-8580-92C195779901}.Release|x86.ActiveCfg = Release|Any CPU
 		{7118044D-9181-4171-8580-92C195779901}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{99C23CD1-B31C-4A47-97AE-42D8E5A9D8B8} = {EE3C3368-3FC2-4D31-A172-FD2C50B0A1B8}
 		{EC3B7119-D13A-453B-8406-9B9DA2D93590} = {AC4C7297-D7A1-42A3-9720-E98C04771886}
@@ -142,5 +142,8 @@ Global
 		{BBA95B70-D652-4440-9B3D-D9D73847F962} = {AC4C7297-D7A1-42A3-9720-E98C04771886}
 		{B4EA8C3F-F4DA-4A1E-AEA2-34B6D95A872A} = {EE3C3368-3FC2-4D31-A172-FD2C50B0A1B8}
 		{7118044D-9181-4171-8580-92C195779901} = {ED864099-3446-4E5C-900B-6A20790D3632}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0C43EF50-A478-4017-ADF8-2F008C742F18}
 	EndGlobalSection
 EndGlobal
