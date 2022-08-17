@@ -18,7 +18,7 @@ jobs:
       coordinator: ${{ steps.filter.outputs.coordinator }}
       pdfgenerator: ${{ steps.filter.outputs.pdfgenerator }}
       textextractor: ${{ steps.filter.outputs.textextractor }}
-      runtests: ${{ steps.filter.outputs.coordinator }} | ${{ steps.filter.outputs.pdfgenerator }} | ${{ steps.filter.outputs.textextractor }}
+      runtests: ${{ steps.filter.outputs.coordinator || steps.filter.outputs.pdfgenerator || steps.filter.outputs.textextractor }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
