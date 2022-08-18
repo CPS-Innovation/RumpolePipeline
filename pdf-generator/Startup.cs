@@ -56,7 +56,8 @@ namespace pdf_generator
                 var htmlPdfService = servicesList.First(s => s.GetType() == typeof(HtmlPdfService));
                 var emailPdfService = servicesList.First(s => s.GetType() == typeof(EmailPdfService));
 
-                return new PdfOrchestratorService(wordsPdfService, cellsPdfService, slidesPdfService, imagingPdfService, diagramPdfService, htmlPdfService, emailPdfService);
+                return new PdfOrchestratorService(wordsPdfService, cellsPdfService, slidesPdfService, imagingPdfService, 
+                    diagramPdfService, htmlPdfService, emailPdfService);
             });
 
             builder.Services.AddTransient<IValidatorWrapper<GeneratePdfRequest>, ValidatorWrapper<GeneratePdfRequest>>();
