@@ -8,6 +8,8 @@ resource "azurerm_storage_account" "sa" {
   account_tier              = "Standard"
   enable_https_traffic_only = true
 
+  min_tls_version = "TLS1_2"
+
   network_rules {
     default_action = "Allow"
   }

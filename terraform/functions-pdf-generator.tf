@@ -20,9 +20,12 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
     "AuthorizationClaim"                      = "application.create"
   }
+  https_only                 = true
+
   site_config {
     always_on      = true
     ip_restriction = []
+    ftps_state     = "FtpsOnly"
   }
 
   identity {
