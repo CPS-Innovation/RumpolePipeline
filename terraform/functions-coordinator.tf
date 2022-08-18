@@ -25,9 +25,12 @@ resource "azurerm_function_app" "fa_coordinator" {
     "OnBehalfOfTokenClientSecret"             = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_coordinator_client_secret.id})"
     "CoordinatorOrchestratorTimeoutSecs"      = "600"
   }
+  https_only                 = true
+
   site_config {
     always_on      = true
     ip_restriction = []
+    ftps_state     = "FtpsOnly"
 
     cors {
       allowed_origins = []

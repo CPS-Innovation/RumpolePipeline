@@ -27,9 +27,12 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "blob__UserDelegationKeyExpirySecs"        = 3600
     "AuthorizationClaim"                      = "application.read"
   }
+  https_only                 = true
+
   site_config {
     always_on      = true
     ip_restriction = []
+    ftps_state     = "FtpsOnly"
   }
 
   identity {
