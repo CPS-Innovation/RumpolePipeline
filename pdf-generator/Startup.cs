@@ -74,7 +74,7 @@ namespace pdf_generator
             });
             builder.Services.AddTransient<IBlobStorageService>(serviceProvider => new BlobStorageService(serviceProvider.GetRequiredService<BlobServiceClient>(), configuration["BlobServiceContainerName"]));
             builder.Services.AddTransient<IDocumentExtractionService>(_ => new DocumentExtractionServiceStub(configuration["StubBlobStorageConnectionString"]));
-            builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionServiceStub>();
+            builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
         }
     }
 }

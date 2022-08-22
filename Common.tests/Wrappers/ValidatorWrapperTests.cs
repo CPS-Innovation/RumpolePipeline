@@ -8,7 +8,7 @@ namespace common.tests.Wrappers
 {
 	public class ValidatorWrapperTests
 	{
-        private Fixture _fixture;
+        private readonly Fixture _fixture;
 
         public ValidatorWrapperTests()
         {
