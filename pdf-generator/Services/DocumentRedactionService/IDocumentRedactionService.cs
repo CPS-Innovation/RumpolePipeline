@@ -6,6 +6,6 @@ namespace pdf_generator.Services.DocumentRedactionService
 {
     public interface IDocumentRedactionService
     {
-        public Task<RedactPdfResponse> RedactPdf(RedactPdfRequest redactPdfRequest, string accessToken);
+        public Task<RedactPdfResponse> RedactPdfAsync(RedactPdfRequest redactPdfRequest, string accessToken);
     }
 }

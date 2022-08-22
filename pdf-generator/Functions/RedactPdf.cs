@@ -56,7 +56,7 @@ namespace pdf_generator.Functions
 
                 //TODO exchange access token via on behalf of?
                 //var accessToken = values.First().Replace("Bearer ", "");
-                var redactResponse = await _documentRedactionService.RedactPdf(redactions.Value, "onBehalfOfAccessToken");
+                var redactResponse = await _documentRedactionService.RedactPdfAsync(redactions.Value, "onBehalfOfAccessToken");
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(_jsonConvertWrapper.SerializeObject(redactResponse), Encoding.UTF8, MediaTypeNames.Application.Json)
