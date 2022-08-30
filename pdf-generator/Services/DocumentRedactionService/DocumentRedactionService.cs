@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Aspose.Pdf;
 using Aspose.Pdf.Annotations;
+using Aspose.Pdf.Facades;
 using pdf_generator.Domain.Requests;
 using pdf_generator.Domain.Responses;
 using pdf_generator.Services.BlobStorageService;
@@ -12,10 +13,12 @@ namespace pdf_generator.Services.DocumentRedactionService
     public class DocumentRedactionService : IDocumentRedactionService
     {
         private readonly IBlobStorageService _blobStorageService;
+        private readonly ICoordinateCalculator _coordinateCalculator;
 
-        public DocumentRedactionService(IBlobStorageService blobStorageService)
+        public DocumentRedactionService(IBlobStorageService blobStorageService, ICoordinateCalculator coordinateCalculator)
         {
             _blobStorageService = blobStorageService ?? throw new ArgumentNullException(nameof(blobStorageService));
+            _coordinateCalculator = coordinateCalculator ?? throw new ArgumentNullException(nameof(coordinateCalculator));
         }
 
         public async Task<RedactPdfResponse> RedactPdfAsync(RedactPdfRequest redactPdfRequest, string accessToken)
@@ -35,15 +38,19 @@ namespace pdf_generator.Services.DocumentRedactionService
             var newFileName = $"{fileNameWithoutExtension}_{DateTime.Now.Ticks.GetHashCode().ToString("x").ToUpper()}.pdf";
 
             using var doc = new Document(document);
-            
+            var pdfInfo = new PdfFileInfo(doc);
+
             foreach (var redactionPage in redactPdfRequest.RedactionDefinitions)
             {
                 var currentPage = redactionPage.PageIndex;
                 var annotationPage = doc.Pages[currentPage];
-                annotationPage.SetPageSize(redactionPage.Width, redactionPage.Height);
+                
                 foreach (var boxToDraw in redactionPage.RedactionCoordinates)
                 {
-                    var annotationRectangle = new Rectangle(boxToDraw.X1, boxToDraw.Y1, boxToDraw.X2, boxToDraw.Y2);
+                    var translatedCoordinates = _coordinateCalculator.CalculateRelativeCoordinates(redactionPage.Width,
+                        redactionPage.Height, currentPage, boxToDraw, pdfInfo);
+
+                    var annotationRectangle = new Rectangle(translatedCoordinates.X1, translatedCoordinates.Y1, translatedCoordinates.X2, translatedCoordinates.Y2);
                     var redactionAnnotation = new RedactionAnnotation(annotationPage, annotationRectangle)
                     {
                         FillColor = Color.Black
