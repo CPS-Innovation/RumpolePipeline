@@ -60,6 +60,7 @@ namespace pdf_generator
                     diagramPdfService, htmlPdfService, emailPdfService);
             });
 
+            builder.Services.AddTransient<ICoordinateCalculator, CoordinateCalculator>();
             builder.Services.AddTransient<IValidatorWrapper<GeneratePdfRequest>, ValidatorWrapper<GeneratePdfRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IDocumentExtractionHttpRequestFactory, DocumentExtractionHttpRequestFactory>();
