@@ -35,11 +35,12 @@ namespace pdf_generator.Services.DocumentRedactionService
             var newFileName = $"{fileNameWithoutExtension}_{DateTime.Now.Ticks.GetHashCode().ToString("x").ToUpper()}.pdf";
 
             using var doc = new Document(document);
-
+            
             foreach (var redactionPage in redactPdfRequest.RedactionDefinitions)
             {
-                var currentPage = redactionPage.PageIndex + 1;
+                var currentPage = redactionPage.PageIndex;
                 var annotationPage = doc.Pages[currentPage];
+                annotationPage.SetPageSize(redactionPage.Width, redactionPage.Height);
                 foreach (var boxToDraw in redactionPage.RedactionCoordinates)
                 {
                     var annotationRectangle = new Rectangle(boxToDraw.X1, boxToDraw.Y1, boxToDraw.X2, boxToDraw.Y2);
