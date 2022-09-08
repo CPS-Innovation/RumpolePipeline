@@ -20,9 +20,9 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
     "AuthorizationClaim"                      = "application.create"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
-    "CallingAppValidAudience"                 = var.auth_details.pdfgenerator_valid_audience
-    "CallingAppValidScopes"                   = var.auth_details.pdfgenerator_valid_scopes
-    "CallingAppValidRoles"                    = var.auth_details.pdfgenerator_valid_roles
+    "CallingAppValidAudience"                 = var.auth_details.pdf_generator_valid_audience
+    "CallingAppValidScopes"                   = var.auth_details.pdf_generator_valid_scopes
+    "CallingAppValidRoles"                    = var.auth_details.pdf_generator_valid_roles
   }
   https_only                 = true
 
@@ -48,11 +48,31 @@ resource "azuread_application" "fa_pdf_generator" {
   display_name               = "fa-${local.resource_name}-pdf-generator"
   identifier_uris            = ["api://fa-${local.resource_name}-pdf-generator"]
 
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow an application to access function app on behalf of the signed-in user."
+      admin_consent_display_name = "Access function app"
+      enabled                    = true
+      id                         = var.pdf_generator_details.user_impersonation_scope_id
+      type                       = "Admin"
+      value                      = "user_impersonation"
+    }
+  }
+
   required_resource_access {
-  resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
 
     resource_access {
       id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
+      type = "Scope"
+    }
+  }
+
+  required_resource_access {
+    resource_app_id = var.pdf_generator_details.application_registration_id  # Pdf Generator
+
+    resource_access {
+      id   = var.pdf_generator_details.user_impersonation_scope_id # user impersonation
       type = "Scope"
     }
   }
