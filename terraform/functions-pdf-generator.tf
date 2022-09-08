@@ -19,6 +19,10 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "BlobServiceContainerName"                = "documents"
     "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
     "AuthorizationClaim"                      = "application.create"
+    "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
+    "CallingAppValidAudience"                 = var.auth_details.pdfgenerator_valid_audience
+    "CallingAppValidScopes"                   = var.auth_details.pdfgenerator_valid_scopes
+    "CallingAppValidRoles"                    = var.auth_details.pdfgenerator_valid_roles
   }
   https_only                 = true
 

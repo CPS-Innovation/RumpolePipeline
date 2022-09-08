@@ -1,5 +1,4 @@
 ﻿using AutoFixture;
-using common.Handlers;
 using common.Wrappers;
 using Moq;
 using System.Security.Claims;
@@ -17,6 +16,8 @@ using pdf_generator.Handlers;
 using pdf_generator.Services.DocumentRedactionService;
 using Xunit;
 using System;
+using System.Net.Http.Headers;
+using common.Handlers;
 
 namespace pdf_generator.tests.Functions
 {
@@ -25,7 +26,7 @@ namespace pdf_generator.tests.Functions
         private readonly Fixture _fixture = new();
         private readonly string _serializedRedactPdfResponse;
         private HttpRequestMessage _httpRequestMessage;
-        private readonly Mock<IAuthorizationHandler> _mockAuthorizationHandler;
+        private readonly Mock<IAuthorizationValidator> _mockAuthorizationValidator;
         private readonly Mock<ClaimsPrincipal> _mockClaimsPrincipal;
         private readonly Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
         private readonly Mock<IExceptionHandler> _mockExceptionHandler;
@@ -34,7 +35,6 @@ namespace pdf_generator.tests.Functions
 
         public RedactPdfTests()
         {
-            var errorMessage = _fixture.Create<string>();
             var request = _fixture.Create<RedactPdfRequest>();
 
             var serializedRedactPdfRequest = JsonConvert.SerializeObject(request);
@@ -44,30 +44,28 @@ namespace pdf_generator.tests.Functions
             };
             _serializedRedactPdfResponse = _fixture.Create<string>();
 
-            _mockAuthorizationHandler = new Mock<IAuthorizationHandler>();
+            _mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
             _mockClaimsPrincipal = new Mock<ClaimsPrincipal>();
             _mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
             _mockExceptionHandler = new Mock<IExceptionHandler>();
             var mockDocumentRedactionService = new Mock<IDocumentRedactionService>();
 
-            _mockAuthorizationHandler.Setup(handler => handler.IsAuthorized(_httpRequestMessage.Headers, _mockClaimsPrincipal.Object, out errorMessage))
-                .Returns(true);
+            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>()))
+                .ReturnsAsync(new Tuple<bool, string>(true, _fixture.Create<string>()));
             _mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.IsAny<RedactPdfResponse>()))
                 .Returns(_serializedRedactPdfResponse);
 
             mockDocumentRedactionService.Setup(x => x.RedactPdfAsync(It.IsAny<RedactPdfRequest>(), It.IsAny<string>())).ReturnsAsync(_fixture.Create<RedactPdfResponse>());
 
-            _redactPdf = new RedactPdf(_mockAuthorizationHandler.Object, _mockExceptionHandler.Object,
+            _redactPdf = new RedactPdf(_mockAuthorizationValidator.Object, _mockExceptionHandler.Object,
                 _mockJsonConvertWrapper.Object, mockDocumentRedactionService.Object);
         }
 
         [Fact]
         public async Task Run_ReturnsUnauthorizedWhenUnauthorized()
         {
-            var errorMessage = _fixture.Create<string>();
-            
-            _mockAuthorizationHandler.Setup(handler => handler.IsAuthorized(_httpRequestMessage.Headers, _mockClaimsPrincipal.Object, out errorMessage))
-                .Returns(false);
+            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>()))
+                .ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
             _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
                 .Returns(new HttpResponseMessage(HttpStatusCode.Unauthorized));
             _httpRequestMessage.Content = new StringContent(" ");

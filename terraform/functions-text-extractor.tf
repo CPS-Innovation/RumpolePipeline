@@ -26,6 +26,10 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "blob__BlobExpirySecs"                     = 3600
     "blob__UserDelegationKeyExpirySecs"        = 3600
     "AuthorizationClaim"                      = "application.read"
+    "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
+    "CallingAppValidAudience"                 = var.auth_details.textextractor_valid_audience
+    "CallingAppValidScopes"                   = var.auth_details.textextractor_valid_scopes
+    "CallingAppValidRoles"                    = var.auth_details.textextractor_valid_roles
   }
   https_only                 = true
 

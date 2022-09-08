@@ -32,13 +32,12 @@ namespace coordinator.Functions.SubOrchestrators
             var payload = context.GetInput<CaseDocumentOrchestrationPayload>();
             if (payload == null)
             {
-                throw new ArgumentException("Orchestration payload cannot be null.", nameof(CaseDocumentOrchestrationPayload));
+                throw new ArgumentException("Orchestration payload cannot be null.", nameof(context));
             }
 
             var tracker = GetTracker(context, payload.CaseId);
             var pdfGeneratorResponse = await CallPdfGeneratorAsync(context, payload, tracker);
             await CallTextExtractorAsync(context, payload, pdfGeneratorResponse.BlobName, tracker);
-
         }
 
         private async Task<GeneratePdfResponse> CallPdfGeneratorAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, ITracker tracker)

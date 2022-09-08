@@ -6,3 +6,15 @@ app_service_plan_sku = {
     size = "B3"
     tier = "Basic"
 }
+
+auth_details = {
+	coordinator_valid_audience = "api://fa-rumpole-pipeline-dev-coordinator"
+	coordinator_valid_scopes = "user_impersonation"
+	coordinator_valid_roles = ""
+	pdfgenerator_valid_audience = "api://fa-rumpole-pipeline-dev-pdf-generator"
+	pdfgenerator_valid_scopes = "user_impersonation"
+	pdfgenerator_valid_roles = ""
+	textextractor_valid_audience = "api://fa-rumpole-pipeline-dev-text-extractor"
+	textextractor_valid_scopes = "user_impersonation"
+	textextractor_valid_roles = ""
+}

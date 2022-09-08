@@ -14,23 +14,22 @@ using text_extractor.Handlers;
 using text_extractor.Services.OcrService;
 using text_extractor.Services.SearchIndexService;
 
-namespace text_extractor.Functions.ProcessDocument
+namespace text_extractor.Functions
 {
     public class ExtractText
     {
-        private readonly IAuthorizationHandler _authorizationHandler;
+        private readonly IAuthorizationValidator _authorizationValidator;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
         private readonly IValidatorWrapper<ExtractTextRequest> _validatorWrapper;
         private readonly IOcrService _ocrService;
         private readonly ISearchIndexService _searchIndexService;
         private readonly IExceptionHandler _exceptionHandler;
 
-        public ExtractText(
-             IAuthorizationHandler authorizationHandler, IJsonConvertWrapper jsonConvertWrapper,
+        public ExtractText(IAuthorizationValidator authorizationValidator, IJsonConvertWrapper jsonConvertWrapper,
              IValidatorWrapper<ExtractTextRequest> validatorWrapper, IOcrService ocrService,
              ISearchIndexService searchIndexService, IExceptionHandler exceptionHandler)
         {
-            _authorizationHandler = authorizationHandler;
+            _authorizationValidator = authorizationValidator;
             _jsonConvertWrapper = jsonConvertWrapper;
             _validatorWrapper = validatorWrapper;
             _ocrService = ocrService;
@@ -43,10 +42,12 @@ namespace text_extractor.Functions.ProcessDocument
         {
             try
             {
-                if (!_authorizationHandler.IsAuthorized(request.Headers, claimsPrincipal, out var errorMessage))
-                {
-                    throw new UnauthorizedException(errorMessage);
-                }
+                var authValidation = await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization);
+                if (!authValidation.Item1)
+                    throw new UnauthorizedException("Token validation failed");
+
+                if (request.Content == null)
+                    throw new BadRequestException("Request body has no content", nameof(request));
 
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
