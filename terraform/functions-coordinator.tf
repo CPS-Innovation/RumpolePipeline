@@ -45,19 +45,6 @@ resource "azurerm_function_app" "fa_coordinator" {
     type = "SystemAssigned"
   }
 
-  auth_settings {
-    enabled                       = true
-    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
-    unauthenticated_client_action = "RedirectToLoginPage"
-    default_provider              = "AzureActiveDirectory"
-    active_directory {
-      client_id                   = azuread_application.fa_coordinator.application_id
-      client_secret               = azuread_application_password.faap_fa_coordinator_app_service.value
-      client_secret_setting_name  = ""
-      allowed_audiences           = ["api://fa-${local.resource_name}-coordinator"]
-    }
-  }
-  
   lifecycle {
     ignore_changes = [
       app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"],
@@ -94,16 +81,25 @@ resource "azuread_application" "fa_coordinator" {
   }
 
   required_resource_access {
-  resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-
+    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+    
     resource_access {
       id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
       type = "Scope"
     }
   }
 
+  required_resource_access {
+    resource_app_id = var.gateway_details.application_registration_id # Rumpole Gateway
+
+    resource_access {
+      id   = var.gateway_details.user_impersonation_scope_id # user impersonation
+      type = "Scope"
+    }
+  }
+  
   web {
-  redirect_uris = ["https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback"]
+    redirect_uris = ["https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback"]
 
     implicit_grant {
       id_token_issuance_enabled     = true

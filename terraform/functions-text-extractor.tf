@@ -27,9 +27,9 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "blob__UserDelegationKeyExpirySecs"        = 3600
     "AuthorizationClaim"                      = "application.read"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
-    "CallingAppValidAudience"                 = var.auth_details.textextractor_valid_audience
-    "CallingAppValidScopes"                   = var.auth_details.textextractor_valid_scopes
-    "CallingAppValidRoles"                    = var.auth_details.textextractor_valid_roles
+    "CallingAppValidAudience"                 = var.auth_details.text_extractor_valid_audience
+    "CallingAppValidScopes"                   = var.auth_details.text_extractor_valid_scopes
+    "CallingAppValidRoles"                    = var.auth_details.text_extractor_valid_roles
   }
   https_only                 = true
 
@@ -55,8 +55,19 @@ resource "azuread_application" "fa_text_extractor" {
   display_name               = "fa-${local.resource_name}-text-extractor"
   identifier_uris            = ["api://fa-${local.resource_name}-text-extractor"]
 
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow an application to access function app on behalf of the signed-in user."
+      admin_consent_display_name = "Access function app"
+      enabled                    = true
+      id                         = var.text_extractor_details.user_impersonation_scope_id
+      type                       = "Admin"
+      value                      = "user_impersonation"
+    }
+  }
+
   required_resource_access {
-  resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
 
     resource_access {
       id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
@@ -64,8 +75,17 @@ resource "azuread_application" "fa_text_extractor" {
     }
   }
 
+  required_resource_access {
+    resource_app_id = var.text_extractor_details.application_registration_id # Text Extractor Function App
+
+    resource_access {
+      id   = var.text_extractor_details.user_impersonation_scope_id # user impersonation
+      type = "Scope"
+    }
+  }
+
   web {
-  redirect_uris = ["https://fa-${local.resource_name}-text-extractor.azurewebsites.net/.auth/login/aad/callback"]
+    redirect_uris = ["https://fa-${local.resource_name}-text-extractor.azurewebsites.net/.auth/login/aad/callback"]
 
     implicit_grant {
       id_token_issuance_enabled     = true
