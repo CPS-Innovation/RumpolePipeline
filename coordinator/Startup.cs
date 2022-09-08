@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using common.Wrappers;
 using coordinator;
 using coordinator.Clients;
+using coordinator.Domain.Adapters;
 using coordinator.Factories;
 using coordinator.Handlers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -25,9 +26,9 @@ namespace coordinator
 
             builder.Services.AddTransient<IDocumentExtractionClient, DocumentExtractionClientStub>();
             builder.Services.AddTransient<IOnBehalfOfTokenClient, OnBehalfOfTokenClient>();
-            builder.Services.AddSingleton(serviceProvider =>
+            builder.Services.AddSingleton(_ =>
             {
-                const string instance = "https://login.microsoftonline.com/";
+                const string instance = Common.Constants.Authentication.AzureAuthenticationInstanceUrl;
                 var onBehalfOfTokenTenantId = GetValueFromConfig(configuration, "OnBehalfOfTokenTenantId");
                 var onBehalfOfTokenClientId = GetValueFromConfig(configuration, "OnBehalfOfTokenClientId");
                 var onBehalfOfTokenClientSecret = GetValueFromConfig(configuration, "OnBehalfOfTokenClientSecret");
@@ -43,6 +44,7 @@ namespace coordinator
 
                 return ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(appOptions).WithAuthority(authority).Build();
             });
+            builder.Services.AddTransient<IIdentityClientAdapter, IIdentityClientAdapter>();
             builder.Services.AddTransient<IDefaultAzureCredentialFactory, DefaultAzureCredentialFactory>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory, GeneratePdfHttpRequestFactory>();

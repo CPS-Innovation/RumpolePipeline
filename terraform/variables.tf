@@ -28,3 +28,17 @@ variable "coordinator_user_impersonation_scope_id" {
 variable "fa_rumpole_gateway_identity_principal_id" {
   type = string
 }
+
+variable "auth_details" {
+  type = object({
+    coordinator_valid_audience = string
+    coordinator_valid_scopes = string
+	coordinator_valid_roles = string
+    pdfgenerator_valid_audience = string
+    pdfgenerator_valid_scopes = string
+	pdfgenerator_valid_roles = string
+    textextractor_valid_audience = string
+    textextractor_valid_scopes = string
+	textextractor_valid_roles = string
+  })
+}

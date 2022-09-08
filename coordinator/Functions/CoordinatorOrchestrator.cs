@@ -34,7 +34,7 @@ namespace coordinator.Functions
             var payload = context.GetInput<CoordinatorOrchestrationPayload>();
             if (payload == null)
             {
-                throw new ArgumentException("Orchestration payload cannot be null.", nameof(CoordinatorOrchestrationPayload));
+                throw new ArgumentException("Orchestration payload cannot be null.", nameof(context));
             }
 
             var tracker = GetTracker(context, payload.CaseId);
@@ -43,24 +43,20 @@ namespace coordinator.Functions
                 var timeout = TimeSpan.FromSeconds(double.Parse(_configuration["CoordinatorOrchestratorTimeoutSecs"]));
                 var deadline = context.CurrentUtcDateTime.Add(timeout);
 
-                using (var cts = new CancellationTokenSource())
-                {
-                    var orchestratorTask = RunOrchestrator(context, tracker, payload);
-                    var timeoutTask = context.CreateTimer(deadline, cts.Token);
+                using var cts = new CancellationTokenSource();
+                var orchestratorTask = RunOrchestrator(context, tracker, payload);
+                var timeoutTask = context.CreateTimer(deadline, cts.Token);
 
-                    var result = await Task.WhenAny(orchestratorTask, timeoutTask);
-                    if (result == orchestratorTask)
-                    {
-                        // success case
-                        cts.Cancel();
-                        return await orchestratorTask;
-                    }
-                    else
-                    {
-                        // timeout case
-                        throw new TimeoutException($"Orchestration with id '{context.InstanceId}' timed out.");
-                    }
+                var result = await Task.WhenAny(orchestratorTask, timeoutTask);
+                if (result == orchestratorTask)
+                {
+                    // success case
+                    cts.Cancel();
+                    return await orchestratorTask;
                 }
+
+                // timeout case
+                throw new TimeoutException($"Orchestration with id '{context.InstanceId}' timed out.");
             }
             catch (Exception exception)
             {
@@ -70,7 +66,7 @@ namespace coordinator.Functions
             }
         }
 
-        private async Task<List<TrackerDocument>> RunOrchestrator(IDurableOrchestrationContext context, ITracker tracker, CoordinatorOrchestrationPayload payload)
+        private static async Task<List<TrackerDocument>> RunOrchestrator(IDurableOrchestrationContext context, ITracker tracker, CoordinatorOrchestrationPayload payload)
         {
             if (!payload.ForceRefresh && await tracker.IsAlreadyProcessed())
             {
@@ -86,7 +82,7 @@ namespace coordinator.Functions
                 nameof(GetCaseDocuments),
                 new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = "accessToken" });
 
-            if (documents.Count() == 0)
+            if (documents.Length == 0)
             {
                 await tracker.RegisterNoDocumentsFoundInCDE();
                 return new List<TrackerDocument>();
@@ -107,7 +103,7 @@ namespace coordinator.Functions
                     }));
             }
 
-            await Task.WhenAll(caseDocumentTasks.Select(t => BufferCall(t)));
+            await Task.WhenAll(caseDocumentTasks.Select(BufferCall));
 
             if (await tracker.AllDocumentsFailed())
             {
@@ -119,7 +115,7 @@ namespace coordinator.Functions
             return await tracker.GetDocuments();
         }
 
-        private async Task BufferCall(Task task)
+        private static async Task BufferCall(Task task)
         {
             try
             {

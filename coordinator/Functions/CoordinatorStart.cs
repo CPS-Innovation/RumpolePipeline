@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using common.Domain.Exceptions;
+using common.Handlers;
 using coordinator.Domain;
 using coordinator.Handlers;
 using Microsoft.Azure.WebJobs;
@@ -17,11 +17,13 @@ namespace coordinator.Functions
     {
         private readonly IExceptionHandler _exceptionHandler;
         private readonly ILogger<CoordinatorStart> _log;
+        private readonly IAuthorizationValidator _authorizationValidator;
 
-        public CoordinatorStart(IExceptionHandler exceptionHandler, ILogger<CoordinatorStart> log)
+        public CoordinatorStart(IExceptionHandler exceptionHandler, ILogger<CoordinatorStart> log, IAuthorizationValidator authorizationValidator)
         {
-            _exceptionHandler = exceptionHandler;
-            _log = log;
+            _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
+            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _authorizationValidator = authorizationValidator ?? throw new ArgumentNullException(nameof(authorizationValidator));
         }
 
         [FunctionName("CoordinatorStart")]
@@ -30,11 +32,9 @@ namespace coordinator.Functions
         {
             try
             {
-                if (!req.Headers.TryGetValues("Authorization", out var values) ||
-                    string.IsNullOrWhiteSpace(values.FirstOrDefault()))
-                {
-                    throw new UnauthorizedException("No authorization token supplied.");
-                }
+                var authValidation = await _authorizationValidator.ValidateTokenAsync(req.Headers.Authorization);
+                if (!authValidation.Item1)
+                    throw new UnauthorizedException("Token validation failed");
 
                 if (!int.TryParse(caseId, out var caseIdNum))
                 {
@@ -50,9 +50,6 @@ namespace coordinator.Functions
                     throw new BadRequestException("Invalid query string. Force value must be a boolean.", force);
                 }
 
-                var accessToken = values.First().Replace("Bearer ", "");
-                var instanceId = caseId;
-
                 // Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled).
                 var existingInstance = await orchestrationClient.GetStatusAsync(caseId);
                 if (existingInstance == null
@@ -63,18 +60,18 @@ namespace coordinator.Functions
                 {
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),
-                        instanceId,
+                        caseId,
                         new CoordinatorOrchestrationPayload
                         {
                             CaseId = caseIdNum,
                             ForceRefresh = forceRefresh,
-                            AccessToken = accessToken
+                            AccessToken = authValidation.Item2
                         });
 
-                    _log.LogInformation($"Started {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}'.");
+                    _log.LogInformation($"Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'.");
                 }
 
-                return orchestrationClient.CreateCheckStatusResponse(req, instanceId);
+                return orchestrationClient.CreateCheckStatusResponse(req, caseId);
             }
             catch(Exception exception)
             {

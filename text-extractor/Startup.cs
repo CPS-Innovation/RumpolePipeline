@@ -1,5 +1,4 @@
-﻿using common.Handlers;
-using common.Wrappers;
+﻿using common.Wrappers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +13,7 @@ using text_extractor.Wrappers;
 using Azure.Identity;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using common.Handlers;
 using text_extractor.Domain;
 
 [assembly: FunctionsStartup(typeof(text_extractor.Startup))]
@@ -50,7 +50,7 @@ namespace text_extractor
                     .WithCredential(new DefaultAzureCredential());
             });
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
-            builder.Services.AddTransient<IAuthorizationHandler, AuthorizationHandler>();
+            builder.Services.AddTransient<IAuthorizationValidator, AuthorizationValidator>();
             builder.Services.AddTransient<IValidatorWrapper<ExtractTextRequest>, ValidatorWrapper<ExtractTextRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IBlobSasBuilderWrapper, BlobSasBuilderWrapper>();

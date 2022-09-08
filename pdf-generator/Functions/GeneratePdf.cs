@@ -23,7 +23,7 @@ namespace pdf_generator.Functions
 {
     public class GeneratePdf
     {
-        private readonly IAuthorizationHandler _authorizationHandler;
+        private readonly IAuthorizationValidator _authorizationValidator;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
         private readonly IValidatorWrapper<GeneratePdfRequest> _validatorWrapper;
         private readonly IDocumentExtractionService _documentExtractionService;
@@ -32,11 +32,11 @@ namespace pdf_generator.Functions
         private readonly IExceptionHandler _exceptionHandler;
 
         public GeneratePdf(
-             IAuthorizationHandler authorizationHandler, IJsonConvertWrapper jsonConvertWrapper,
+             IAuthorizationValidator authorizationValidator, IJsonConvertWrapper jsonConvertWrapper,
              IValidatorWrapper<GeneratePdfRequest> validatorWrapper, IDocumentExtractionService documentExtractionService,
              IBlobStorageService blobStorageService, IPdfOrchestratorService pdfOrchestratorService, IExceptionHandler exceptionHandler)
         {
-            _authorizationHandler = authorizationHandler;
+            _authorizationValidator = authorizationValidator;
             _jsonConvertWrapper = jsonConvertWrapper;
             _validatorWrapper = validatorWrapper;
             _documentExtractionService = documentExtractionService;
@@ -50,10 +50,12 @@ namespace pdf_generator.Functions
         {
             try
             {
-                if (!_authorizationHandler.IsAuthorized(request.Headers, claimsPrincipal, out var errorMessage))
-                {
-                    throw new UnauthorizedException(errorMessage);
-                }
+                var authValidation = await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization);
+                if (!authValidation.Item1)
+                    throw new UnauthorizedException("Token validation failed");
+
+                if (request.Content == null)
+                    throw new BadRequestException("Request body has no content", nameof(request));
 
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
