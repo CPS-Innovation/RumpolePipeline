@@ -111,3 +111,12 @@ data "azurerm_function_app_host_keys" "ak_text_extractor" {
   resource_group_name = azurerm_resource_group.rg.name
     depends_on = [azurerm_function_app.fa_text_extractor]
 }
+
+resource "azuread_application_password" "faap_fa_text_extractor_app_service" {
+  application_object_id = azuread_application.fa_text_extractor.id
+  end_date_relative     = "17520h"
+
+  depends_on = [
+    azuread_application.fa_text_extractor
+  ]
+}

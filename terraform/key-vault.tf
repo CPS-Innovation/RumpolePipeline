@@ -64,7 +64,7 @@ resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
 
 resource "azurerm_key_vault_secret" "kvs_fa_pdf_generator_client_secret" {
   name         = "PdfGeneratorAppRegistrationClientSecret"
-  value        = azuread_application_password.faap_fa_coordinator_app_service.value
+  value        = azuread_application_password.faap_fa_pdf_generator_app_service.value
   key_vault_id = azurerm_key_vault.kv.id
   depends_on = [
     azurerm_key_vault_access_policy.kvap_terraform_sp
@@ -73,7 +73,7 @@ resource "azurerm_key_vault_secret" "kvs_fa_pdf_generator_client_secret" {
 
 resource "azurerm_key_vault_secret" "kvs_fa_text_extractor_client_secret" {
   name         = "TextExtractorAppRegistrationClientSecret"
-  value        = azuread_application_password.faap_fa_coordinator_app_service.value
+  value        = azuread_application_password.faap_fa_text_extractor_app_service.value
   key_vault_id = azurerm_key_vault.kv.id
   depends_on = [
     azurerm_key_vault_access_policy.kvap_terraform_sp
