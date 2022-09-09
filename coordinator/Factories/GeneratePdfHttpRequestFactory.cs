@@ -31,7 +31,7 @@ namespace coordinator.Factories
         {
             try
             {
-                var clientScopes = _configuration["PdfGeneratorScopes"];
+                var clientScopes = _configuration["PdfGeneratorScope"];
                 
                 var result = await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(currentAccessToken, clientScopes);
                 
