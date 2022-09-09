@@ -45,10 +45,6 @@ variable "coordinator_user_impersonation_scope_id" {
   type = string
 }
 
-variable "text_extractor_user_impersonation_scope_id" {
-  type = string
-}
-
 # TODO get rid of this as it will change every time gateway is rebuilt
 variable "fa_rumpole_gateway_identity_principal_id" {
   type = string
