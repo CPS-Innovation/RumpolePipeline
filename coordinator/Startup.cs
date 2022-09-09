@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using common.Handlers;
 using common.Wrappers;
 using coordinator;
 using coordinator.Clients;
@@ -44,7 +45,8 @@ namespace coordinator
 
                 return ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(appOptions).WithAuthority(authority).Build();
             });
-            builder.Services.AddTransient<IIdentityClientAdapter, IIdentityClientAdapter>();
+            builder.Services.AddTransient<IAuthorizationValidator, AuthorizationValidator>();
+            builder.Services.AddTransient<IIdentityClientAdapter, IdentityClientAdapter>();
             builder.Services.AddTransient<IDefaultAzureCredentialFactory, DefaultAzureCredentialFactory>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory, GeneratePdfHttpRequestFactory>();
