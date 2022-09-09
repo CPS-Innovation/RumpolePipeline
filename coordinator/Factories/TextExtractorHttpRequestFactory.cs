@@ -31,7 +31,12 @@ namespace coordinator.Factories
         {
             try
             {
-                var result = await _identityClientAdapter.GetAccessTokenAsync(new[] { _configuration["TextExtractorScope"] });
+                var tenantId = _configuration["OnBehalfOfTokenTenantId"];
+                var clientId = _configuration["TextExtractorClientId"];
+                var clientSecret = _configuration["TextExtractorClientSecret"];
+                var clientScopes = _configuration["TextExtractorScopes"];
+                
+                var result = await _identityClientAdapter.GetAccessTokenAsync(tenantId, clientId, clientSecret, clientScopes);
                 
                 var headers = new Dictionary<string, StringValues>() {
                     { "Content-Type", "application/json" },

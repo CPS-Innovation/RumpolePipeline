@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture;
@@ -44,7 +43,8 @@ namespace coordinator.tests.Factories
             var mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
 			var mockConfiguration = new Mock<IConfiguration>();
 			
-            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<IEnumerable<string>>())).ReturnsAsync(_accessToken.Token);
+            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+	            .ReturnsAsync(_accessToken.Token);
 
             mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<TextExtractorRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.BlobName == _blobName)))
 				.Returns(_content);
@@ -91,7 +91,8 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_ThrowsExceptionWhenExceptionOccurs()
 		{
-            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<IEnumerable<string>>())).Throws(new Exception());
+			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+				.Throws(new Exception());
 
             await Assert.ThrowsAsync<TextExtractorHttpRequestFactoryException>(() => _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName));
 		}

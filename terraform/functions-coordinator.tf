@@ -16,8 +16,12 @@ resource "azurerm_function_app" "fa_coordinator" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
+    "PdfGeneratorClientId"                    = var.pdf_generator_details.application_registration_id
+    "PdfGeneratorClientSecret"                = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_pdf_generator_client_secret.id})"
     "PdfGeneratorUrl"                         = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
     "PdfGeneratorScope"                       = "api://fa-${local.resource_name}-pdf-generator/.default"
+    "TextExtractorClientId"                   = var.text_extractor_details.application_registration_id
+    "TextExtractorClientSecret"               = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_text_extractor_client_secret.id})"
     "TextExtractorUrl"                        = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/extract?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "TextExtractorScope"                      = "api://fa-${local.resource_name}-text-extractor/.default"
     "OnBehalfOfTokenTenantId"                 = data.azurerm_client_config.current.tenant_id

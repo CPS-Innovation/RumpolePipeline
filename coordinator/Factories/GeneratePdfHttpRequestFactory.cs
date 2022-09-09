@@ -31,7 +31,12 @@ namespace coordinator.Factories
         {
             try
             {
-                var result = await _identityClientAdapter.GetAccessTokenAsync(new[] {_configuration["PdfGeneratorScope"]});
+                var tenantId = _configuration["OnBehalfOfTokenTenantId"];
+                var clientId = _configuration["PdfGeneratorClientId"];
+                var clientSecret = _configuration["PdfGeneratorClientSecret"];
+                var clientScopes = _configuration["PdfGeneratorScopes"];
+                
+                var result = await _identityClientAdapter.GetAccessTokenAsync(tenantId, clientId, clientSecret, clientScopes);
                 
                 var headers = new Dictionary<string, StringValues>() {
                     { "Content-Type", "application/json" },
