@@ -31,7 +31,7 @@ namespace coordinator.Factories
         {
             try
             {
-                var clientScopes = _configuration["TextExtractorScopes"];
+                var clientScopes = _configuration["TextExtractorScope"];
                 
                 var result = await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(currentAccessToken, clientScopes);
                 

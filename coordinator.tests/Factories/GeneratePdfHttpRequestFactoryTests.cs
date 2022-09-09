@@ -50,12 +50,10 @@ namespace coordinator.tests.Factories
 			mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.FileName == _fileName)))
 				.Returns(_content);
 
-			mockConfiguration.Setup(config => config["PdfGeneratorScopes"]).Returns(pdfGeneratorScope);
+			mockConfiguration.Setup(config => config["PdfGeneratorScope"]).Returns(pdfGeneratorScope);
 			mockConfiguration.Setup(config => config["PdfGeneratorUrl"]).Returns(_pdfGeneratorUrl);
 			mockConfiguration.Setup(config => config["OnBehalfOfTokenTenantId"]).Returns(fixture.Create<string>());
-			mockConfiguration.Setup(config => config["PdfGeneratorClientId"]).Returns(fixture.Create<string>());
-			mockConfiguration.Setup(config => config["PdfGeneratorClientSecret"]).Returns(fixture.Create<string>());
-
+			
 			_generatePdfHttpRequestFactory = new GeneratePdfHttpRequestFactory(_mockIdentityClientAdapter.Object, mockJsonConvertWrapper.Object, mockConfiguration.Object);
 		}
 
