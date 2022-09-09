@@ -77,7 +77,7 @@ namespace coordinator.Functions.SubOrchestrators
                         break;
                 }
                 
-                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
+                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}. Calling access token: [{payload.AccessToken}].");
             }
 
             return _jsonConvertWrapper.DeserializeObject<GeneratePdfResponse>(response.Content);
