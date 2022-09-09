@@ -36,8 +36,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _mockDurableActivityContext.Setup(context => context.GetInput<string>())
                 .Returns(_accessToken);
 
-            _identityClientAdapterMock.Setup(client => client.GetAccessTokenOnBehalfOfAsync(_accessToken, It.IsAny<string>(), It.IsAny<string>(), 
-                    It.IsAny<string>(), It.IsAny<string>()))
+            _identityClientAdapterMock.Setup(client => client.GetAccessTokenOnBehalfOfAsync(_accessToken, It.IsAny<string>()))
                 .ReturnsAsync(_onBehalfOfAccessToken);
 
             GetOnBehalfOfAccessToken = new GetOnBehalfOfAccessToken(_identityClientAdapterMock.Object, _mockConfiguration.Object);

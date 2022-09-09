@@ -61,7 +61,7 @@ namespace coordinator.Functions
             catch (Exception exception)
             {
                 await tracker.RegisterFailed();
-                _log.LogError(exception, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration with id '{context.InstanceId}'.");
+                _log.LogError(exception, "Error when running {CoordinatorOrchestratorName} orchestration with id \'{ContextInstanceId}\'.", nameof(CoordinatorOrchestrator), context.InstanceId);
                 throw;
             }
         }
@@ -80,7 +80,7 @@ namespace coordinator.Functions
 
             var documents = await context.CallActivityAsync<CaseDocument[]>(
                 nameof(GetCaseDocuments),
-                new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = "accessToken" });
+                new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = payload.AccessToken });
 
             if (documents.Length == 0)
             {
@@ -99,7 +99,8 @@ namespace coordinator.Functions
                     {
                         CaseId = payload.CaseId,
                         DocumentId = documents[documentIndex].DocumentId,
-                        FileName = documents[documentIndex].FileName
+                        FileName = documents[documentIndex].FileName,
+                        AccessToken = payload.AccessToken
                     }));
             }
 

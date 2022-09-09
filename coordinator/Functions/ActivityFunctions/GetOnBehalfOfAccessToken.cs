@@ -27,12 +27,9 @@ namespace coordinator.Functions.ActivityFunctions
                 throw new ArgumentException("Access token cannot be null.");
             }
             
-            var onBehalfOfTokenTenantId = _configuration["OnBehalfOfTokenTenantId"];
-            var onBehalfOfTokenClientId = _configuration["OnBehalfOfTokenClientId"];
-            var onBehalfOfTokenClientSecret = _configuration["OnBehalfOfTokenClientSecret"];
             var onBehalfOfScopes = _configuration["CoreDataApiScope"];
 
-            return await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(accessToken, onBehalfOfTokenTenantId, onBehalfOfTokenClientId, onBehalfOfTokenClientSecret, onBehalfOfScopes);
+            return await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(accessToken, onBehalfOfScopes);
         }
     }
 }
