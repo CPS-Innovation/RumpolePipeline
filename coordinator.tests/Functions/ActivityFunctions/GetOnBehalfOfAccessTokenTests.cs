@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AutoFixture;
-using coordinator.Clients;
+using coordinator.Domain.Adapters;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -16,8 +17,9 @@ namespace coordinator.tests.Functions.ActivityFunctions
         private string _accessToken;
         private string _onBehalfOfAccessToken;
 
-        private Mock<IOnBehalfOfTokenClient> _mockOnBehalfOfAccessTokenClient;
+        private Mock<IIdentityClientAdapter> _identityClientAdapterMock;
         private Mock<IDurableActivityContext> _mockDurableActivityContext;
+        private Mock<IConfiguration> _mockConfiguration;
 
         private GetOnBehalfOfAccessToken GetOnBehalfOfAccessToken;
 
@@ -27,16 +29,18 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _accessToken = _fixture.Create<string>();
             _onBehalfOfAccessToken = _fixture.Create<string>();
 
-            _mockOnBehalfOfAccessTokenClient = new Mock<IOnBehalfOfTokenClient>();
+            _identityClientAdapterMock = new Mock<IIdentityClientAdapter>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
+            _mockConfiguration = new Mock<IConfiguration>();
 
             _mockDurableActivityContext.Setup(context => context.GetInput<string>())
                 .Returns(_accessToken);
 
-            _mockOnBehalfOfAccessTokenClient.Setup(client => client.GetAccessTokenAsync(_accessToken))
+            _identityClientAdapterMock.Setup(client => client.GetAccessTokenOnBehalfOfAsync(_accessToken, It.IsAny<string>(), It.IsAny<string>(), 
+                    It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(_onBehalfOfAccessToken);
 
-            GetOnBehalfOfAccessToken = new GetOnBehalfOfAccessToken(_mockOnBehalfOfAccessTokenClient.Object);
+            GetOnBehalfOfAccessToken = new GetOnBehalfOfAccessToken(_identityClientAdapterMock.Object, _mockConfiguration.Object);
         }
 
         [Fact]

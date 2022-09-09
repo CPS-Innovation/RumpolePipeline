@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace coordinator.Domain.Adapters
 {
     public interface IIdentityClientAdapter
     {
-        Task<string> GetAccessTokenAsync(IEnumerable<string> scopes);
+        Task<string> GetAccessTokenAsync(string tenantId, string clientId, string clientSecret, string scopes);
+
+        Task<string> GetAccessTokenOnBehalfOfAsync(string currentAccessToken, string tenantId, string clientId,
+            string clientSecret, string scopes);
     }
 }

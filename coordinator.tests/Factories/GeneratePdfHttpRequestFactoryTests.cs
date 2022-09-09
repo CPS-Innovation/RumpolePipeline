@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture;
@@ -26,6 +25,7 @@ namespace coordinator.tests.Factories
         private readonly string _pdfGeneratorUrl;
 
         private readonly Mock<IIdentityClientAdapter> _mockIdentityClientAdapter;
+        
 
 		private readonly GeneratePdfHttpRequestFactory _generatePdfHttpRequestFactory;
 
@@ -44,13 +44,17 @@ namespace coordinator.tests.Factories
 			var mockConfiguration = new Mock<IConfiguration>();
             _mockIdentityClientAdapter = new Mock<IIdentityClientAdapter>();
 
-            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<IEnumerable<string>>())).ReturnsAsync(_accessToken.Token);
+            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+	            .ReturnsAsync(_accessToken.Token);
 			
 			mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.FileName == _fileName)))
 				.Returns(_content);
 
-			mockConfiguration.Setup(config => config["PdfGeneratorScope"]).Returns(pdfGeneratorScope);
+			mockConfiguration.Setup(config => config["PdfGeneratorScopes"]).Returns(pdfGeneratorScope);
 			mockConfiguration.Setup(config => config["PdfGeneratorUrl"]).Returns(_pdfGeneratorUrl);
+			mockConfiguration.Setup(config => config["OnBehalfOfTokenTenantId"]).Returns(fixture.Create<string>());
+			mockConfiguration.Setup(config => config["PdfGeneratorClientId"]).Returns(fixture.Create<string>());
+			mockConfiguration.Setup(config => config["PdfGeneratorClientSecret"]).Returns(fixture.Create<string>());
 
 			_generatePdfHttpRequestFactory = new GeneratePdfHttpRequestFactory(_mockIdentityClientAdapter.Object, mockJsonConvertWrapper.Object, mockConfiguration.Object);
 		}
@@ -91,7 +95,8 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_ThrowsExceptionWhenExceptionOccurs()
 		{
-			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<IEnumerable<string>>())).Throws(new Exception());
+			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+				.Throws(new Exception());
 
 			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName));
 		}

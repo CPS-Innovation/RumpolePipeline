@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Threading.Tasks;
-using coordinator.Clients;
+using coordinator.Domain.Adapters;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Configuration;
 
 namespace coordinator.Functions.ActivityFunctions
 {
     public class GetOnBehalfOfAccessToken
     {
-        private readonly IOnBehalfOfTokenClient _onBehalfOfTokenClient;
+        private readonly IIdentityClientAdapter _identityClientAdapter;
+        private readonly IConfiguration _configuration;
 
-        public GetOnBehalfOfAccessToken(IOnBehalfOfTokenClient onBehalfOfTokenClient)
+        public GetOnBehalfOfAccessToken(IIdentityClientAdapter identityClientAdapter, IConfiguration configuration)
         {
-            _onBehalfOfTokenClient = onBehalfOfTokenClient;
+            _identityClientAdapter = identityClientAdapter;
+            _configuration = configuration;
         }
 
         [FunctionName("GetOnBehalfOfAccessToken")]
@@ -23,8 +26,13 @@ namespace coordinator.Functions.ActivityFunctions
             {
                 throw new ArgumentException("Access token cannot be null.");
             }
+            
+            var onBehalfOfTokenTenantId = _configuration["OnBehalfOfTokenTenantId"];
+            var onBehalfOfTokenClientId = _configuration["OnBehalfOfTokenClientId"];
+            var onBehalfOfTokenClientSecret = _configuration["OnBehalfOfTokenClientSecret"];
+            var onBehalfOfScopes = _configuration["CoreDataApiScope"];
 
-            return await _onBehalfOfTokenClient.GetAccessTokenAsync(accessToken);
+            return await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(accessToken, onBehalfOfTokenTenantId, onBehalfOfTokenClientId, onBehalfOfTokenClientSecret, onBehalfOfScopes);
         }
     }
 }
