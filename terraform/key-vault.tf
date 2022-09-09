@@ -49,7 +49,8 @@ resource "azurerm_key_vault_access_policy" "kvap_terraform_sp" {
     "Get",
     "Set",
     "Delete",
-    "Purge"
+    "Purge",
+    "Recover"
   ]
 }
 
