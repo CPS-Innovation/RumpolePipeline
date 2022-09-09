@@ -27,9 +27,9 @@ auth_details = {
 	coordinator_valid_scopes = "user_impersonation"
 	coordinator_valid_roles = ""
 	pdf_generator_valid_audience = "api://fa-rumpole-pipeline-dev-pdf-generator"
-	pdf_generator_valid_scopes = "user_impersonation"
+	pdf_generator_valid_scopes = ".default"
 	pdf_generator_valid_roles = ""
 	text_extractor_valid_audience = "api://fa-rumpole-pipeline-dev-text-extractor"
-	text_extractor_valid_scopes = "user_impersonation"
+	text_extractor_valid_scopes = ".default"
 	text_extractor_valid_roles = ""
 }
