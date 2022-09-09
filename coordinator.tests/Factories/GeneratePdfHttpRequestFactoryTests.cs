@@ -44,7 +44,7 @@ namespace coordinator.tests.Factories
 			var mockConfiguration = new Mock<IConfiguration>();
             _mockIdentityClientAdapter = new Mock<IIdentityClientAdapter>();
 
-            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenOnBehalfOfAsync(It.IsAny<string>(), It.IsAny<string>()))
 	            .ReturnsAsync(_accessToken.Token);
 			
 			mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.FileName == _fileName)))
@@ -62,7 +62,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token);
 
 			durableRequest.Method.Should().Be(HttpMethod.Post);
 		}
@@ -70,7 +70,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedUriOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token);
 
 			durableRequest.Uri.AbsoluteUri.Should().Be(_pdfGeneratorUrl);
 		}
@@ -78,7 +78,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHeadersOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token);
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
 			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_accessToken.Token}");
@@ -87,7 +87,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedContentOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token);
 
 			durableRequest.Content.Should().Be(_content);
 		}
@@ -95,10 +95,10 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_ThrowsExceptionWhenExceptionOccurs()
 		{
-			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenOnBehalfOfAsync(It.IsAny<string>(), It.IsAny<string>()))
 				.Throws(new Exception());
 
-			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName));
+			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token));
 		}
 	}
 }

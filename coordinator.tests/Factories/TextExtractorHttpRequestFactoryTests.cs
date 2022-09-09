@@ -43,7 +43,7 @@ namespace coordinator.tests.Factories
             var mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
 			var mockConfiguration = new Mock<IConfiguration>();
 			
-            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenOnBehalfOfAsync(It.IsAny<string>(), It.IsAny<string>()))
 	            .ReturnsAsync(_accessToken.Token);
 
             mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<TextExtractorRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.BlobName == _blobName)))
@@ -58,7 +58,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token);
 
 			durableRequest.Method.Should().Be(HttpMethod.Post);
 		}
@@ -66,7 +66,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedUriOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token);
 
 			durableRequest.Uri.AbsoluteUri.Should().Be(_textExtractorUrl);
 		}
@@ -74,7 +74,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHeadersOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token);
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
 			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_accessToken.Token}");
@@ -83,7 +83,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedContentOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token);
 
 			durableRequest.Content.Should().Be(_content);
 		}
@@ -91,10 +91,10 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_ThrowsExceptionWhenExceptionOccurs()
 		{
-			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenOnBehalfOfAsync(It.IsAny<string>(), It.IsAny<string>()))
 				.Throws(new Exception());
 
-            await Assert.ThrowsAsync<TextExtractorHttpRequestFactoryException>(() => _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName));
+            await Assert.ThrowsAsync<TextExtractorHttpRequestFactoryException>(() => _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token));
 		}
 	}
 }

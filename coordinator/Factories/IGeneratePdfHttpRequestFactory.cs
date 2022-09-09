@@ -5,7 +5,7 @@ namespace coordinator.Factories
 {
 	public interface IGeneratePdfHttpRequestFactory
 	{
-		Task<DurableHttpRequest> Create(int caseId, string documentId, string fileName);
+		Task<DurableHttpRequest> Create(int caseId, string documentId, string fileName, string currentAccessToken);
 	}
 }
 

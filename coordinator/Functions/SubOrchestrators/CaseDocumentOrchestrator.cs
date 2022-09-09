@@ -62,7 +62,7 @@ namespace coordinator.Functions.SubOrchestrators
         {
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
-                new CreateGeneratePdfHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, FileName = payload.FileName });
+                new CreateGeneratePdfHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, FileName = payload.FileName, AccessToken = payload.AccessToken });
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -103,7 +103,7 @@ namespace coordinator.Functions.SubOrchestrators
         {
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateTextExtractorHttpRequest),
-                new CreateTextExtractorHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, BlobName = blobName });
+                new CreateTextExtractorHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, BlobName = blobName, AccessToken = payload.AccessToken });
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)

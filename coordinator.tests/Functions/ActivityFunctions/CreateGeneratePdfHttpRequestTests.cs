@@ -35,7 +35,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
                 .Returns(_payload);
 
-            _mockGeneratePdfHttpFactory.Setup(client => client.Create(_payload.CaseId, _payload.DocumentId, _payload.FileName))
+            _mockGeneratePdfHttpFactory.Setup(client => client.Create(_payload.CaseId, _payload.DocumentId, _payload.FileName, _payload.AccessToken))
                 .ReturnsAsync(_durableRequest);
 
             CreateGeneratePdfHttpRequest = new CreateGeneratePdfHttpRequest(_mockGeneratePdfHttpFactory.Object);
