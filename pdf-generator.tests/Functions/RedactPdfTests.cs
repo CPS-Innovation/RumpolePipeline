@@ -1,7 +1,6 @@
 ﻿using AutoFixture;
 using common.Wrappers;
 using Moq;
-using System.Security.Claims;
 using pdf_generator.Functions;
 using System.Net.Http;
 using System.Net;
@@ -27,7 +26,6 @@ namespace pdf_generator.tests.Functions
         private readonly string _serializedRedactPdfResponse;
         private HttpRequestMessage _httpRequestMessage;
         private readonly Mock<IAuthorizationValidator> _mockAuthorizationValidator;
-        private readonly Mock<ClaimsPrincipal> _mockClaimsPrincipal;
         private readonly Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
         private readonly Mock<IExceptionHandler> _mockExceptionHandler;
 
@@ -45,7 +43,6 @@ namespace pdf_generator.tests.Functions
             _serializedRedactPdfResponse = _fixture.Create<string>();
 
             _mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
-            _mockClaimsPrincipal = new Mock<ClaimsPrincipal>();
             _mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
             _mockExceptionHandler = new Mock<IExceptionHandler>();
             var mockDocumentRedactionService = new Mock<IDocumentRedactionService>();
@@ -70,7 +67,7 @@ namespace pdf_generator.tests.Functions
                 .Returns(new HttpResponseMessage(HttpStatusCode.Unauthorized));
             _httpRequestMessage.Content = new StringContent(" ");
 
-            var response = await _redactPdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+            var response = await _redactPdf.Run(_httpRequestMessage);
 
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
@@ -83,7 +80,7 @@ namespace pdf_generator.tests.Functions
                 .Returns(errorHttpResponseMessage);
             _httpRequestMessage.Content = new StringContent(" ");
 
-            var response = await _redactPdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+            var response = await _redactPdf.Run(_httpRequestMessage);
 
             response.Should().Be(errorHttpResponseMessage);
         }
@@ -98,7 +95,7 @@ namespace pdf_generator.tests.Functions
             _mockExceptionHandler.Setup(handler => handler.HandleException(exception))
                 .Returns(errorHttpResponseMessage);
 
-            var response = await _redactPdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+            var response = await _redactPdf.Run(_httpRequestMessage);
 
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
@@ -106,7 +103,7 @@ namespace pdf_generator.tests.Functions
         [Fact]
         public async Task Run_ReturnsOk()
         {
-            var response = await _redactPdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+            var response = await _redactPdf.Run(_httpRequestMessage);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
@@ -114,7 +111,7 @@ namespace pdf_generator.tests.Functions
         [Fact]
         public async Task Run_ReturnsExpectedContent()
         {
-            var response = await _redactPdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+            var response = await _redactPdf.Run(_httpRequestMessage);
 
             var content = await response.Content.ReadAsStringAsync();
             content.Should().Be(_serializedRedactPdfResponse);
@@ -136,7 +133,7 @@ namespace pdf_generator.tests.Functions
                 Content = new StringContent(serializedRedactPdfRequest, Encoding.UTF8, "application/json")
             };
 
-            var response = await _redactPdf.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+            var response = await _redactPdf.Run(_httpRequestMessage);
 
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }

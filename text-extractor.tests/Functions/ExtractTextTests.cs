@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoFixture;
 using common.Domain.Exceptions;
@@ -30,7 +29,6 @@ namespace text_extractor.tests.Functions
 		private HttpResponseMessage _errorHttpResponseMessage;
 		
 		private readonly Mock<IAuthorizationValidator> _mockAuthorizationValidator;
-		private readonly Mock<ClaimsPrincipal> _mockClaimsPrincipal;
 		private readonly Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
         private readonly Mock<ISearchIndexService> _mockSearchIndexService;
 		private readonly Mock<IExceptionHandler> _mockExceptionHandler;
@@ -49,7 +47,6 @@ namespace text_extractor.tests.Functions
 			_extractTextRequest = fixture.Create<ExtractTextRequest>();
 			
 			_mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
-			_mockClaimsPrincipal = new Mock<ClaimsPrincipal>();
 			_mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
 			var mockValidatorWrapper = new Mock<IValidatorWrapper<ExtractTextRequest>>();
 			var mockOcrService = new Mock<IOcrService>();
@@ -84,7 +81,7 @@ namespace text_extractor.tests.Functions
 				.Returns(_errorHttpResponseMessage);
 			_httpRequestMessage.Content = new StringContent(" ");
 
-			var response = await _extractText.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+			var response = await _extractText.Run(_httpRequestMessage);
 
 			response.Should().Be(_errorHttpResponseMessage);
 		}
@@ -97,7 +94,7 @@ namespace text_extractor.tests.Functions
 				.Returns(_errorHttpResponseMessage);
 			_httpRequestMessage.Content = new StringContent(" ");
 
-			var response = await _extractText.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+			var response = await _extractText.Run(_httpRequestMessage);
 
 			response.Should().Be(_errorHttpResponseMessage);
 		}
@@ -105,7 +102,7 @@ namespace text_extractor.tests.Functions
 		[Fact]
 		public async Task Run_StoresOcrResults()
 		{
-			await _extractText.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+			await _extractText.Run(_httpRequestMessage);
 
 			_mockSearchIndexService.Verify(service => service.StoreResultsAsync(_mockAnalyzeResults.Object, _extractTextRequest.CaseId, _extractTextRequest.DocumentId));
 		}
@@ -113,7 +110,7 @@ namespace text_extractor.tests.Functions
 		[Fact]
 		public async Task Run_ReturnsOk()
 		{
-			var response = await _extractText.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+			var response = await _extractText.Run(_httpRequestMessage);
 
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
@@ -128,7 +125,7 @@ namespace text_extractor.tests.Functions
 			_mockExceptionHandler.Setup(handler => handler.HandleException(exception))
 				.Returns(_errorHttpResponseMessage);
 
-			var response = await _extractText.Run(_httpRequestMessage, _mockClaimsPrincipal.Object);
+			var response = await _extractText.Run(_httpRequestMessage);
 
 			response.Should().Be(_errorHttpResponseMessage);
 		}
