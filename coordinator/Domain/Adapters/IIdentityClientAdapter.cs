@@ -5,5 +5,7 @@ namespace coordinator.Domain.Adapters
     public interface IIdentityClientAdapter
     {
         Task<string> GetAccessTokenOnBehalfOfAsync(string currentAccessToken, string scopes);
+
+        Task<string> GetClientAccessTokenAsync(string scopes);
     }
 }

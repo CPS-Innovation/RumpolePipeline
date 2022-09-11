@@ -14,31 +14,28 @@ namespace coordinator.tests.Functions.ActivityFunctions
 {
     public class CreateGeneratePdfHttpRequestTests
     {
-        private Fixture _fixture;
-        private CreateGeneratePdfHttpRequestActivityPayload _payload;
-        private DurableHttpRequest _durableRequest;
+        private readonly DurableHttpRequest _durableRequest;
 
-        private Mock<IGeneratePdfHttpRequestFactory> _mockGeneratePdfHttpFactory;
-        private Mock<IDurableActivityContext> _mockDurableActivityContext;
+        private readonly Mock<IDurableActivityContext> _mockDurableActivityContext;
 
-        private CreateGeneratePdfHttpRequest CreateGeneratePdfHttpRequest;
+        private readonly CreateGeneratePdfHttpRequest _createGeneratePdfHttpRequest;
 
         public CreateGeneratePdfHttpRequestTests()
         {
-            _fixture = new Fixture();
-            _payload = _fixture.Create<CreateGeneratePdfHttpRequestActivityPayload>();
+            var fixture = new Fixture();
+            var payload = fixture.Create<CreateGeneratePdfHttpRequestActivityPayload>();
             _durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.test.co.uk"));
 
-            _mockGeneratePdfHttpFactory = new Mock<IGeneratePdfHttpRequestFactory>();
+            var mockGeneratePdfHttpFactory = new Mock<IGeneratePdfHttpRequestFactory>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
 
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
-                .Returns(_payload);
+                .Returns(payload);
 
-            _mockGeneratePdfHttpFactory.Setup(client => client.Create(_payload.CaseId, _payload.DocumentId, _payload.FileName, _payload.AccessToken))
+            mockGeneratePdfHttpFactory.Setup(client => client.Create(payload.CaseId, payload.DocumentId, payload.FileName))
                 .ReturnsAsync(_durableRequest);
 
-            CreateGeneratePdfHttpRequest = new CreateGeneratePdfHttpRequest(_mockGeneratePdfHttpFactory.Object);
+            _createGeneratePdfHttpRequest = new CreateGeneratePdfHttpRequest(mockGeneratePdfHttpFactory.Object);
         }
 
         [Fact]
@@ -47,13 +44,13 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
                 .Returns(default(CreateGeneratePdfHttpRequestActivityPayload));
 
-            await Assert.ThrowsAsync<ArgumentException>(() => CreateGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object));
+            await Assert.ThrowsAsync<ArgumentException>(() => _createGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object));
         }
 
         [Fact]
         public async Task Run_ReturnsDurableRequest()
         {
-            var durableRequest = await CreateGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object);
+            var durableRequest = await _createGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object);
 
             durableRequest.Should().Be(_durableRequest);
         }

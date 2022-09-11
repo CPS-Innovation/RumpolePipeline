@@ -27,13 +27,13 @@ namespace coordinator.Factories
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string fileName, string currentAccessToken)
+        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string fileName)
         {
             try
             {
                 var clientScopes = _configuration["PdfGeneratorScope"];
                 
-                var result = await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(currentAccessToken, clientScopes);
+                var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes);
                 
                 var headers = new Dictionary<string, StringValues>() {
                     { "Content-Type", "application/json" },

@@ -30,5 +30,19 @@ namespace coordinator.Domain.Adapters
                 throw new OnBehalfOfTokenClientException($"Failed to acquire onBehalfOf token. Exception: {exception.Message}");
             }
         }
+
+        public async Task<string> GetClientAccessTokenAsync(string scopes)
+        {
+            try
+            {
+                var requestedScopes = new Collection<string> { scopes };
+                var result = await _confidentialClientApplication.AcquireTokenForClient(requestedScopes).ExecuteAsync();
+                return result.AccessToken;
+            }
+            catch (Exception ex)
+            {
+                throw new ClientTokenException($"Failed to acquire a client token. Exception: {ex.Message}");
+            }
+        }
     }
 }

@@ -20,7 +20,7 @@ namespace coordinator.tests.Factories
         private readonly int _caseId;
 		private readonly string _documentId;
 		private readonly string _fileName;
-		private readonly AccessToken _accessToken;
+		private readonly AccessToken _clientAccessToken;
 		private readonly string _content;
         private readonly string _pdfGeneratorUrl;
 
@@ -35,7 +35,7 @@ namespace coordinator.tests.Factories
 			_caseId = fixture.Create<int>();
 			_documentId = fixture.Create<string>();
 			_fileName = fixture.Create<string>();
-			_accessToken = fixture.Create<AccessToken>();
+			_clientAccessToken = fixture.Create<AccessToken>();
 			_content = fixture.Create<string>();
 			var pdfGeneratorScope = fixture.Create<string>();
 			_pdfGeneratorUrl = "https://www.test.co.uk/";
@@ -44,8 +44,8 @@ namespace coordinator.tests.Factories
 			var mockConfiguration = new Mock<IConfiguration>();
             _mockIdentityClientAdapter = new Mock<IIdentityClientAdapter>();
 
-            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenOnBehalfOfAsync(It.IsAny<string>(), It.IsAny<string>()))
-	            .ReturnsAsync(_accessToken.Token);
+            _mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>()))
+	            .ReturnsAsync(_clientAccessToken.Token);
 			
 			mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.FileName == _fileName)))
 				.Returns(_content);
@@ -60,7 +60,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
 
 			durableRequest.Method.Should().Be(HttpMethod.Post);
 		}
@@ -68,7 +68,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedUriOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
 
 			durableRequest.Uri.AbsoluteUri.Should().Be(_pdfGeneratorUrl);
 		}
@@ -76,27 +76,27 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHeadersOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
-			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_accessToken.Token}");
+			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_clientAccessToken.Token}");
 		}
 
 		[Fact]
 		public async Task Create_SetsExpectedContentOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName);
 
 			durableRequest.Content.Should().Be(_content);
 		}
 
 		[Fact]
-		public async Task Create_ThrowsExceptionWhenExceptionOccurs()
+		public async Task Create_ClientCredentialsFlow_ThrowsExceptionWhenExceptionOccurs()
 		{
-			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenOnBehalfOfAsync(It.IsAny<string>(), It.IsAny<string>()))
+			_mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>()))
 				.Throws(new Exception());
 
-			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _accessToken.Token));
+			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName));
 		}
 	}
 }

@@ -27,13 +27,13 @@ namespace coordinator.Factories
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string blobName, string currentAccessToken)
+        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string blobName)
         {
             try
             {
                 var clientScopes = _configuration["TextExtractorScope"];
                 
-                var result = await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(currentAccessToken, clientScopes);
+                var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes);
                 
                 var headers = new Dictionary<string, StringValues>() {
                     { "Content-Type", "application/json" },

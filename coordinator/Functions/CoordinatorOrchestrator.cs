@@ -99,8 +99,7 @@ namespace coordinator.Functions
                     {
                         CaseId = payload.CaseId,
                         DocumentId = documents[documentIndex].DocumentId,
-                        FileName = documents[documentIndex].FileName,
-                        AccessToken = payload.AccessToken
+                        FileName = documents[documentIndex].FileName
                     }));
             }
 

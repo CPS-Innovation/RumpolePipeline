@@ -14,31 +14,28 @@ namespace coordinator.tests.Functions.ActivityFunctions
 {
     public class CreateTextExtractorHttpRequestTests
     {
-        private Fixture _fixture;
-        private CreateTextExtractorHttpRequestActivityPayload _payload;
-        private DurableHttpRequest _durableRequest;
+        private readonly DurableHttpRequest _durableRequest;
 
-        private Mock<ITextExtractorHttpRequestFactory> _mockTextExtractorHttpFactory;
-        private Mock<IDurableActivityContext> _mockDurableActivityContext;
+        private readonly Mock<IDurableActivityContext> _mockDurableActivityContext;
 
-        private CreateTextExtractorHttpRequest CreateTextExtractorHttpRequest;
+        private readonly CreateTextExtractorHttpRequest _createTextExtractorHttpRequest;
 
         public CreateTextExtractorHttpRequestTests()
         {
-            _fixture = new Fixture();
-            _payload = _fixture.Create<CreateTextExtractorHttpRequestActivityPayload>();
+            var fixture = new Fixture();
+            var payload = fixture.Create<CreateTextExtractorHttpRequestActivityPayload>();
             _durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.test.co.uk"));
 
-            _mockTextExtractorHttpFactory = new Mock<ITextExtractorHttpRequestFactory>();
+            var mockTextExtractorHttpFactory = new Mock<ITextExtractorHttpRequestFactory>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
 
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateTextExtractorHttpRequestActivityPayload>())
-                .Returns(_payload);
+                .Returns(payload);
 
-            _mockTextExtractorHttpFactory.Setup(client => client.Create(_payload.CaseId, _payload.DocumentId, _payload.BlobName, _payload.AccessToken))
+            mockTextExtractorHttpFactory.Setup(client => client.Create(payload.CaseId, payload.DocumentId, payload.BlobName))
                 .ReturnsAsync(_durableRequest);
 
-            CreateTextExtractorHttpRequest = new CreateTextExtractorHttpRequest(_mockTextExtractorHttpFactory.Object);
+            _createTextExtractorHttpRequest = new CreateTextExtractorHttpRequest(mockTextExtractorHttpFactory.Object);
         }
 
         [Fact]
@@ -47,13 +44,13 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateTextExtractorHttpRequestActivityPayload>())
                 .Returns(default(CreateTextExtractorHttpRequestActivityPayload));
 
-            await Assert.ThrowsAsync<ArgumentException>(() => CreateTextExtractorHttpRequest.Run(_mockDurableActivityContext.Object));
+            await Assert.ThrowsAsync<ArgumentException>(() => _createTextExtractorHttpRequest.Run(_mockDurableActivityContext.Object));
         }
 
         [Fact]
         public async Task Run_ReturnsDurableRequest()
         {
-            var durableRequest = await CreateTextExtractorHttpRequest.Run(_mockDurableActivityContext.Object);
+            var durableRequest = await _createTextExtractorHttpRequest.Run(_mockDurableActivityContext.Object);
 
             durableRequest.Should().Be(_durableRequest);
         }

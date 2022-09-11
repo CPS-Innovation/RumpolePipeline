@@ -25,7 +25,7 @@ namespace coordinator.Functions.ActivityFunctions
                 throw new ArgumentException("Payload cannot be null.");
             }
 
-            return await _textExtractorHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.BlobName, payload.AccessToken);
+            return await _textExtractorHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.BlobName);
         }
     }
 }
