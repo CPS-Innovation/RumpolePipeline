@@ -20,7 +20,7 @@ namespace coordinator.tests.Factories
         private readonly int _caseId;
 		private readonly string _documentId;
 		private readonly string _blobName;
-		private readonly AccessToken _accessToken;
+		private readonly AccessToken _clientAccessToken;
 		private readonly string _content;
         private readonly string _textExtractorUrl;
 
@@ -34,7 +34,7 @@ namespace coordinator.tests.Factories
 			_caseId = fixture.Create<int>();
 			_documentId = fixture.Create<string>();
 			_blobName = fixture.Create<string>();
-			_accessToken = fixture.Create<AccessToken>();
+			_clientAccessToken = fixture.Create<AccessToken>();
 			_content = fixture.Create<string>();
 			var textExtractorScope = fixture.Create<string>();
 			_textExtractorUrl = "https://www.test.co.uk/";
@@ -43,8 +43,8 @@ namespace coordinator.tests.Factories
             var mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
 			var mockConfiguration = new Mock<IConfiguration>();
 			
-            _mockIdentityClientAdapter.Setup(x => x.GetAccessTokenOnBehalfOfAsync(It.IsAny<string>(), It.IsAny<string>()))
-	            .ReturnsAsync(_accessToken.Token);
+            _mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>()))
+	            .ReturnsAsync(_clientAccessToken.Token);
 
             mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<TextExtractorRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.BlobName == _blobName)))
 				.Returns(_content);
@@ -58,7 +58,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
 
 			durableRequest.Method.Should().Be(HttpMethod.Post);
 		}
@@ -66,7 +66,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedUriOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
 
 			durableRequest.Uri.AbsoluteUri.Should().Be(_textExtractorUrl);
 		}
@@ -74,27 +74,27 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHeadersOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
-			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_accessToken.Token}");
+			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_clientAccessToken.Token}");
 		}
 
 		[Fact]
 		public async Task Create_SetsExpectedContentOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName);
 
 			durableRequest.Content.Should().Be(_content);
 		}
 
 		[Fact]
-		public async Task Create_ThrowsExceptionWhenExceptionOccurs()
+		public async Task Create_ClientCredentialsFlow_ThrowsExceptionWhenExceptionOccurs()
 		{
-			_mockIdentityClientAdapter.Setup(x => x.GetAccessTokenOnBehalfOfAsync(It.IsAny<string>(), It.IsAny<string>()))
+			_mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>()))
 				.Throws(new Exception());
 
-            await Assert.ThrowsAsync<TextExtractorHttpRequestFactoryException>(() => _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName, _accessToken.Token));
+            await Assert.ThrowsAsync<TextExtractorHttpRequestFactoryException>(() => _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _blobName));
 		}
 	}
 }

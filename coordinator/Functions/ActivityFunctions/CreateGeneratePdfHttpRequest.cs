@@ -25,8 +25,7 @@ namespace coordinator.Functions.ActivityFunctions
                 throw new ArgumentException("Payload cannot be null.");
             }
 
-            return await _generatePdfHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.FileName,
-                payload.AccessToken);
+            return await _generatePdfHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.FileName);
         }
     }
 }

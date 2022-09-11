@@ -27,7 +27,7 @@ namespace coordinator.Factories
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string blobName, string currentAccessToken)
+        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string blobName)
         {
             try
             {

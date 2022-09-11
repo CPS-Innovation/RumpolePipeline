@@ -7,7 +7,5 @@
         public string DocumentId { get; set; }
 
         public string BlobName { get; set; }
-
-        public string AccessToken { get; set; }
     }
 }

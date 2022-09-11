@@ -62,7 +62,7 @@ namespace coordinator.Functions.SubOrchestrators
         {
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
-                new CreateGeneratePdfHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, FileName = payload.FileName, AccessToken = payload.AccessToken });
+                new CreateGeneratePdfHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, FileName = payload.FileName });
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -77,7 +77,7 @@ namespace coordinator.Functions.SubOrchestrators
                         break;
                 }
                 
-                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}. Calling access token: [{payload.AccessToken}].");
+                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
             }
 
             return _jsonConvertWrapper.DeserializeObject<GeneratePdfResponse>(response.Content);
@@ -103,7 +103,7 @@ namespace coordinator.Functions.SubOrchestrators
         {
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateTextExtractorHttpRequest),
-                new CreateTextExtractorHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, BlobName = blobName, AccessToken = payload.AccessToken });
+                new CreateTextExtractorHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, BlobName = blobName });
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
