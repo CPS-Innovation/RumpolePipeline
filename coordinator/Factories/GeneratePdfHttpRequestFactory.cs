@@ -33,7 +33,7 @@ namespace coordinator.Factories
             {
                 var clientScopes = _configuration["PdfGeneratorScope"];
                 
-                var result = await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(currentAccessToken, clientScopes);
+                var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes);
                 
                 var headers = new Dictionary<string, StringValues>() {
                     { "Content-Type", "application/json" },
