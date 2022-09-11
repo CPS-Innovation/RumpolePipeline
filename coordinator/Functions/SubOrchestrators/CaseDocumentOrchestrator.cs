@@ -76,8 +76,9 @@ namespace coordinator.Functions.SubOrchestrators
                         await tracker.RegisterUnableToConvertDocumentToPdf(payload.DocumentId);
                         break;
                 }
-                
-                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
+
+                request.Headers.TryGetValue("Authorization", out var tokenUsed);
+                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}].");
             }
 
             return _jsonConvertWrapper.DeserializeObject<GeneratePdfResponse>(response.Content);
@@ -94,6 +95,7 @@ namespace coordinator.Functions.SubOrchestrators
             catch (Exception exception)
             {
                 await tracker.RegisterOcrAndIndexFailure(payload.DocumentId);
+                
                 _log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
                 throw;
             }
@@ -108,7 +110,8 @@ namespace coordinator.Functions.SubOrchestrators
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                throw new HttpRequestException($"Failed to ocr/index document with id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
+                request.Headers.TryGetValue("Authorization", out var tokenUsed);
+                throw new HttpRequestException($"Failed to ocr/index document with id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}].");
             }
         }
 

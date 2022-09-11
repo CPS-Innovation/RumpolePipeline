@@ -39,6 +39,14 @@ namespace coordinator.Domain.Adapters
                 var result = await _confidentialClientApplication.AcquireTokenForClient(requestedScopes).ExecuteAsync();
                 return result.AccessToken;
             }
+            catch (MsalUiRequiredException ex)
+            {
+                throw new ClientTokenException($"Failed to acquire a client token. Insufficient permissions. Exception: {ex.Message}");
+            }
+            catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
+            {
+                throw new ClientTokenException($"Failed to acquire a client token. Invalid scope. Exception: {ex.Message}");
+            }
             catch (Exception ex)
             {
                 throw new ClientTokenException($"Failed to acquire a client token. Exception: {ex.Message}");
