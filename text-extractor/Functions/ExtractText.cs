@@ -38,7 +38,7 @@ namespace text_extractor.Functions
         }
 
         [FunctionName("ExtractText")]
-        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "extract")] HttpRequestMessage request, ClaimsPrincipal claimsPrincipal)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "extract")] HttpRequestMessage request)
         {
             try
             {

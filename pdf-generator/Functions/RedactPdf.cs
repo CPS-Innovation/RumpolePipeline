@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using common.Domain.Exceptions;
@@ -35,7 +34,7 @@ namespace pdf_generator.Functions
 
         [FunctionName("redact-pdf")]
         public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "redactPdf")]
-            HttpRequestMessage request, ClaimsPrincipal claimsPrincipal)
+            HttpRequestMessage request)
         {
             try
             {

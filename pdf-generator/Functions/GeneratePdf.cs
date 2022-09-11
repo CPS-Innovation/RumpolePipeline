@@ -46,7 +46,7 @@ namespace pdf_generator.Functions
         }
 
         [FunctionName("generate-pdf")]
-        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "generate")] HttpRequestMessage request, ClaimsPrincipal claimsPrincipal)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "generate")] HttpRequestMessage request)
         {
             try
             {
