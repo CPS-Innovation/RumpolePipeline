@@ -9,12 +9,13 @@ app_service_plan_sku = {
 
 pdf_generator_details = {
 	application_registration_id = "6cda2834-224f-4578-9b4f-2792102411c9"
-	user_impersonation_scope_id = "9da85336-7f4c-4f7f-b8cb-6b791e754a8d"
+	user_impersonation_scope_id = "cd5af403-f1a8-43fa-8baf-ff64efcbb085"
+	application_create_role_id  = "1d9e799a-c0ce-4266-a5c8-a82514774689"
 }
 
 text_extractor_details = {
 	application_registration_id = "6525d99f-9d0e-4293-bfb2-5e24a1295bf0"
-	user_impersonation_scope_id = "d1bef34b-63c7-4b44-8dce-09133a012264"
+	application_text_extraction_role_id  = "0ee34100-d0d0-4ce0-97d0-a654f1758155"
 }
 
 gateway_details = {
@@ -28,8 +29,8 @@ auth_details = {
 	coordinator_valid_roles = ""
 	pdf_generator_valid_audience = "api://fa-rumpole-pipeline-dev-pdf-generator"
 	pdf_generator_valid_scopes = "user_impersonation"
-	pdf_generator_valid_roles = ""
+	pdf_generator_valid_roles = "application.create"
 	text_extractor_valid_audience = "api://fa-rumpole-pipeline-dev-text-extractor"
-	text_extractor_valid_scopes = "user_impersonation"
-	text_extractor_valid_roles = ""
+	text_extractor_valid_scopes = ""
+	text_extractor_valid_roles = "application.extracttext"
 }

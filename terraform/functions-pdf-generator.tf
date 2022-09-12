@@ -18,7 +18,6 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "BlobServiceUrl"                          = "https://sacps${var.env != "prod" ? var.env : ""}rumpolepipeline.blob.core.windows.net/"
     "BlobServiceContainerName"                = "documents"
     "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
-    "AuthorizationClaim"                      = "application.create"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = var.auth_details.pdf_generator_valid_audience
     "CallingAppValidScopes"                   = var.auth_details.pdf_generator_valid_scopes
@@ -68,29 +67,21 @@ resource "azuread_application" "fa_pdf_generator" {
     }
   }
 
-  required_resource_access {
-    resource_app_id = var.pdf_generator_details.application_registration_id  # Pdf Generator
-
-    resource_access {
-      id   = var.pdf_generator_details.user_impersonation_scope_id # user impersonation
-      type = "Scope"
-    }
-  }
-
   web {
   redirect_uris = ["https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/.auth/login/aad/callback"]
 
     implicit_grant {
+      access_token_issuance_enabled = true
       id_token_issuance_enabled     = true
     }
   }
 
   app_role {
-    allowed_member_types  = ["Application", "User"]
+    allowed_member_types  = ["Application"]
     description          = "Creators have the ability to create resources"
     display_name         = "Create"
     enabled              = true
-    id                   = "86CD7E91-7949-47EB-A148-9B81C249C55C"
+    id                   = var.pdf_generator_details.application_create_role_id
     value                = "application.create"
   }
 }

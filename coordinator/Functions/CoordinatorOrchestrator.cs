@@ -61,7 +61,7 @@ namespace coordinator.Functions
             catch (Exception exception)
             {
                 await tracker.RegisterFailed();
-                _log.LogError(exception, "Error when running {CoordinatorOrchestratorName} orchestration with id \'{ContextInstanceId}\'.", nameof(CoordinatorOrchestrator), context.InstanceId);
+                _log.LogError(exception, "Error when running {CoordinatorOrchestratorName} orchestration with id \'{ContextInstanceId}\'", nameof(CoordinatorOrchestrator), context.InstanceId);
                 throw;
             }
         }

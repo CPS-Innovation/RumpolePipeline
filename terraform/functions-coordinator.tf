@@ -17,9 +17,9 @@ resource "azurerm_function_app" "fa_coordinator" {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
     "PdfGeneratorUrl"                         = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
-    "PdfGeneratorScope"                       = "api://fa-${local.resource_name}-pdf-generator/user_impersonation"
+    "PdfGeneratorScope"                       = "api://fa-${local.resource_name}-pdf-generator/.default"
     "TextExtractorUrl"                        = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/extract?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
-    "TextExtractorScope"                      = "api://fa-${local.resource_name}-text-extractor/user_impersonation"
+    "TextExtractorScope"                      = "api://fa-${local.resource_name}-text-extractor/.default"
     "OnBehalfOfTokenTenantId"                 = data.azurerm_client_config.current.tenant_id
     "OnBehalfOfTokenClientId"                 = azuread_application.fa_coordinator.application_id
     "OnBehalfOfTokenClientSecret"             = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_coordinator_client_secret.id})"
@@ -90,18 +90,40 @@ resource "azuread_application" "fa_coordinator" {
   }
 
   required_resource_access {
-    resource_app_id = var.gateway_details.application_registration_id # Rumpole Gateway
+    resource_app_id = var.pdf_generator_details.application_registration_id # Pdf Generator
 
     resource_access {
-      id   = var.gateway_details.user_impersonation_scope_id # user impersonation
+      id   = var.pdf_generator_details.user_impersonation_scope_id # user impersonation
       type = "Scope"
+    }
+  }
+
+  required_resource_access {
+    resource_app_id = var.pdf_generator_details.application_registration_id # Pdf Generator
+
+    resource_access {
+      id   = var.pdf_generator_details.application_create_role_id # pdf generator role
+      type = "Role"
+    }
+  }
+
+  required_resource_access {
+    resource_app_id = var.text_extractor_details.application_registration_id # Text Extractor
+
+    resource_access {
+      id   = var.text_extractor_details.application_text_extraction_role_id # text extraction role
+      type = "Role"
     }
   }
   
   web {
-    redirect_uris = ["https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback"]
+    redirect_uris = [
+      "https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback",
+      "https://getpostman.com/oauth2/callback"
+    ]
 
     implicit_grant {
+      access_token_issuance_enabled = true
       id_token_issuance_enabled     = true
     }
   }

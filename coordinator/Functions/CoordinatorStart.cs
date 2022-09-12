@@ -41,6 +41,9 @@ namespace coordinator.Functions
                     throw new BadRequestException("Invalid case id. A 32-bit integer is required.", caseId);
                 }
 
+                if (req.RequestUri == null)
+                    throw new BadRequestException("Expected querystring value", nameof(req));
+
                 var query = HttpUtility.ParseQueryString(req.RequestUri.Query);
                 var force = query.Get("force");
 
@@ -68,7 +71,8 @@ namespace coordinator.Functions
                             AccessToken = authValidation.Item2
                         });
 
-                    _log.LogInformation($"Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'.");
+                    _log.LogInformation("Started {CoordinatorOrchestratorName} with instance id \'{CaseId}\'",
+                        nameof(CoordinatorOrchestrator), caseId);
                 }
 
                 return orchestrationClient.CreateCheckStatusResponse(req, caseId);
