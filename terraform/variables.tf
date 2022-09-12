@@ -31,6 +31,13 @@ variable "gateway_details" {
   })
 }
 
+variable "coordinator_details" {
+  type = object({
+    application_registration_id = string
+    user_impersonation_scope_id = string
+  })
+}
+
 variable "pdf_generator_details" {
   type = object({
     application_registration_id = string
@@ -44,10 +51,6 @@ variable "text_extractor_details" {
     application_registration_id = string
     application_text_extraction_role_id = string
   })
-}
-
-variable "coordinator_user_impersonation_scope_id" {
-  type = string
 }
 
 # TODO get rid of this as it will change every time gateway is rebuilt
