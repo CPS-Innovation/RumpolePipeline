@@ -24,13 +24,13 @@ namespace common.Handlers
             _log = log;
         }
 
-        public async Task<Tuple<bool, string>> ValidateTokenAsync(AuthenticationHeaderValue authenticationHeader)
+        public async Task<Tuple<bool, string>> ValidateTokenAsync(AuthenticationHeaderValue authenticationHeader, string validAudience = "")
         {
             if (authenticationHeader == null) return new Tuple<bool, string>(false, string.Empty);
             if (string.IsNullOrEmpty(authenticationHeader.Parameter)) throw new ArgumentNullException(nameof(authenticationHeader));
 
             var issuer = $"https://sts.windows.net/{Environment.GetEnvironmentVariable("CallingAppTenantId")}/";
-            var audience = Environment.GetEnvironmentVariable("CallingAppValidAudience");
+            var audience = string.IsNullOrWhiteSpace(validAudience) ? Environment.GetEnvironmentVariable("CallingAppValidAudience") : validAudience;
             var configurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(issuer + "/.well-known/openid-configuration", new OpenIdConnectConfigurationRetriever(),
                 new HttpDocumentRetriever());
 

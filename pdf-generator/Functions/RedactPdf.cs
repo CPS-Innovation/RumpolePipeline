@@ -38,7 +38,7 @@ namespace pdf_generator.Functions
         {
             try
             {
-                var authValidation = await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization);
+                var authValidation = await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, Environment.GetEnvironmentVariable("RedactPdfValidAudience"));
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
 
