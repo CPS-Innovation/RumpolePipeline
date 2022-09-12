@@ -32,6 +32,10 @@ resource "azurerm_function_app" "fa_text_extractor" {
   }
   https_only                 = true
 
+  auth_settings {
+    enabled = true
+  }
+
   site_config {
     always_on      = true
     ip_restriction = []

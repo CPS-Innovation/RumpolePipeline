@@ -38,7 +38,6 @@ variable "pdf_generator_details" {
 variable "text_extractor_details" {
   type = object({
     application_registration_id = string
-    user_impersonation_scope_id = string
     application_text_extraction_role_id = string
   })
 }
