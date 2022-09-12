@@ -39,7 +39,7 @@ resource "azurerm_key_vault_access_policy" "kvap_terraform_sp" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azuread_service_principal.terraform_service_principal.object_id
 
-  key_permissions = ["get", "create", "delete", "list", "restore", "recover", "unwrapkey", "wrapkey", "purge", "encrypt", "decrypt", "sign", "verify"]
+  key_permissions = ["get", "create", "update", "delete", "list", "restore", "recover", "unwrapkey", "wrapkey", "purge", "encrypt", "decrypt", "sign", "verify"]
   secret_permissions = ["get", "set", "delete", "purge", "recover"]
 }
 
