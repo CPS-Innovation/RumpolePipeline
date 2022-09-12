@@ -25,6 +25,10 @@ resource "azurerm_function_app" "fa_pdf_generator" {
   }
   https_only                 = true
 
+  auth_settings {
+    enabled = true
+  }
+
   site_config {
     always_on      = true
     ip_restriction = []
