@@ -7,6 +7,7 @@ resource "azurerm_key_vault" "kv" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
 
   sku_name = "standard"
+  purge_protection_enabled = true
 }
 
 resource "azurerm_key_vault_access_policy" "kvap_fa_coordinator" {
@@ -14,10 +15,7 @@ resource "azurerm_key_vault_access_policy" "kvap_fa_coordinator" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = azurerm_function_app.fa_coordinator.identity[0].principal_id
 
-  secret_permissions = [
-    "Get",
-  ]
-
+  secret_permissions = ["get"]
 }
 
 resource "azurerm_key_vault_access_policy" "kvap_fa_pdf_generator" {
@@ -25,9 +23,7 @@ resource "azurerm_key_vault_access_policy" "kvap_fa_pdf_generator" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = azurerm_function_app.fa_pdf_generator.identity[0].principal_id
 
-  secret_permissions = [
-    "Get",
-  ]
+  secret_permissions = ["get"]
 }
 
 resource "azurerm_key_vault_access_policy" "kvap_fa_text_extractor" {
@@ -35,9 +31,7 @@ resource "azurerm_key_vault_access_policy" "kvap_fa_text_extractor" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = azurerm_function_app.fa_text_extractor.identity[0].principal_id
 
-  secret_permissions = [
-    "Get",
-  ]
+  secret_permissions = ["get"]
 }
 
 resource "azurerm_key_vault_access_policy" "kvap_terraform_sp" {
@@ -45,12 +39,19 @@ resource "azurerm_key_vault_access_policy" "kvap_terraform_sp" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azuread_service_principal.terraform_service_principal.object_id
 
-  secret_permissions = [
-    "Get",
-    "Set",
-    "Delete",
-    "Purge",
-    "Recover"
+  key_permissions = ["get", "create", "delete", "list", "restore", "recover", "unwrapkey", "wrapkey", "purge", "encrypt", "decrypt", "sign", "verify"]
+  secret_permissions = ["get", "set", "delete", "purge", "recover"]
+}
+
+resource "azurerm_key_vault_key" "kvap_sa_customer_managed_key" {
+  name         = "tfex-key"
+  key_vault_id = azurerm_key_vault.kv.id
+  key_type     = "RSA"
+  key_size     = 2048
+  key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+
+  depends_on = [
+    azurerm_key_vault_access_policy.kvap_terraform_sp
   ]
 }
 
