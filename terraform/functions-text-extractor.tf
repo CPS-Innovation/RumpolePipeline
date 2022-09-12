@@ -45,7 +45,7 @@ resource "azurerm_function_app" "fa_text_extractor" {
   auth_settings {
     enabled                       = true
     issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
-    default_provider              = "AzureActiveDirectory"
+    unauthenticated_client_action = "RedirectToLoginPage"
   }
 
   lifecycle {
