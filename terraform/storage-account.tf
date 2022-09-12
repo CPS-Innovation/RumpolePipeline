@@ -13,6 +13,16 @@ resource "azurerm_storage_account" "sa" {
   network_rules {
     default_action = "Allow"
   }
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_storage_account_customer_managed_key" "ok_cmk" {
+  storage_account_id = azurerm_storage_account.sa.id
+  key_vault_id       = azurerm_key_vault.kv.id
+  key_name           = azurerm_key_vault_key.kvap_sa_customer_managed_key.name
 }
 
 resource "azurerm_role_assignment" "ra_blob_delegator_text_extractor" {
