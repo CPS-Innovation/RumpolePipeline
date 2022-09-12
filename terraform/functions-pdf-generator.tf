@@ -25,10 +25,6 @@ resource "azurerm_function_app" "fa_pdf_generator" {
   }
   https_only                 = true
 
-  auth_settings {
-    enabled = true
-  }
-
   site_config {
     always_on      = true
     ip_restriction = []
@@ -37,6 +33,17 @@ resource "azurerm_function_app" "fa_pdf_generator" {
 
   identity {
     type = "SystemAssigned"
+  }
+
+  auth_settings {
+    enabled                       = true
+    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
+    unauthenticated_client_action = "RedirectToLoginPage"
+    default_provider              = "AzureActiveDirectory"
+    active_directory {
+      client_id                   = azuread_application.fa_pdf_generator.application_id
+      allowed_audiences           = ["api://fa-${local.resource_name}-pdf-generator","https://CPSGOVUK.onmicrosoft.com/fa-rumpole${var.env_suffix}-gateway"]
+    }
   }
 
   lifecycle {

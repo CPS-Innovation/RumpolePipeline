@@ -9,6 +9,10 @@ variable "env" {
   type = string 
 }
 
+variable "env_suffix" {
+  type = string
+}
+
 variable "app_service_plan_sku" {
   type = object({
     tier = string
