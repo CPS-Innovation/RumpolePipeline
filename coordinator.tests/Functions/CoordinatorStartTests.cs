@@ -61,9 +61,9 @@ namespace coordinator.tests.Functions
             _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>()))
                 .Returns(new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
-            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsNotNull<AuthenticationHeaderValue>()))
+            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsNotNull<AuthenticationHeaderValue>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(true, _accessToken));
-            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(null))
+            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(null, It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
 
             _coordinatorStart = new CoordinatorStart(_mockExceptionHandler.Object, _mockLogger.Object, mockAuthorizationValidator.Object);

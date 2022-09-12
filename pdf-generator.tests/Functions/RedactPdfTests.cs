@@ -47,7 +47,7 @@ namespace pdf_generator.tests.Functions
             _mockExceptionHandler = new Mock<IExceptionHandler>();
             var mockDocumentRedactionService = new Mock<IDocumentRedactionService>();
 
-            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>()))
+            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(true, _fixture.Create<string>()));
             _mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.IsAny<RedactPdfResponse>()))
                 .Returns(_serializedRedactPdfResponse);
@@ -61,7 +61,7 @@ namespace pdf_generator.tests.Functions
         [Fact]
         public async Task Run_ReturnsUnauthorizedWhenUnauthorized()
         {
-            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>()))
+            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
             _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
                 .Returns(new HttpResponseMessage(HttpStatusCode.Unauthorized));
