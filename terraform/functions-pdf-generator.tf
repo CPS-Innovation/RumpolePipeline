@@ -31,12 +31,6 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     ftps_state     = "FtpsOnly"
   }
 
-  auth_settings {
-    enabled                       = true
-    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
-    unauthenticated_client_action = "RedirectToLoginPage"
-  }
-
   identity {
     type = "SystemAssigned"
   }
