@@ -41,12 +41,6 @@ resource "azurerm_function_app" "fa_coordinator" {
     }
   }
 
-  auth_settings {
-    enabled                       = true
-    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
-    unauthenticated_client_action = "RedirectToLoginPage"
-  }
-
   identity {
     type = "SystemAssigned"
   }
