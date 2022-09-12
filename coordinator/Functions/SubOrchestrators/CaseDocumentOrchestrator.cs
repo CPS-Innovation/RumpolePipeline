@@ -88,7 +88,7 @@ namespace coordinator.Functions.SubOrchestrators
         {
             try
             {
-                await CallTextExtractorHttpAsync(context, payload, blobName, tracker);
+                await CallTextExtractorHttpAsync(context, payload, blobName);
 
                 await tracker.RegisterIndexed(payload.DocumentId);
             }
@@ -101,7 +101,7 @@ namespace coordinator.Functions.SubOrchestrators
             }
         }
 
-        private async Task CallTextExtractorHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, string blobName, ITracker tracker)
+        private static async Task CallTextExtractorHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, string blobName)
         {
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateTextExtractorHttpRequest),
@@ -115,7 +115,7 @@ namespace coordinator.Functions.SubOrchestrators
             }
         }
 
-        private ITracker GetTracker(IDurableOrchestrationContext context, int caseId)
+        private static ITracker GetTracker(IDurableOrchestrationContext context, int caseId)
         {
             var entityId = new EntityId(nameof(Tracker), caseId.ToString());
             return context.CreateEntityProxy<ITracker>(entityId);

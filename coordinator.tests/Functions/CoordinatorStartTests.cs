@@ -169,7 +169,7 @@ namespace coordinator.tests.Functions
             _mockLogger.Verify(x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((value, _) => value.ToString() == $"Started {nameof(CoordinatorOrchestrator)} with instance id '{_caseId}'."),
+                It.Is<It.IsAnyType>((value, _) => value.ToString() == $"Started {nameof(CoordinatorOrchestrator)} with instance id '{_caseId}'"),
                 It.IsAny<Exception>(),
                 (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()));
         }

@@ -25,7 +25,6 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "blob__BlobContainerName"                  = azurerm_storage_container.container.name
     "blob__BlobExpirySecs"                     = 3600
     "blob__UserDelegationKeyExpirySecs"        = 3600
-    "AuthorizationClaim"                      = "application.read"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = var.auth_details.text_extractor_valid_audience
     "CallingAppValidScopes"                   = var.auth_details.text_extractor_valid_scopes
@@ -55,17 +54,6 @@ resource "azuread_application" "fa_text_extractor" {
   display_name               = "fa-${local.resource_name}-text-extractor"
   identifier_uris            = ["api://fa-${local.resource_name}-text-extractor"]
 
-  api {
-    oauth2_permission_scope {
-      admin_consent_description  = "Allow an application to access function app on behalf of the signed-in user."
-      admin_consent_display_name = "Access function app"
-      enabled                    = true
-      id                         = var.text_extractor_details.user_impersonation_scope_id
-      type                       = "Admin"
-      value                      = "user_impersonation"
-    }
-  }
-
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
 
@@ -75,30 +63,22 @@ resource "azuread_application" "fa_text_extractor" {
     }
   }
 
-  required_resource_access {
-    resource_app_id = var.text_extractor_details.application_registration_id # Text Extractor Function App
-
-    resource_access {
-      id   = var.text_extractor_details.user_impersonation_scope_id # user impersonation
-      type = "Scope"
-    }
-  }
-
   web {
     redirect_uris = ["https://fa-${local.resource_name}-text-extractor.azurewebsites.net/.auth/login/aad/callback"]
 
     implicit_grant {
+      access_token_issuance_enabled = true
       id_token_issuance_enabled     = true
     }
   }
 
   app_role {
-    allowed_member_types  = ["Application", "User"]
+    allowed_member_types  = ["Application"]
     description          = "Readers have the ability to read resources"
     display_name         = "Read"
     enabled              = true
-    id                   = "86CD7E91-7949-47EB-A148-9B81C249C55C"
-    value                = "application.read"
+    id                   = var.text_extractor_details.application_text_extraction_role_id
+    value                = "application.extracttext"
   }
 }
 
