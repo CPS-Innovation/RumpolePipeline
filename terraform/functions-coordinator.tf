@@ -45,17 +45,6 @@ resource "azurerm_function_app" "fa_coordinator" {
     type = "SystemAssigned"
   }
 
-  auth_settings {
-    enabled                       = true
-    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
-    unauthenticated_client_action = "RedirectToLoginPage"
-    default_provider              = "AzureActiveDirectory"
-    active_directory {
-      client_id                   = azuread_application.fa_coordinator.application_id
-      allowed_audiences           = ["api://fa-${local.resource_name}-coordinator"]
-    }
-  }
-
   lifecycle {
     ignore_changes = [
       app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"],
@@ -85,12 +74,12 @@ resource "azuread_application" "fa_coordinator" {
         admin_consent_description  = "Allow an application to access function app on behalf of the signed-in user."
         admin_consent_display_name = "Access function app"
         enabled                    = true
-        id                         = var.coordinator_user_impersonation_scope_id
+        id                         = var.coordinator_details.user_impersonation_scope_id
         type                       = "Admin"
         value                      = "user_impersonation"
     }
   }
-
+  
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
     
@@ -107,10 +96,6 @@ resource "azuread_application" "fa_coordinator" {
       id   = var.pdf_generator_details.user_impersonation_scope_id # user impersonation
       type = "Scope"
     }
-  }
-
-  required_resource_access {
-    resource_app_id = var.pdf_generator_details.application_registration_id # Pdf Generator
 
     resource_access {
       id   = var.pdf_generator_details.application_create_role_id # pdf generator role
@@ -138,6 +123,12 @@ resource "azuread_application" "fa_coordinator" {
       id_token_issuance_enabled     = true
     }
   }
+}
+
+resource "azuread_application_pre_authorized" "fapre_fa_coordinator" {
+  application_object_id = azuread_application.fa_coordinator.id
+  authorized_app_id     = var.gateway_details.application_registration_id
+  permission_ids        = [var.coordinator_details.user_impersonation_scope_id]
 }
 
 resource "azuread_application_password" "faap_fa_coordinator_app_service" {

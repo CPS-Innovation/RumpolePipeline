@@ -35,17 +35,6 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     type = "SystemAssigned"
   }
 
-  auth_settings {
-    enabled                       = true
-    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
-    unauthenticated_client_action = "RedirectToLoginPage"
-    default_provider              = "AzureActiveDirectory"
-    active_directory {
-      client_id                   = azuread_application.fa_pdf_generator.application_id
-      allowed_audiences           = ["api://fa-${local.resource_name}-pdf-generator","https://CPSGOVUK.onmicrosoft.com/fa-rumpole${var.env_suffix}-gateway"]
-    }
-  }
-
   lifecycle {
     ignore_changes = [
       app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"],
@@ -105,6 +94,18 @@ data "azurerm_function_app_host_keys" "ak_pdf_generator" {
   name                = "fa-${local.resource_name}-pdf-generator"
   resource_group_name = azurerm_resource_group.rg.name
   depends_on = [azurerm_function_app.fa_pdf_generator]
+}
+
+resource "azuread_application_pre_authorized" "fapre_fa_coordinator" {
+  application_object_id = azuread_application.fa_pdf_generator.id
+  authorized_app_id     = var.gateway_details.application_registration_id
+  permission_ids        = [var.pdf_generator_details.user_impersonation_scope_id]
+}
+
+resource "azuread_application_pre_authorized" "fapre_fa_coordinator2" {
+  application_object_id = azuread_application.fa_pdf_generator.id
+  authorized_app_id     = var.coordinator_details.application_registration_id
+  permission_ids        = [var.pdf_generator_details.user_impersonation_scope_id]
 }
 
 resource "azuread_application_password" "faap_fa_pdf_generator_app_service" {

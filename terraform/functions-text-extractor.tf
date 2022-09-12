@@ -42,17 +42,6 @@ resource "azurerm_function_app" "fa_text_extractor" {
     type = "SystemAssigned"
   }
 
-  auth_settings {
-    enabled                       = true
-    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
-    unauthenticated_client_action = "RedirectToLoginPage"
-    default_provider              = "AzureActiveDirectory"
-    active_directory {
-      client_id                   = azuread_application.fa_text_extractor.application_id
-      allowed_audiences           = ["api://fa-${local.resource_name}-text-extractor"]
-    }
-  }
-
   lifecycle {
     ignore_changes = [
       app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"],
