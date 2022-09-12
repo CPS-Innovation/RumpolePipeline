@@ -93,6 +93,8 @@ namespace common.Handlers
             }
 
             var hasAccessToRoles = !requiredRoles.Any() || requiredRoles.All(claimsPrincipal.IsInRole);
+            if (hasAccessToRoles)
+                return true;
             
             var scopeClaim = claimsPrincipal.HasClaim(x => x.Type == ScopeType)
                 ? claimsPrincipal.Claims.First(x => x.Type == ScopeType).Value
@@ -100,8 +102,7 @@ namespace common.Handlers
 
             var tokenScopes = scopeClaim.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries).ToList();
             var hasAccessToScopes = !requiredScopes.Any() || requiredScopes.All(x => tokenScopes.Any(y => string.Equals(x, y, StringComparison.OrdinalIgnoreCase)));
-
-            return hasAccessToRoles && hasAccessToScopes;
+            return hasAccessToScopes;
         }
     }
 }
