@@ -31,10 +31,6 @@ resource "azurerm_function_app" "fa_coordinator" {
   }
   https_only                 = true
 
-  auth_settings {
-    enabled = true
-  }
-
   site_config {
     always_on      = true
     ip_restriction = []
@@ -47,6 +43,17 @@ resource "azurerm_function_app" "fa_coordinator" {
 
   identity {
     type = "SystemAssigned"
+  }
+
+  auth_settings {
+    enabled                       = true
+    issuer                        = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/"
+    unauthenticated_client_action = "RedirectToLoginPage"
+    default_provider              = "AzureActiveDirectory"
+    active_directory {
+      client_id                   = azuread_application.fa_coordinator.application_id
+      allowed_audiences           = ["api://fa-${local.resource_name}-coordinator"]
+    }
   }
 
   lifecycle {
