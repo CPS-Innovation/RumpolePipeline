@@ -63,3 +63,15 @@ resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
     azurerm_key_vault_access_policy.kvap_terraform_sp
   ]
 }
+
+resource "azurerm_role_assignment" "kv_role_client_kvc" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
+resource "azurerm_role_assignment" "kv_role_sa_kvcseu" {
+  scope                = var.keyVaultId
+  role_definition_name = "Key Vault Crypto Service Encryption User"
+  principal_id         = azurerm_storage_account.sa.identity.0.principal_id
+}
