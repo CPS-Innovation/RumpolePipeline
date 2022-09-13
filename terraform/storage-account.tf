@@ -13,11 +13,21 @@ resource "azurerm_storage_account" "sa" {
   min_tls_version = "TLS1_2"
 
   network_rules {
-    default_action = "Allow"
+    default_action = "Deny"
   }
 
   identity {
     type = "SystemAssigned"
+  }
+
+  queue_properties  {
+    logging {
+      delete                = true
+      read                  = true
+      write                 = true
+      version               = "1.0"
+      retention_policy_days = 10
+    }
   }
 }
 
@@ -54,7 +64,7 @@ resource "azurerm_log_analytics_storage_insights" "asi" {
 
   storage_account_id  = azurerm_storage_account.sa.id
   storage_account_key = azurerm_storage_account.sa.primary_access_key
-  blob_container_names= ["documents"]
+  blob_container_names= [azurerm_storage_container.container.name]
 }
 
 resource "azurerm_role_assignment" "ra_blob_data_contributor" {
