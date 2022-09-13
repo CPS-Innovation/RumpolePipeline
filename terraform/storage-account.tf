@@ -47,6 +47,16 @@ resource "azurerm_storage_container" "container" {
   container_access_type = "private"
 }
 
+resource "azurerm_log_analytics_storage_insights" "asi" {
+  name                = "sacps${var.env != "prod" ? var.env : ""}documentinsights"
+  resource_group_name = azurerm_resource_group.rg.name
+  workspace_id        = azurerm_log_analytics_workspace.law.id
+
+  storage_account_id  = azurerm_storage_account.sa.id
+  storage_account_key = azurerm_storage_account.sa.primary_access_key
+  blob_container_names= ["documents"]
+}
+
 resource "azurerm_role_assignment" "ra_blob_data_contributor" {
   scope                = azurerm_storage_container.container.resource_manager_id
   role_definition_name = "Storage Blob Data Contributor"
