@@ -9,6 +9,8 @@ resource "azurerm_storage_account" "sa" {
   enable_https_traffic_only = true
   shared_access_key_enabled = true
   allow_blob_public_access  = false
+  enabled_for_template_deployment = true
+  enabled_for_disk_encryption = true
 
   min_tls_version = "TLS1_2"
 
