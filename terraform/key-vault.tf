@@ -57,7 +57,7 @@ resource "azurerm_role_assignment" "kv_role_client_kvc" {
 resource "azurerm_role_assignment" "kv_role_sa_kvcseu" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = azurerm_storage_account.sa.identity.0.principal_id
+  principal_id         = azurerm_storage_account.sa.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "kv_role_fa_coordinator_crypto_user" {
