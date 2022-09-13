@@ -9,7 +9,7 @@ resource "azurerm_key_vault" "kv" {
   enabled_for_disk_encryption     = true
   enable_rbac_authorization       = true
   purge_protection_enabled        = true
-  soft_delete_retention_days      = 7
+  soft_delete_retention_days      = 90
 
   sku_name = "standard"
 }
