@@ -64,3 +64,13 @@ resource "azurerm_role_assignment" "ra_blob_data_reader" {
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = var.fa_rumpole_gateway_identity_principal_id
 }
+
+resource "azurerm_log_analytics_storage_insights" "asi" {
+  name                = "sacps${var.env != "prod" ? var.env : ""}rumpolepipeline-storageinsights-config"
+  resource_group_name = azurerm_resource_group.rg.name
+  workspace_id        = azurerm_log_analytics_workspace.analytics_workspace_ok.id
+
+  storage_account_id  = azurerm_storage_account.sa.id
+  storage_account_key = azurerm_storage_account.sa.primary_access_key
+  blob_container_names= [azurerm_storage_container.container.name]
+}
