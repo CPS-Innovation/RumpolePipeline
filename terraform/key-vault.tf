@@ -55,3 +55,12 @@ resource "azurerm_key_vault_access_policy" "kvap_terraform_sp" {
     "Recover"
   ]
 }
+
+resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
+  name         = "CoordinatorFunctionAppRegistrationClientSecret"
+  value        = azuread_application_password.faap_fa_coordinator_app_service.value
+  key_vault_id = azurerm_key_vault.kv.id
+  depends_on = [
+    azurerm_key_vault_access_policy.kvap_terraform_sp
+  ]
+}
