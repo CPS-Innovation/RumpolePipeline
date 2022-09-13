@@ -8,8 +8,8 @@ resource "azurerm_application_insights" "ai" {
   retention_in_days   = 90
 }
 
-resource "azurerm_log_analytics_workspace" "analytics_workspace_ok" {
-  name                = "exampleworkspace"
+resource "azurerm_log_analytics_workspace" "aw" {
+  name                = "aw-${local.resource_name}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   sku                 = "PerGB2018"
