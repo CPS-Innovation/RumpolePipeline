@@ -22,21 +22,21 @@ resource "azurerm_key_vault_key" "kvap_sa_customer_managed_key" {
   key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
   expiration_date = timeadd(timestamp(), "8760h")
 
-  #depends_on = [
-  #  azurerm_role_assignment.kv_role_terraform_sp
-  #]
+  depends_on = [
+    azurerm_role_assignment.kv_role_terraform_sp
+  ]
 }
 
 resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
   name         = "CoordinatorFunctionAppRegistrationClientSecret"
   value        = azuread_application_password.faap_fa_coordinator_app_service.value
   key_vault_id = azurerm_key_vault.kv.id
-  #depends_on = [
-  #  azurerm_role_assignment.kv_role_terraform_sp
-  #]
+  depends_on = [
+    azurerm_role_assignment.kv_role_terraform_sp
+  ]
 }
 
-/*resource "azurerm_role_assignment" "kv_role_terraform_sp" {
+resource "azurerm_role_assignment" "kv_role_terraform_sp" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Administrator"
   principal_id         = data.azuread_service_principal.terraform_service_principal.object_id
@@ -88,4 +88,4 @@ resource "azurerm_role_assignment" "kv_role_fa_text_extractor_secrets_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_function_app.fa_text_extractor.identity[0].principal_id
-}*/
+}
