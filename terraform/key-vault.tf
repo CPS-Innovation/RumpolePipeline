@@ -48,9 +48,9 @@ resource "azurerm_key_vault_access_policy" "kvap_terraform_sp" {
 }
 
 resource "azurerm_key_vault_key" "kvap_sa_customer_managed_key" {
-  name         = "sa-pipeline-key"
+  name         = "tfex-key"
   key_vault_id = azurerm_key_vault.kv.id
-  key_type     = "RSA-HSM"
+  key_type     = "RSA"
   key_size     = 2048
   key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
   expiration_date = timeadd(timestamp(), "8760h")
