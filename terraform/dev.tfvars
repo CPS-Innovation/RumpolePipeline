@@ -6,6 +6,7 @@ app_service_plan_sku = {
     size = "B3"
     tier = "Basic"
 }
+default_workspace_name = "DefaultWorkspace-4ae5270e-9e32-4bdf-88f1-a677dd3280c0-SUK"
 
 coordinator_details = {
 	application_registration_id="b8f25b3d-d89c-4d2a-a010-31e426e5eb99"

@@ -20,6 +20,10 @@ variable "app_service_plan_sku" {
   })
 }
 
+variable "default_workspace_name" {
+  type = string	
+}
+
 variable "stub_blob_storage_connection_string" {
   type = string
 }
