@@ -53,6 +53,7 @@ resource "azurerm_key_vault_key" "kvap_sa_customer_managed_key" {
   key_type     = "RSA"
   key_size     = 2048
   key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+  expiration_date = timeadd(timestamp(), "8760h")
 
   depends_on = [
     azurerm_key_vault_access_policy.kvap_terraform_sp
