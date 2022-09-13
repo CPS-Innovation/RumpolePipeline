@@ -4,5 +4,4 @@ resource "azurerm_search_service" "ss" {
     location              = azurerm_resource_group.rg.location
     sku                   = "standard"
     replica_count         = 3
-    public_network_access_enabled = false
 }
