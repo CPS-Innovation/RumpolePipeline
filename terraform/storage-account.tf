@@ -13,6 +13,10 @@ resource "azurerm_storage_account" "sa" {
   network_rules {
     default_action = "Allow"
   }
+
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
 resource "azurerm_role_assignment" "ra_blob_delegator_text_extractor" {
