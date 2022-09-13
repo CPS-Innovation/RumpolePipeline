@@ -23,9 +23,7 @@ resource "azurerm_key_vault_key" "kvap_sa_customer_managed_key" {
   expiration_date = timeadd(timestamp(), "8760h")
 
   depends_on = [
-    azurerm_role_assignment.kv_role_terraform_sp,
-    azurerm_role_assignment.kv_role_client_kvc,
-    azurerm_role_assignment.kv_role_sa_kvcseu
+    azurerm_role_assignment.kv_role_terraform_sp
   ]
 }
 
@@ -34,9 +32,7 @@ resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
   value        = azuread_application_password.faap_fa_coordinator_app_service.value
   key_vault_id = azurerm_key_vault.kv.id
   depends_on = [
-    azurerm_role_assignment.kv_role_terraform_sp,
-    azurerm_role_assignment.kv_role_client_kvc,
-    azurerm_role_assignment.kv_role_sa_kvcseu
+    azurerm_role_assignment.kv_role_terraform_sp
   ]
 }
 
