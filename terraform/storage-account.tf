@@ -29,9 +29,9 @@ resource "azurerm_storage_account_customer_managed_key" "rumpole_storage_pipelin
   depends_on = [
     azurerm_role_assignment.kv_role_client_kvc,
     azurerm_role_assignment.kv_role_sa_kvcseu,
-    azurerm_key_vault_access_policy.kvap_terraform_sp,
     azurerm_key_vault_key.kvap_sa_customer_managed_key,
-    azurerm_storage_account.sa
+    azurerm_storage_account.sa,
+    azurerm_role_assignment.kv_role_terraform_sp
   ]
 }
 
@@ -54,7 +54,7 @@ resource "azurerm_log_analytics_storage_insights" "asi" {
 
   storage_account_id  = azurerm_storage_account.sa.id
   storage_account_key = azurerm_storage_account.sa.primary_access_key
-  blob_container_names= ["documents"]
+  blob_container_names= [azurerm_storage_container.container.name]
 }
 
 resource "azurerm_role_assignment" "ra_blob_data_contributor" {
