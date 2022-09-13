@@ -30,7 +30,8 @@ resource "azurerm_storage_account_customer_managed_key" "rumpole_storage_pipelin
     azurerm_role_assignment.kv_role_client_kvc,
     azurerm_role_assignment.kv_role_sa_kvcseu,
     azurerm_key_vault_access_policy.kvap_terraform_sp,
-    azurerm_key_vault_key.kvap_sa_customer_managed_key
+    azurerm_key_vault_key.kvap_sa_customer_managed_key,
+    azurerm_storage_account.sa
   ]
 }
 
