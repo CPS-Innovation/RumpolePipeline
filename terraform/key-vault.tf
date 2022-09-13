@@ -5,6 +5,8 @@ resource "azurerm_key_vault" "kv" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
+  enabled_for_template_deployment = true
+  enabled_for_disk_encryption = true
 
   sku_name = "standard"
   purge_protection_enabled = true
