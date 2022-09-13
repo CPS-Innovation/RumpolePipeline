@@ -38,13 +38,13 @@ resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
 
 resource "azurerm_role_assignment" "kv_role_terraform_sp" {
   scope                = azurerm_key_vault.kv.id
-  role_definition_name = "Owner"
+  role_definition_name = "Key Vault Administrator"
   principal_id         = data.azuread_service_principal.terraform_service_principal.object_id
 }
 
 resource "azurerm_role_assignment" "kv_role_client_kvc" {
   scope                = azurerm_key_vault.kv.id
-  role_definition_name = "Key Vault Contributor"
+  role_definition_name = "Key Vault Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
