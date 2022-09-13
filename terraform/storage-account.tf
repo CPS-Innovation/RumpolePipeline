@@ -35,13 +35,13 @@ resource "azurerm_storage_account_customer_managed_key" "rumpole_storage_pipelin
   key_vault_id       = azurerm_key_vault.kv.id
   key_name           = azurerm_key_vault_key.kvap_sa_customer_managed_key.name
   
-  depends_on = [
+  /*depends_on = [
     azurerm_role_assignment.kv_role_client_kvc,
     azurerm_role_assignment.kv_role_sa_kvcseu,
     azurerm_key_vault_key.kvap_sa_customer_managed_key,
     azurerm_storage_account.sa,
     azurerm_role_assignment.kv_role_terraform_sp
-  ]
+  ]*/
 }
 
 resource "azurerm_role_assignment" "ra_blob_delegator_text_extractor" {
