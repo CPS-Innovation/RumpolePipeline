@@ -19,15 +19,6 @@ resource "azurerm_storage_account" "sa" {
   identity {
     type = "SystemAssigned"
   }
-
-  queue_properties {
-    logging {
-      read    = true
-      write   = true
-      delete  = true
-      version = 1.0
-    }
-  }
 }
 
 resource "azurerm_storage_account_customer_managed_key" "rumpole_storage_pipeline_cmk" {
