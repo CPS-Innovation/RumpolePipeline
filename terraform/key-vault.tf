@@ -27,7 +27,7 @@ resource "azurerm_key_vault_key" "kvap_sa_customer_managed_key" {
   depends_on = [
     azurerm_role_assignment.kv_role_terraform_sp,
     azurerm_role_assignment.kv_role_client_kvc,
-    azurerm_role_assignment.kv_role_sa_kvcseu
+    #azurerm_role_assignment.kv_role_sa_kvcseu
   ]
 }
 
@@ -38,7 +38,7 @@ resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
   depends_on = [
     azurerm_role_assignment.kv_role_terraform_sp,
     azurerm_role_assignment.kv_role_client_kvc,
-    azurerm_role_assignment.kv_role_sa_kvcseu
+    #azurerm_role_assignment.kv_role_sa_kvcseu
   ]
 }
 
@@ -54,11 +54,11 @@ resource "azurerm_role_assignment" "kv_role_client_kvc" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
-resource "azurerm_role_assignment" "kv_role_sa_kvcseu" {
-  scope                = azurerm_key_vault.kv.id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = azurerm_storage_account.sa.identity.principal_id
-}
+#resource "azurerm_role_assignment" "kv_role_sa_kvcseu" {
+#  scope                = azurerm_key_vault.kv.id
+#  role_definition_name = "Key Vault Crypto Service Encryption User"
+#  principal_id         = azurerm_storage_account.sa.identity[0].principal_id
+#}
 
 resource "azurerm_role_assignment" "kv_role_fa_coordinator_crypto_user" {
   scope                = azurerm_key_vault.kv.id
