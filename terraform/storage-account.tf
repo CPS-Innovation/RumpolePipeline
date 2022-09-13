@@ -13,21 +13,11 @@ resource "azurerm_storage_account" "sa" {
   min_tls_version = "TLS1_2"
 
   network_rules {
-    default_action = "Deny"
+    default_action = "Allow"
   }
 
   identity {
     type = "SystemAssigned"
-  }
-
-  queue_properties  {
-    logging {
-      delete                = true
-      read                  = true
-      write                 = true
-      version               = "1.0"
-      retention_policy_days = 10
-    }
   }
 }
 
