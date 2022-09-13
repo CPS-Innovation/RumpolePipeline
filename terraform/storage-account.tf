@@ -20,15 +20,6 @@ resource "azurerm_storage_account" "sa" {
     type = "SystemAssigned"
   }
 
-  blob_properties {
-    logging {
-      read    = true
-      write   = true
-      delete  = true
-      version = 1.0
-    }
-  }
-
   queue_properties {
     logging {
       read    = true
