@@ -7,7 +7,9 @@ resource "azurerm_cosmosdb_account" "cdba" {
   offer_type          = "Standard"
   kind                = "GlobalDocumentDB"
   key_vault_key_id    = azurerm_key_vault_key.kvap_cmos_customer_managed_key.versionless_id
-  default_identity_type = "SystemAssignedIdentity"
+  default_identity_type = "FirstPartyIdentity"
+  #after deployment change to below
+  #default_identity_type = "SystemAssignedIdentity"
   capabilities {
     name = "EnableServerless"
   }
@@ -21,10 +23,6 @@ resource "azurerm_cosmosdb_account" "cdba" {
     //prefix            = "cdb-${local.resource_name}-geoloc"
     location          = azurerm_resource_group.rg.location
     failover_priority = 0
-  }
-
-  identity {
-    type="SystemAssigned"
   }
 }
 
