@@ -36,6 +36,7 @@ resource "azurerm_function_app" "fa_text_extractor" {
     always_on      = true
     ip_restriction = []
     ftps_state     = "FtpsOnly"
+    http2_enabled = true
   }
 
   identity {

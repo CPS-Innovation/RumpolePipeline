@@ -35,6 +35,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     always_on      = true
     ip_restriction = []
     ftps_state     = "FtpsOnly"
+    http2_enabled = true
 
     cors {
       allowed_origins = []

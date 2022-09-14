@@ -29,6 +29,7 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     always_on      = true
     ip_restriction = []
     ftps_state     = "FtpsOnly"
+    http2_enabled = true
   }
 
   identity {
