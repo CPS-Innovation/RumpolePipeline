@@ -6,6 +6,8 @@ resource "azurerm_cosmosdb_account" "cdba" {
   resource_group_name = azurerm_resource_group.rg.name
   offer_type          = "Standard"
   kind                = "GlobalDocumentDB"
+  key_vault_key_id    = azurerm_key_vault_key.kvap_cmos_customer_managed_key.versionless_id
+  default_identity_type = "SystemAssignedIdentity"
   capabilities {
     name = "EnableServerless"
   }
@@ -21,6 +23,9 @@ resource "azurerm_cosmosdb_account" "cdba" {
     failover_priority = 0
   }
 
+  identity {
+    type="SystemAssigned"
+  }
 }
 
 resource "azurerm_cosmosdb_sql_database" "cdb" {
