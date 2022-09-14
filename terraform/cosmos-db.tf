@@ -26,10 +26,6 @@ resource "azurerm_cosmosdb_account" "cdba" {
   identity {
     type="SystemAssigned"
   }
-  
-  depends_on = [
-    azurerm_role_assignment.kv_role_cmos_kvcseu
-  ]
 }
 
 resource "azurerm_cosmosdb_sql_database" "cdb" {
