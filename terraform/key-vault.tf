@@ -31,20 +31,6 @@ resource "azurerm_key_vault_key" "kvap_sa_customer_managed_key" {
   ]
 }
 
-resource "azurerm_key_vault_key" "kvap_cmos_customer_managed_key" {
-  name         = "cmos-key"
-  key_vault_id = azurerm_key_vault.kv.id
-  key_type     = "RSA"
-  key_size     = 3072
-  key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
-  expiration_date = timeadd(timestamp(), "8760h")
-
-  depends_on = [
-    azurerm_role_assignment.kv_role_terraform_sp,
-    azurerm_role_assignment.kv_role_client_kvc
-  ]
-}
-
 resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
   name         = "CoordinatorFunctionAppRegistrationClientSecret"
   value        = azuread_application_password.faap_fa_coordinator_app_service.value
@@ -76,12 +62,6 @@ resource "azurerm_role_assignment" "kv_role_sa_kvcseu" {
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = azurerm_storage_account.sa.identity.0.principal_id
 }
-
-#resource "azurerm_role_assignment" "kv_role_cmos_kvcseu" {
-#  scope                = azurerm_key_vault.kv.id
-#  role_definition_name = "Key Vault Crypto Service Encryption User"
-#  principal_id         = azurerm_cosmosdb_account.cdba.identity.0.principal_id
-#}
 
 resource "azurerm_role_assignment" "kv_role_fa_coordinator_crypto_user" {
   scope                = azurerm_key_vault.kv.id
