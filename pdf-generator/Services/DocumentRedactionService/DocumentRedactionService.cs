@@ -101,7 +101,7 @@ namespace pdf_generator.Services.DocumentRedactionService
                 // Add the image into paragraphs collection of the section
                 newPage.Paragraphs.Add(image1);
 
-                // YES, save after every page otherwise we get out of memory exception
+                // YES, save after every page otherwise we get an out of memory exception
                 newDoc.Save(redactedDocumentStream);
             }
 
