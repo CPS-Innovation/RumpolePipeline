@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Aspose.Pdf;
 using Aspose.Pdf.Annotations;
+using Aspose.Pdf.Devices;
 using Aspose.Pdf.Facades;
 using pdf_generator.Domain.Requests;
 using pdf_generator.Domain.Responses;
@@ -25,6 +26,7 @@ namespace pdf_generator.Services.DocumentRedactionService
         {
             var saveResult = new RedactPdfResponse();
 
+            //1. Load PDF from BLOB storage
             var fileName = redactPdfRequest.FileName;
             var document = await _blobStorageService.GetDocumentAsync(fileName);
             if (document == null)
@@ -37,6 +39,7 @@ namespace pdf_generator.Services.DocumentRedactionService
             var fileNameWithoutExtension = fileName.IndexOf(".pdf", StringComparison.OrdinalIgnoreCase) > -1 ? fileName.Split(".pdf", StringSplitOptions.RemoveEmptyEntries)[0] : fileName;
             var newFileName = $"{fileNameWithoutExtension}_{DateTime.Now.Ticks.GetHashCode().ToString("x").ToUpper()}.pdf";
 
+            //2. Apply UI instructions by drawing boxes according to co-ordinate data onto existing PDF
             using var doc = new Document(document);
             var pdfInfo = new PdfFileInfo(doc);
 
@@ -62,9 +65,46 @@ namespace pdf_generator.Services.DocumentRedactionService
             }
             doc.RemoveMetadata();
 
+            //3. now flatten the redacted document to remove "hidden" tags and data by converting each page to a Bitmap and then adding it back as an ASPOSE PDF page to a new PDF document, built up in-memory
             using var redactedDocumentStream = new MemoryStream();
-            doc.Save(redactedDocumentStream);
-            
+            using var newDoc = new Document();
+            var pos = 0;
+            foreach (var page in doc.Pages)
+            {
+                pos++;
+    
+                using var imageMs = new MemoryStream();
+                var currentPageWidth = pdfInfo.GetPageWidth(pos);
+                var currentPageHeight = pdfInfo.GetPageHeight(pos);
+                var device = new BmpDevice(new PageSize(currentPageWidth, currentPageHeight));
+
+                // Convert a particular page and save the image to stream
+                device.Process(page, imageMs);
+    
+                var newPage = newDoc.Pages.Add();
+                // Set margins so image will fit, etc.
+                newPage.PageInfo.Margin.Bottom = 0;
+                newPage.PageInfo.Margin.Top = 0;    
+                newPage.PageInfo.Margin.Left = 0;
+                newPage.PageInfo.Margin.Right = 0;
+
+
+                // Create an image object
+                var image1 = new Image
+                {
+                    // Set the image file stream
+                    ImageStream = imageMs,
+                    IsBlackWhite = true
+                };
+
+                // Add the image into paragraphs collection of the section
+                newPage.Paragraphs.Add(image1);
+
+                // YES, save after every page otherwise we get out of memory exception
+                newDoc.Save(redactedDocumentStream);
+            }
+
+            //4. Save the flattened PDF into BLOB storage but with a new filename (FOR NOW, until we have a tactical or "for-reals" API solution/integration in place)
             await _blobStorageService.UploadDocumentAsync(redactedDocumentStream, newFileName);
 
             saveResult.Succeeded = true;
