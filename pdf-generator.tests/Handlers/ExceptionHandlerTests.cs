@@ -14,20 +14,19 @@ namespace pdf_generator.tests.Handlers
 {
     public class ExceptionHandlerTests
     {
-        private IExceptionHandler ExceptionHandler;
-        private Mock<ILogger<IExceptionHandler>> _mockLogger;
+        private readonly IExceptionHandler _exceptionHandler;
 
         public ExceptionHandlerTests()
         {
-            _mockLogger = new Mock<ILogger<IExceptionHandler>>();
+            var mockLogger = new Mock<ILogger<ExceptionHandler>>();
 
-            ExceptionHandler = new ExceptionHandler(_mockLogger.Object);
+            _exceptionHandler = new ExceptionHandler(mockLogger.Object);
         }
 
         [Fact]
         public void HandleException_ReturnsUnauthorizedWhenUnauthorizedExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new UnauthorizedException("Test unauthorized exception"));
+            var httpResponseMessage = _exceptionHandler.HandleException(new UnauthorizedException("Test unauthorized exception"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
@@ -35,7 +34,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsBadRequestWhenBadRequestExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new BadRequestException("Test bad request exception", "id"));
+            var httpResponseMessage = _exceptionHandler.HandleException(new BadRequestException("Test bad request exception", "id"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
@@ -43,7 +42,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsBadRequestWhenFileTypeNotSupportedExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new UnsupportedFileTypeException("Test file type"));
+            var httpResponseMessage = _exceptionHandler.HandleException(new UnsupportedFileTypeException("Test file type"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
@@ -51,7 +50,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenHttpExceptionWithBadRequestOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(
+            var httpResponseMessage = _exceptionHandler.HandleException(
                 new HttpException(HttpStatusCode.BadRequest, new HttpRequestException()));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
@@ -61,7 +60,7 @@ namespace pdf_generator.tests.Handlers
         public void HandleException_ReturnsExpectedStatusCodeWhenHttpExceptionOccurs()
         {
             var expectedStatusCode = HttpStatusCode.ExpectationFailed;
-            var httpResponseMessage = ExceptionHandler.HandleException(
+            var httpResponseMessage = _exceptionHandler.HandleException(
                 new HttpException(expectedStatusCode, new HttpRequestException()));
 
             httpResponseMessage.StatusCode.Should().Be(expectedStatusCode);
@@ -70,7 +69,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenRequestFailedExceptionWithBadRequestOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(
+            var httpResponseMessage = _exceptionHandler.HandleException(
                 new RequestFailedException((int)HttpStatusCode.BadRequest, "Test request failed exception"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
@@ -79,7 +78,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenRequestFailedExceptionWithNotFoundOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(
+            var httpResponseMessage = _exceptionHandler.HandleException(
                 new RequestFailedException((int)HttpStatusCode.NotFound, "Test request failed exception"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
@@ -89,7 +88,7 @@ namespace pdf_generator.tests.Handlers
         public void HandleException_ReturnsExpectedStatusCodeWhenRequestFailedExceptionOccurs()
         {
             var expectedStatusCode = HttpStatusCode.ExpectationFailed;
-            var httpResponseMessage = ExceptionHandler.HandleException(
+            var httpResponseMessage = _exceptionHandler.HandleException(
                 new RequestFailedException((int)expectedStatusCode, "Test request failed exception"));
 
             httpResponseMessage.StatusCode.Should().Be(expectedStatusCode);
@@ -98,7 +97,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsNotImplementedWhenFailedToConvertToPdfExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new PdfConversionException("Test id", "Test message"));
+            var httpResponseMessage = _exceptionHandler.HandleException(new PdfConversionException("Test id", "Test message"));
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.NotImplemented);
         }
@@ -106,7 +105,7 @@ namespace pdf_generator.tests.Handlers
         [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenUnhandledErrorOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new ApplicationException());
+            var httpResponseMessage = _exceptionHandler.HandleException(new ApplicationException());
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }

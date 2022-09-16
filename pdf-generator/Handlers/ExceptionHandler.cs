@@ -14,7 +14,7 @@ namespace pdf_generator.Handlers
     {
         private readonly ILogger<IExceptionHandler> _log;
 
-        public ExceptionHandler(ILogger<IExceptionHandler> log)
+        public ExceptionHandler(ILogger<ExceptionHandler> log)
         {
             _log = log;
         }
@@ -24,46 +24,45 @@ namespace pdf_generator.Handlers
             var baseErrorMessage = "An unhandled exception occurred";
             var statusCode = HttpStatusCode.InternalServerError;
 
-            if (exception is UnauthorizedException)
+            switch (exception)
             {
-                baseErrorMessage = "Unauthorized";
-                statusCode = HttpStatusCode.Unauthorized;
-            }
-            else if (exception is BadRequestException or UnsupportedFileTypeException)
-            {
-                baseErrorMessage = "Invalid request";
-                statusCode = HttpStatusCode.BadRequest;
-            }
-            else if (exception is HttpException httpException)
-            {
-                baseErrorMessage = "An http exception occurred";
-                statusCode =
-                    httpException.StatusCode == HttpStatusCode.BadRequest
-                    ? statusCode
-                    : httpException.StatusCode;
-            }
-            else if (exception is RequestFailedException requestFailedException)
-            {
-                baseErrorMessage = "A service request failed exception occurred";
-                var requestFailedStatusCode = (HttpStatusCode)requestFailedException.Status;
-                statusCode =
-                    requestFailedStatusCode == HttpStatusCode.BadRequest || requestFailedStatusCode == HttpStatusCode.NotFound
-                    ? statusCode
-                    : requestFailedStatusCode;
-            }
-            else if(exception is PdfConversionException)
-            {
-                statusCode = HttpStatusCode.NotImplemented;
-                baseErrorMessage = "A failed to convert to pdf exception occurred";
+                case UnauthorizedException:
+                    baseErrorMessage = "Unauthorized";
+                    statusCode = HttpStatusCode.Unauthorized;
+                    break;
+                case BadRequestException or UnsupportedFileTypeException:
+                    baseErrorMessage = "Invalid request";
+                    statusCode = HttpStatusCode.BadRequest;
+                    break;
+                case HttpException httpException:
+                    baseErrorMessage = "An http exception occurred";
+                    statusCode =
+                        httpException.StatusCode == HttpStatusCode.BadRequest
+                            ? statusCode
+                            : httpException.StatusCode;
+                    break;
+                case RequestFailedException requestFailedException:
+                {
+                    baseErrorMessage = "A service request failed exception occurred";
+                    var requestFailedStatusCode = (HttpStatusCode)requestFailedException.Status;
+                    statusCode =
+                        requestFailedStatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound
+                            ? statusCode
+                            : requestFailedStatusCode;
+                    break;
+                }
+                case PdfConversionException:
+                    statusCode = HttpStatusCode.NotImplemented;
+                    baseErrorMessage = "A failed to convert to pdf exception occurred";
+                    break;
             }
 
+            _log.LogError(exception, "{BaseErrorMessage}: {Message}", baseErrorMessage, exception.Message);
             return ErrorResponse(baseErrorMessage, exception, statusCode);
         }
 
         private HttpResponseMessage ErrorResponse(string baseErrorMessage, Exception exception, HttpStatusCode httpStatusCode)
         {
-            _log.LogError(exception, baseErrorMessage);
-
             var errorMessage = $"{baseErrorMessage}. Base exception message: {exception.GetBaseException().Message}";
             return new HttpResponseMessage(httpStatusCode)
             {
