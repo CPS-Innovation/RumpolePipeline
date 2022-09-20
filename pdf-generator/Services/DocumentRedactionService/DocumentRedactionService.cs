@@ -76,10 +76,8 @@ namespace pdf_generator.Services.DocumentRedactionService
                 using var imageMs = new MemoryStream();
                 var currentPageWidth = pdfInfo.GetPageWidth(pos);
                 var currentPageHeight = pdfInfo.GetPageHeight(pos);
-                //var resolution = new Resolution(Convert.ToInt32(page.ArtBox.Width), Convert.ToInt32(page.ArtBox.Height));
-                //var resolution = new Resolution(300);
-                //var device = new BmpDevice(new PageSize(currentPageWidth, currentPageHeight), resolution);
-                var device = new BmpDevice(new PageSize(currentPageWidth, currentPageHeight)); //default resolution
+                var resolution = new Resolution(Convert.ToInt32(currentPageWidth), Convert.ToInt32(currentPageHeight));
+                var device = new BmpDevice(resolution);
 
                 // Convert a particular page and save the image to stream
                 device.Process(page, imageMs);
