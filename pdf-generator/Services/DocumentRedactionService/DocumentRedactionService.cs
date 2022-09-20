@@ -40,13 +40,13 @@ namespace pdf_generator.Services.DocumentRedactionService
             var newFileName = $"{fileNameWithoutExtension}_{DateTime.Now.Ticks.GetHashCode().ToString("x").ToUpper()}.pdf";
 
             //2. Apply UI instructions by drawing boxes according to co-ordinate data onto existing PDF
-            using var doc = new Document(document);
-            var pdfInfo = new PdfFileInfo(doc);
+            using var redactedDocument = new Document(document);
+            var pdfInfo = new PdfFileInfo(redactedDocument);
 
             foreach (var redactionPage in redactPdfRequest.RedactionDefinitions)
             {
                 var currentPage = redactionPage.PageIndex;
-                var annotationPage = doc.Pages[currentPage];
+                var annotationPage = redactedDocument.Pages[currentPage];
                 
                 foreach (var boxToDraw in redactionPage.RedactionCoordinates)
                 {
@@ -59,17 +59,17 @@ namespace pdf_generator.Services.DocumentRedactionService
                         FillColor = Color.Black
                     };
 
-                    doc.Pages[currentPage].Annotations.Add(redactionAnnotation, true);
+                    redactedDocument.Pages[currentPage].Annotations.Add(redactionAnnotation, true);
                     redactionAnnotation.Redact();
                 }
             }
-            doc.RemoveMetadata();
+            redactedDocument.RemoveMetadata();
 
             //3. now flatten the redacted document to remove "hidden" tags and data by converting each page to a Bitmap and then adding it back as an ASPOSE PDF page to a new PDF document, built up in-memory
-            using var redactedDocumentStream = new MemoryStream();
-            using var newDoc = new Document();
+            using var flattenedDocumentStream = new MemoryStream();
+            using var flattenedDoc = new Document();
             var pos = 0;
-            foreach (var page in doc.Pages)
+            foreach (var page in redactedDocument.Pages)
             {
                 pos++;
     
@@ -77,13 +77,14 @@ namespace pdf_generator.Services.DocumentRedactionService
                 var currentPageWidth = pdfInfo.GetPageWidth(pos);
                 var currentPageHeight = pdfInfo.GetPageHeight(pos);
                 //var resolution = new Resolution(Convert.ToInt32(page.ArtBox.Width), Convert.ToInt32(page.ArtBox.Height));
-                var resolution = new Resolution(300);
-                var device = new BmpDevice(new PageSize(currentPageWidth, currentPageHeight), resolution);
+                //var resolution = new Resolution(300);
+                //var device = new BmpDevice(new PageSize(currentPageWidth, currentPageHeight), resolution);
+                var device = new BmpDevice(new PageSize(currentPageWidth, currentPageHeight)); //default resolution
 
                 // Convert a particular page and save the image to stream
                 device.Process(page, imageMs);
     
-                var newPage = newDoc.Pages.Add();
+                var newPage = flattenedDoc.Pages.Add();
                 // Set margins so image will fit, etc.
                 newPage.PageInfo.Margin.Bottom = 0;
                 newPage.PageInfo.Margin.Top = 0;    
@@ -103,11 +104,11 @@ namespace pdf_generator.Services.DocumentRedactionService
                 newPage.Paragraphs.Add(image1);
 
                 // YES, save after every page otherwise we get an out of memory exception
-                newDoc.Save(redactedDocumentStream);
+                flattenedDoc.Save(flattenedDocumentStream);
             }
 
             //4. Save the flattened PDF into BLOB storage but with a new filename (FOR NOW, until we have a tactical or "for-reals" API solution/integration in place)
-            await _blobStorageService.UploadDocumentAsync(redactedDocumentStream, newFileName);
+            await _blobStorageService.UploadDocumentAsync(flattenedDocumentStream, newFileName);
 
             saveResult.Succeeded = true;
             saveResult.RedactedDocumentName = newFileName;
