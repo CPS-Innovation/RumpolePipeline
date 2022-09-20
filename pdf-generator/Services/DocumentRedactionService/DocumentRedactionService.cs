@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Aspose.Pdf;
 using Aspose.Pdf.Annotations;
-using Aspose.Pdf.Devices;
+//using Aspose.Pdf.Devices;
 using Aspose.Pdf.Facades;
 using pdf_generator.Domain.Requests;
 using pdf_generator.Domain.Responses;
@@ -66,7 +66,7 @@ namespace pdf_generator.Services.DocumentRedactionService
             redactedDocument.RemoveMetadata();
 
             //3. now flatten the redacted document to remove "hidden" tags and data by converting each page to a Bitmap and then adding it back as an ASPOSE PDF page to a new PDF document, built up in-memory
-            using var flattenedDocumentStream = new MemoryStream();
+            /*using var flattenedDocumentStream = new MemoryStream();
             using var flattenedDoc = new Document();
             var pos = 0;
             foreach (var page in redactedDocument.Pages)
@@ -103,10 +103,12 @@ namespace pdf_generator.Services.DocumentRedactionService
 
                 // YES, save after every page otherwise we get an out of memory exception
                 flattenedDoc.Save(flattenedDocumentStream);
-            }
-
+            }*/
+            
             //4. Save the flattened PDF into BLOB storage but with a new filename (FOR NOW, until we have a tactical or "for-reals" API solution/integration in place)
-            await _blobStorageService.UploadDocumentAsync(flattenedDocumentStream, newFileName);
+            using var redactedDocumentStream = new MemoryStream();
+            redactedDocument.Save(redactedDocumentStream);
+            await _blobStorageService.UploadDocumentAsync(redactedDocumentStream, newFileName);
 
             saveResult.Succeeded = true;
             saveResult.RedactedDocumentName = newFileName;
