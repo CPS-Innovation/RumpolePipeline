@@ -95,7 +95,7 @@ namespace pdf_generator.Services.DocumentRedactionService
                 {
                     // Set the image file stream
                     ImageStream = imageMs,
-                    //IsBlackWhite = true
+                    IsBlackWhite = true
                 };
 
                 // Add the image into paragraphs collection of the section
