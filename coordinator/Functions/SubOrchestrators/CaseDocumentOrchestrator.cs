@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Common.Logging;
 using common.Wrappers;
 using coordinator.Domain;
 using coordinator.Domain.Responses;
@@ -53,7 +54,11 @@ namespace coordinator.Functions.SubOrchestrators
             catch (Exception exception)
             {
                 await tracker.RegisterUnexpectedPdfDocumentFailure(payload.DocumentId);
-                _log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
+                
+                _log.LogError(new EventId(LoggingEvent.ProcessingFailedUnhandledException), exception, LoggingConstants.StructuredTemplate,
+                    payload.CorrelationId, LoggingCheckpoint.DocumentConversionFailed.Name, nameof(CaseDocumentOrchestrator),
+                    payload.CaseId, LoggingEventStatus.Failed.Name, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration: {exception.Message}");
+                
                 throw;
             }
         }
@@ -62,7 +67,7 @@ namespace coordinator.Functions.SubOrchestrators
         {
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
-                new CreateGeneratePdfHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, FileName = payload.FileName });
+                new CreateGeneratePdfHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, FileName = payload.FileName, CorrelationId = payload.CorrelationId });
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -78,7 +83,7 @@ namespace coordinator.Functions.SubOrchestrators
                 }
 
                 request.Headers.TryGetValue("Authorization", out var tokenUsed);
-                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}].");
+                throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
             }
 
             return _jsonConvertWrapper.DeserializeObject<GeneratePdfResponse>(response.Content);
@@ -96,7 +101,9 @@ namespace coordinator.Functions.SubOrchestrators
             {
                 await tracker.RegisterOcrAndIndexFailure(payload.DocumentId);
                 
-                _log.LogError(exception, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration.");
+                _log.LogError(new EventId(LoggingEvent.ProcessingFailedUnhandledException), exception, LoggingConstants.StructuredTemplate,
+                    payload.CorrelationId, LoggingCheckpoint.TextExtractionFailed.Name, nameof(CaseDocumentOrchestrator),
+                    payload.CaseId, LoggingEventStatus.Failed.Name, $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration: {exception.Message}");
                 throw;
             }
         }
@@ -105,13 +112,13 @@ namespace coordinator.Functions.SubOrchestrators
         {
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateTextExtractorHttpRequest),
-                new CreateTextExtractorHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, BlobName = blobName });
+                new CreateTextExtractorHttpRequestActivityPayload { CaseId = payload.CaseId, DocumentId = payload.DocumentId, BlobName = blobName, CorrelationId = payload.CorrelationId });
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 request.Headers.TryGetValue("Authorization", out var tokenUsed);
-                throw new HttpRequestException($"Failed to ocr/index document with id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}].");
+                throw new HttpRequestException($"Failed to ocr/index document with id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
             }
         }
 

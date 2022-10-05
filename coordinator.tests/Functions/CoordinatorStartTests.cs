@@ -5,11 +5,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AutoFixture;
-using common.Domain.Exceptions;
 using common.Handlers;
 using coordinator.Domain;
 using coordinator.Functions;
-using coordinator.Handlers;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -24,12 +22,12 @@ namespace coordinator.tests.Functions
         private readonly int _caseIdNum;
         private readonly string _caseId;
         private readonly string _accessToken;
+        private readonly Guid _correlationId;
         private readonly HttpRequestMessage _httpRequestMessage;
         private readonly HttpRequestHeaders _httpRequestHeaders;
         private readonly HttpResponseMessage _httpResponseMessage;
 
         private readonly Mock<IDurableOrchestrationClient> _mockDurableOrchestrationClient;
-        private readonly Mock<IExceptionHandler> _mockExceptionHandler;
         private readonly Mock<ILogger<CoordinatorStart>> _mockLogger;
 
         private readonly CoordinatorStart _coordinatorStart;
@@ -40,17 +38,18 @@ namespace coordinator.tests.Functions
             _caseIdNum = _fixture.Create<int>();
             _caseId = _caseIdNum.ToString();
             _accessToken = _fixture.Create<string>();
+            _correlationId = _fixture.Create<Guid>();
             _httpRequestMessage = new HttpRequestMessage();
             _httpRequestMessage.RequestUri = new Uri("https://www.test.co.uk");
             _httpRequestHeaders = _httpRequestMessage.Headers;
             _httpResponseMessage = new HttpResponseMessage();
 
             _mockDurableOrchestrationClient = new Mock<IDurableOrchestrationClient>();
-            _mockExceptionHandler = new Mock<IExceptionHandler>();
             _mockLogger = new Mock<ILogger<CoordinatorStart>>();
             var mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
 
             _httpRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
+            _httpRequestHeaders.Add("X-Correlation-Id", _correlationId.ToString());
 
             _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_caseId, false, false, true))
                .ReturnsAsync(default(DurableOrchestrationStatus));
@@ -58,34 +57,44 @@ namespace coordinator.tests.Functions
             _mockDurableOrchestrationClient.Setup(client => client.CreateCheckStatusResponse(_httpRequestMessage, _caseId, false))
                 .Returns(_httpResponseMessage);
 
-            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>()))
-                .Returns(new HttpResponseMessage(HttpStatusCode.InternalServerError));
-
             mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsNotNull<AuthenticationHeaderValue>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(true, _accessToken));
             mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(null, It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
 
-            _coordinatorStart = new CoordinatorStart(_mockExceptionHandler.Object, _mockLogger.Object, mockAuthorizationValidator.Object);
+            _coordinatorStart = new CoordinatorStart(_mockLogger.Object, mockAuthorizationValidator.Object);
         }
 
         [Fact]
         public async Task Run_ReturnsUnauthorizedWhenAuthorizationHeaderIsMissing()
         {
             _httpRequestHeaders.Clear();
-            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
-                 .Returns(new HttpResponseMessage(HttpStatusCode.Unauthorized));
+            _httpRequestHeaders.Add("X-Correlation-Id", _correlationId.ToString());
+            //_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
+            //     .Returns(new HttpResponseMessage(HttpStatusCode.Unauthorized));
 
             var httpResponseMessage = await _coordinatorStart.Run(_httpRequestMessage, _caseId, _mockDurableOrchestrationClient.Object);
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
+        
+        [Fact]
+        public async Task Run_ReturnsBadRequestWhenCorrelationIdIsMissing()
+        {
+            _httpRequestHeaders.Clear();
+            //_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
+            //     .Returns(new HttpResponseMessage(HttpStatusCode.Unauthorized));
+
+            var httpResponseMessage = await _coordinatorStart.Run(_httpRequestMessage, _caseId, _mockDurableOrchestrationClient.Object);
+
+            httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
 
         [Fact]
         public async Task Run_ReturnsBadRequestWhenInvalidCaseId()
         {
-            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>()))
-                .Returns(new HttpResponseMessage(HttpStatusCode.BadRequest));
+            //_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>()))
+            //    .Returns(new HttpResponseMessage(HttpStatusCode.BadRequest));
 
             var httpResponseMessage = await _coordinatorStart.Run(_httpRequestMessage, "invalid", _mockDurableOrchestrationClient.Object);
 
@@ -96,8 +105,8 @@ namespace coordinator.tests.Functions
         public async Task Run_ReturnsBadRequestWhenForceRefreshIsInvalid()
         {
             _httpRequestMessage.RequestUri = new Uri("https://www.test.co.uk?force=invalid");
-            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>()))
-                .Returns(new HttpResponseMessage(HttpStatusCode.BadRequest));
+            //_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>()))
+            //    .Returns(new HttpResponseMessage(HttpStatusCode.BadRequest));
 
             var httpResponseMessage = await _coordinatorStart.Run(_httpRequestMessage, _caseId, _mockDurableOrchestrationClient.Object);
 
@@ -169,7 +178,7 @@ namespace coordinator.tests.Functions
             _mockLogger.Verify(x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((value, _) => value.ToString() == $"Started {nameof(CoordinatorOrchestrator)} with instance id '{_caseId}'"),
+                It.Is<It.IsAnyType>((value, _) => value.ToString().Contains($"Started {nameof(CoordinatorOrchestrator)} with instance id '{_caseId}'")),
                 It.IsAny<Exception>(),
                 (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()));
         }

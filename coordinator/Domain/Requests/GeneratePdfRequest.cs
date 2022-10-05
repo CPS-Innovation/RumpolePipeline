@@ -1,4 +1,6 @@
-﻿namespace coordinator.Domain.Requests
+﻿using System;
+
+namespace coordinator.Domain.Requests
 {
     public class GeneratePdfRequest
     {

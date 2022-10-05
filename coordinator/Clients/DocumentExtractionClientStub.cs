@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using coordinator.Domain.DocumentExtraction;
 
 namespace coordinator.Clients
 {
 	public class DocumentExtractionClientStub : IDocumentExtractionClient
 	{
-        public Task<Case> GetCaseDocumentsAsync(string caseId, string accessToken)
+        public Task<Case> GetCaseDocumentsAsync(string caseId, string accessToken, Guid correlationId)
         {
             return Task.FromResult(caseId switch
             {

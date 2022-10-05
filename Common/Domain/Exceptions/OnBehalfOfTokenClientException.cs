@@ -1,5 +1,6 @@
 ﻿using System;
-namespace coordinator.Domain.Exceptions
+
+namespace Common.Domain.Exceptions
 {
     [Serializable]
     public class OnBehalfOfTokenClientException : Exception

@@ -5,5 +5,7 @@
         public string Token { get; set; }
 
         public string RequestedScope { get; set; }
+
+        public string CorrelationId { get; set; }
     }
 }

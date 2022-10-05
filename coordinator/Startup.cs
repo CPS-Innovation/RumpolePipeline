@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using Common.Adapters;
 using common.Handlers;
 using common.Wrappers;
 using coordinator;
 using coordinator.Clients;
-using coordinator.Domain.Adapters;
 using coordinator.Factories;
-using coordinator.Handlers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,7 +49,6 @@ namespace coordinator
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory, GeneratePdfHttpRequestFactory>();
             builder.Services.AddSingleton<ITextExtractorHttpRequestFactory, TextExtractorHttpRequestFactory>();
-            builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
         }
         
         private string GetValueFromConfig(IConfiguration configuration, string key)

@@ -10,7 +10,7 @@ namespace coordinator.Clients
 		{
 		}
 
-        public Task<Case> GetCaseDocumentsAsync(string caseId, string accessToken)
+        public Task<Case> GetCaseDocumentsAsync(string caseId, string accessToken, Guid correlationId)
         {
             // TODO
             throw new NotImplementedException();

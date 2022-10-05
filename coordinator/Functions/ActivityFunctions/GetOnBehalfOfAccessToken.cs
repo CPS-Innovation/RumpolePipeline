@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using coordinator.Domain.Adapters;
+using Common.Adapters;
+using coordinator.Domain.Requests;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
@@ -21,15 +22,16 @@ namespace coordinator.Functions.ActivityFunctions
         [FunctionName("GetOnBehalfOfAccessToken")]
         public async Task<string> Run([ActivityTrigger] IDurableActivityContext context)
         {
-            var accessToken = context.GetInput<string>();
-            if (string.IsNullOrWhiteSpace(accessToken))
-            {
+            var request = context.GetInput<GetOnBehalfOfTokenRequest>();
+            if (string.IsNullOrWhiteSpace(request.AccessToken))
                 throw new ArgumentException("Access token cannot be null.");
-            }
+
+            if (request.CorrelationId == Guid.Empty)
+                throw new ArgumentException("CorrelationId must not be null");
             
             var onBehalfOfScopes = _configuration["CoreDataApiScope"];
 
-            return await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(accessToken, onBehalfOfScopes);
+            return await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(request.AccessToken, onBehalfOfScopes, request.CorrelationId);
         }
     }
 }

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Common.Adapters;
 using common.Wrappers;
-using coordinator.Domain.Adapters;
 using coordinator.Domain.Exceptions;
 using coordinator.Domain.Requests;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -27,17 +27,18 @@ namespace coordinator.Factories
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string blobName)
+        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string blobName, Guid correlationId)
         {
             try
             {
                 var clientScopes = _configuration["TextExtractorScope"];
                 
-                var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes);
+                var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes, correlationId);
                 
                 var headers = new Dictionary<string, StringValues>() {
                     { "Content-Type", "application/json" },
-                    { "Authorization", $"Bearer {result}"}
+                    { "Authorization", $"Bearer {result}"},
+                    { "X-Correlation-ID", correlationId.ToString() }
                 };
                 var content = _jsonConvertWrapper.SerializeObject(
                     new TextExtractorRequest { CaseId = caseId, DocumentId = documentId, BlobName = blobName });

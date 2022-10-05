@@ -32,7 +32,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
                 .Returns(payload);
 
-            mockGeneratePdfHttpFactory.Setup(client => client.Create(payload.CaseId, payload.DocumentId, payload.FileName))
+            mockGeneratePdfHttpFactory.Setup(client => client.Create(payload.CaseId, payload.DocumentId, payload.FileName, payload.CorrelationId))
                 .ReturnsAsync(_durableRequest);
 
             _createGeneratePdfHttpRequest = new CreateGeneratePdfHttpRequest(mockGeneratePdfHttpFactory.Object);

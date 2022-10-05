@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Common.Logging;
 using coordinator.Domain;
 using coordinator.Domain.DocumentExtraction;
 using coordinator.Domain.Exceptions;
@@ -33,10 +34,8 @@ namespace coordinator.Functions
         {
             var payload = context.GetInput<CoordinatorOrchestrationPayload>();
             if (payload == null)
-            {
                 throw new ArgumentException("Orchestration payload cannot be null.", nameof(context));
-            }
-
+            
             var tracker = GetTracker(context, payload.CaseId);
             try
             {
@@ -61,7 +60,11 @@ namespace coordinator.Functions
             catch (Exception exception)
             {
                 await tracker.RegisterFailed();
-                _log.LogError(exception, "Error when running {CoordinatorOrchestratorName} orchestration with id \'{ContextInstanceId}\'", nameof(CoordinatorOrchestrator), context.InstanceId);
+                
+                _log.LogError(new EventId(LoggingEvent.ProcessingFailedUnhandledException), exception, LoggingConstants.StructuredTemplate,
+                    payload.CorrelationId, LoggingCheckpoint.PipelineTaskFailed.Name, nameof(CoordinatorOrchestrator),
+                    payload.CaseId, LoggingEventStatus.Failed.Name, $"Error when running {nameof(CoordinatorOrchestrator)} orchestration with id \'{context.InstanceId}\'");
+                
                 throw;
             }
         }
@@ -80,7 +83,7 @@ namespace coordinator.Functions
 
             var documents = await context.CallActivityAsync<CaseDocument[]>(
                 nameof(GetCaseDocuments),
-                new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = payload.AccessToken });
+                new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = payload.AccessToken, CorrelationId = payload.CorrelationId });
 
             if (documents.Length == 0)
             {
@@ -99,17 +102,16 @@ namespace coordinator.Functions
                     {
                         CaseId = payload.CaseId,
                         DocumentId = documents[documentIndex].DocumentId,
-                        FileName = documents[documentIndex].FileName
+                        FileName = documents[documentIndex].FileName,
+                        CorrelationId = payload.CorrelationId
                     }));
             }
 
             await Task.WhenAll(caseDocumentTasks.Select(BufferCall));
 
             if (await tracker.AllDocumentsFailed())
-            {
                 throw new CoordinatorOrchestrationException("All documents failed to process during orchestration.");
-            }
-
+            
             await tracker.RegisterCompleted();
 
             return await tracker.GetDocuments();
@@ -127,7 +129,7 @@ namespace coordinator.Functions
             }
         }
 
-        private ITracker GetTracker(IDurableOrchestrationContext context, int caseId)
+        private static ITracker GetTracker(IDurableOrchestrationContext context, int caseId)
         {
             var entityId = new EntityId(nameof(Tracker), caseId.ToString());
             return context.CreateEntityProxy<ITracker>(entityId);

@@ -21,12 +21,17 @@ namespace coordinator.Functions.ActivityFunctions
         public async Task<CaseDocument[]> Run([ActivityTrigger] IDurableActivityContext context)
         {
             var payload = context.GetInput<GetCaseDocumentsActivityPayload>();
+            
             if (payload == null)
-            {
                 throw new ArgumentException("Payload cannot be null.");
-            }
-
-            var caseDetails = await _documentExtractionClient.GetCaseDocumentsAsync(payload.CaseId.ToString(), payload.AccessToken);
+            if (payload.CaseId == 0)
+                throw new ArgumentException("CaseId cannot be zero");
+            if (string.IsNullOrWhiteSpace(payload.AccessToken))
+                throw new ArgumentException("Access Token cannot be null");
+            if (payload.CorrelationId == Guid.Empty)
+                throw new ArgumentException("CorrelationId must be valid GUID");
+            
+            var caseDetails = await _documentExtractionClient.GetCaseDocumentsAsync(payload.CaseId.ToString(), payload.AccessToken, payload.CorrelationId);
             return caseDetails.CaseDocuments;
         }
     }

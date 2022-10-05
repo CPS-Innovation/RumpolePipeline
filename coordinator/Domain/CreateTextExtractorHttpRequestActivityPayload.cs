@@ -1,9 +1,7 @@
 ﻿namespace coordinator.Domain
 {
-    public class CreateGeneratePdfHttpRequestActivityPayload
+    public class CreateGeneratePdfHttpRequestActivityPayload : BasePipelinePayload
     {
-        public int CaseId { get; set; }
-
         public string DocumentId { get; set; }
 
         public string FileName { get; set; }

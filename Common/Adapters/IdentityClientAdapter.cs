@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using coordinator.Domain.Exceptions;
+using Common.Domain.Exceptions;
 using Microsoft.Identity.Client;
 
-namespace coordinator.Domain.Adapters
+namespace Common.Adapters
 {
     public class IdentityClientAdapter : IIdentityClientAdapter
     {
@@ -16,13 +16,13 @@ namespace coordinator.Domain.Adapters
                                              throw new ArgumentNullException(nameof(confidentialClientApplication));
         }
 
-        public async Task<string> GetAccessTokenOnBehalfOfAsync(string currentAccessToken, string scopes)
+        public async Task<string> GetAccessTokenOnBehalfOfAsync(string currentAccessToken, string scopes, Guid correlationId)
         {
             try
             {
-                var userAssertion = new UserAssertion(currentAccessToken, Common.Constants.Authentication.AzureAuthenticationAssertionType);
+                var userAssertion = new UserAssertion(currentAccessToken, Constants.Authentication.AzureAuthenticationAssertionType);
                 var requestedScopes = new Collection<string> { scopes };
-                var result = await _confidentialClientApplication.AcquireTokenOnBehalfOf(requestedScopes, userAssertion).ExecuteAsync();
+                var result = await _confidentialClientApplication.AcquireTokenOnBehalfOf(requestedScopes, userAssertion).WithCorrelationId(correlationId).ExecuteAsync();
                 return result.AccessToken;
             }
             catch (MsalException exception)
@@ -31,12 +31,12 @@ namespace coordinator.Domain.Adapters
             }
         }
 
-        public async Task<string> GetClientAccessTokenAsync(string scopes)
+        public async Task<string> GetClientAccessTokenAsync(string scopes, Guid correlationId)
         {
             try
             {
                 var requestedScopes = new Collection<string> { scopes };
-                var result = await _confidentialClientApplication.AcquireTokenForClient(requestedScopes).ExecuteAsync();
+                var result = await _confidentialClientApplication.AcquireTokenForClient(requestedScopes).WithCorrelationId(correlationId).ExecuteAsync();
                 return result.AccessToken;
             }
             catch (MsalUiRequiredException ex)

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AutoFixture;
-using coordinator.Domain.Adapters;
+using Common.Adapters;
+using coordinator.Domain.Requests;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -13,48 +14,57 @@ namespace coordinator.tests.Functions.ActivityFunctions
 {
     public class GetOnBehalfOfAccessTokenTests
     {
-        private Fixture _fixture;
-        private string _accessToken;
-        private string _onBehalfOfAccessToken;
+        private readonly string _onBehalfOfAccessToken;
+        private readonly Guid _correlationId;
+        private readonly string _accessToken;
 
-        private Mock<IIdentityClientAdapter> _identityClientAdapterMock;
-        private Mock<IDurableActivityContext> _mockDurableActivityContext;
-        private Mock<IConfiguration> _mockConfiguration;
+        private readonly Mock<IDurableActivityContext> _mockDurableActivityContext;
 
-        private GetOnBehalfOfAccessToken GetOnBehalfOfAccessToken;
+        private readonly GetOnBehalfOfAccessToken _getOnBehalfOfAccessToken;
 
         public GetOnBehalfOfAccessTokenTests()
         {
-            _fixture = new Fixture();
-            _accessToken = _fixture.Create<string>();
-            _onBehalfOfAccessToken = _fixture.Create<string>();
+            var fixture = new Fixture();
+            
+            _accessToken = fixture.Create<string>();
+            _onBehalfOfAccessToken = fixture.Create<string>();
+            _correlationId = fixture.Create<Guid>();
 
-            _identityClientAdapterMock = new Mock<IIdentityClientAdapter>();
+            var identityClientAdapterMock = new Mock<IIdentityClientAdapter>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
-            _mockConfiguration = new Mock<IConfiguration>();
+            var mockConfiguration = new Mock<IConfiguration>();
 
-            _mockDurableActivityContext.Setup(context => context.GetInput<string>())
-                .Returns(_accessToken);
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetOnBehalfOfTokenRequest>())
+                .Returns(new GetOnBehalfOfTokenRequest { AccessToken = _accessToken, CorrelationId = _correlationId });
 
-            _identityClientAdapterMock.Setup(client => client.GetAccessTokenOnBehalfOfAsync(_accessToken, It.IsAny<string>()))
+            identityClientAdapterMock.Setup(client => client.GetAccessTokenOnBehalfOfAsync(_accessToken, It.IsAny<string>(), It.IsAny<Guid>()))
                 .ReturnsAsync(_onBehalfOfAccessToken);
 
-            GetOnBehalfOfAccessToken = new GetOnBehalfOfAccessToken(_identityClientAdapterMock.Object, _mockConfiguration.Object);
+            _getOnBehalfOfAccessToken = new GetOnBehalfOfAccessToken(identityClientAdapterMock.Object, mockConfiguration.Object);
         }
 
         [Fact]
-        public async Task Run_ThrowsWhenAccessTokenPayloadIsNull()
+        public async Task Run_ThrowsWhenAccessToken_InPayload_IsNull()
         {
-            _mockDurableActivityContext.Setup(context => context.GetInput<string>())
-                .Returns(default(string));
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetOnBehalfOfTokenRequest>())
+                .Returns(new GetOnBehalfOfTokenRequest { AccessToken = default, CorrelationId = _correlationId });
 
-            await Assert.ThrowsAsync<ArgumentException>(() => GetOnBehalfOfAccessToken.Run(_mockDurableActivityContext.Object));
+            await Assert.ThrowsAsync<ArgumentException>(() => _getOnBehalfOfAccessToken.Run(_mockDurableActivityContext.Object));
+        }
+        
+        [Fact]
+        public async Task Run_ThrowsWhenCorrelationId_InPayload_IsNull()
+        {
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetOnBehalfOfTokenRequest>())
+                .Returns(new GetOnBehalfOfTokenRequest { AccessToken = _accessToken, CorrelationId = default });
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _getOnBehalfOfAccessToken.Run(_mockDurableActivityContext.Object));
         }
 
         [Fact]
         public async Task Run_ReturnsAccessToken()
         {
-            var caseDetails = await GetOnBehalfOfAccessToken.Run(_mockDurableActivityContext.Object);
+            var caseDetails = await _getOnBehalfOfAccessToken.Run(_mockDurableActivityContext.Object);
 
             caseDetails.Should().Be(_onBehalfOfAccessToken);
         }
