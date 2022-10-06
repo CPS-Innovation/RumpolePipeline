@@ -108,7 +108,13 @@ namespace common.Handlers
             }
 
             var hasAccessToRoles = !requiredRoles.Any() || requiredRoles.All(claimsPrincipal.IsInRole);
-            
+            if (hasAccessToRoles)
+            {
+                _log.LogMethodFlow(_correlationId, nameof(IsValid), "Access to at least one application role has been found - allowing access - returning");
+                return true;
+            }
+
+            _log.LogMethodFlow(_correlationId, nameof(IsValid), "No access to an application role found, checking the requested scope(s)");
             var scopeClaim = claimsPrincipal.HasClaim(x => x.Type == ScopeType)
                 ? claimsPrincipal.Claims.First(x => x.Type == ScopeType).Value
                 : string.Empty;
@@ -116,8 +122,10 @@ namespace common.Handlers
             var tokenScopes = scopeClaim.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries).ToList();
             var hasAccessToScopes = !requiredScopes.Any() || requiredScopes.All(x => tokenScopes.Any(y => string.Equals(x, y, StringComparison.OrdinalIgnoreCase)));
 
-            _log.LogMethodExit(_correlationId, nameof(IsValid), $"Outcome role and scope checks - hasAccessToRoles: {hasAccessToRoles}, hasAccessToScopes: {hasAccessToScopes}");
-            return hasAccessToRoles && hasAccessToScopes;
+            _log.LogMethodFlow(_correlationId, nameof(IsValid),
+                hasAccessToScopes ? "Scope(s) found - allowing access - returning" : "No required scope(s) found - access denied - returning");
+            
+            return hasAccessToScopes;
         }
     }
 }
