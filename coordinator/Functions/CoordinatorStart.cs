@@ -19,39 +19,42 @@ namespace coordinator.Functions
 {
     public class CoordinatorStart
     {
-        private readonly ILogger<CoordinatorStart> _log;
+        private readonly ILogger<CoordinatorStart> _logger;
         private readonly IAuthorizationValidator _authorizationValidator;
-
-        public CoordinatorStart(ILogger<CoordinatorStart> log, IAuthorizationValidator authorizationValidator)
+        
+        public CoordinatorStart(ILogger<CoordinatorStart> logger, IAuthorizationValidator authorizationValidator)
         {
-            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _logger = logger;
             _authorizationValidator = authorizationValidator ?? throw new ArgumentNullException(nameof(authorizationValidator));
         }
 
         [FunctionName("CoordinatorStart")]
         public async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "cases/{caseId}")] HttpRequestMessage req, string caseId, [DurableClient] IDurableOrchestrationClient orchestrationClient)
-        {
-            var correlationId = string.Empty;
-            
+        { 
+            Guid currentCorrelationId = default;
+            const string loggingName = $"{nameof(CoordinatorStart)} - {nameof(Run)}";
+
             try
             {
                 req.Headers.TryGetValues("X-Correlation-ID", out var correlationIdValues);
                 if (correlationIdValues == null)
                     throw new BadRequestException("Invalid correlationId. A valid GUID is required.", nameof(req));
-            
-                correlationId = correlationIdValues.FirstOrDefault();
+
+                var correlationId = correlationIdValues.FirstOrDefault();
+                if (!Guid.TryParse(correlationId, out currentCorrelationId))
+                    if (currentCorrelationId == Guid.Empty)
+                        throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
+
+                _logger.LogMethodEntry(currentCorrelationId, loggingName, req.RequestUri?.Query);
                 
-                var authValidation = await _authorizationValidator.ValidateTokenAsync(req.Headers.Authorization);
+                var authValidation = await _authorizationValidator.ValidateTokenAsync(req.Headers.Authorization, currentCorrelationId);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
 
-                if (!Guid.TryParse(correlationId, out var currentCorrelationId))
-                    throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
-
                 if (!int.TryParse(caseId, out var caseIdNum))
                     throw new BadRequestException("Invalid case id. A 32-bit integer is required.", caseId);
-                
+
                 if (req.RequestUri == null)
                     throw new BadRequestException("Expected querystring value", nameof(req));
 
@@ -65,12 +68,13 @@ namespace coordinator.Functions
                 }
 
                 // Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled).
+                _logger.LogMethodFlow(currentCorrelationId, loggingName, "Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled");
                 var existingInstance = await orchestrationClient.GetStatusAsync(caseId);
                 if (existingInstance == null
-                || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Completed
-                || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Failed
-                || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Terminated
-                || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Canceled)
+                    || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Completed
+                    || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Failed
+                    || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Terminated
+                    || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Canceled)
                 {
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),
@@ -83,18 +87,20 @@ namespace coordinator.Functions
                             CorrelationId = currentCorrelationId
                         });
 
-                    _log.LogInformation(new EventId(LoggingEvent.ProcessingSucceeded), LoggingConstants.StructuredTemplate,
-                        correlationId, LoggingCheckpoint.PipelineTriggered.Name, nameof(CoordinatorStart),
-                        caseId, LoggingEventStatus.Succeeded.Name, $"Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'");
+                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'");
+                }
+                else
+                {
+                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - {nameof(CoordinatorOrchestrator)} with instance id '{caseId}' is already running");
                 }
 
                 return orchestrationClient.CreateCheckStatusResponse(req, caseId);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 var rootCauseMessage = "An unhandled exception occurred";
                 var httpStatusCode = HttpStatusCode.InternalServerError;
-                
+
                 if (exception is UnauthorizedException)
                 {
                     rootCauseMessage = "Unauthorized";
@@ -105,16 +111,19 @@ namespace coordinator.Functions
                     rootCauseMessage = "Invalid request";
                     httpStatusCode = HttpStatusCode.BadRequest;
                 }
+
                 var errorMessage = $"{rootCauseMessage}. {exception.Message}.  Base exception message: {exception.GetBaseException().Message}";
-                
-                _log.LogInformation(new EventId(LoggingEvent.ProcessingFailedUnhandledException), LoggingConstants.StructuredTemplate,
-                    correlationId, LoggingCheckpoint.PipelineRunFailed.Name, nameof(CoordinatorStart),
-                    caseId, LoggingEventStatus.Failed.Name, errorMessage);
-                
+
+                _logger.LogMethodError(currentCorrelationId, loggingName, errorMessage, exception);
+
                 return new HttpResponseMessage(httpStatusCode)
                 {
                     Content = new StringContent(errorMessage, Encoding.UTF8, MediaTypeNames.Application.Json)
                 };
+            }
+            finally
+            {
+                _logger.LogMethodExit(currentCorrelationId, loggingName, "n/a");
             }
         }
     }

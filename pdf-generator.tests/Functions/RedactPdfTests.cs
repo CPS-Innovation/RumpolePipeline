@@ -17,6 +17,7 @@ using Xunit;
 using System;
 using System.Net.Http.Headers;
 using common.Handlers;
+using Microsoft.Extensions.Logging;
 
 namespace pdf_generator.tests.Functions
 {
@@ -28,6 +29,8 @@ namespace pdf_generator.tests.Functions
         private readonly Mock<IAuthorizationValidator> _mockAuthorizationValidator;
         private readonly Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
         private readonly Mock<IExceptionHandler> _mockExceptionHandler;
+        private readonly Mock<ILogger<RedactPdf>> _loggerMock;
+        private readonly Guid _correlationId;
 
         private readonly RedactPdf _redactPdf;
 
@@ -36,10 +39,11 @@ namespace pdf_generator.tests.Functions
             var request = _fixture.Create<RedactPdfRequest>();
 
             var serializedRedactPdfRequest = JsonConvert.SerializeObject(request);
-            _httpRequestMessage = new HttpRequestMessage()
+            _httpRequestMessage = new HttpRequestMessage
             {
                 Content = new StringContent(serializedRedactPdfRequest, Encoding.UTF8, "application/json")
             };
+            _httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
             _serializedRedactPdfResponse = _fixture.Create<string>();
 
             _mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
@@ -47,23 +51,26 @@ namespace pdf_generator.tests.Functions
             _mockExceptionHandler = new Mock<IExceptionHandler>();
             var mockDocumentRedactionService = new Mock<IDocumentRedactionService>();
 
-            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<string>()))
+            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(true, _fixture.Create<string>()));
             _mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.IsAny<RedactPdfResponse>()))
                 .Returns(_serializedRedactPdfResponse);
 
-            mockDocumentRedactionService.Setup(x => x.RedactPdfAsync(It.IsAny<RedactPdfRequest>(), It.IsAny<string>())).ReturnsAsync(_fixture.Create<RedactPdfResponse>());
+            mockDocumentRedactionService.Setup(x => x.RedactPdfAsync(It.IsAny<RedactPdfRequest>(), It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(_fixture.Create<RedactPdfResponse>());
+
+            _loggerMock = new Mock<ILogger<RedactPdf>>();
+            _correlationId = _fixture.Create<Guid>();
 
             _redactPdf = new RedactPdf(_mockAuthorizationValidator.Object, _mockExceptionHandler.Object,
-                _mockJsonConvertWrapper.Object, mockDocumentRedactionService.Object);
+                _mockJsonConvertWrapper.Object, mockDocumentRedactionService.Object, _loggerMock.Object);
         }
 
         [Fact]
         public async Task Run_ReturnsUnauthorizedWhenUnauthorized()
         {
-            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<string>()))
+            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
-            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
+            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>(), It.IsAny<Guid>(), It.IsAny<string>(), _loggerMock.Object))
                 .Returns(new HttpResponseMessage(HttpStatusCode.Unauthorized));
             _httpRequestMessage.Content = new StringContent(" ");
 
@@ -76,7 +83,7 @@ namespace pdf_generator.tests.Functions
         public async Task Run_ReturnsBadRequestWhenContentIsInvalid()
         {
             var errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
-            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>()))
+            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _loggerMock.Object))
                 .Returns(errorHttpResponseMessage);
             _httpRequestMessage.Content = new StringContent(" ");
 
@@ -92,7 +99,7 @@ namespace pdf_generator.tests.Functions
             var exception = new Exception();
             _mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.IsAny<RedactPdfResponse>()))
                 .Throws(exception);
-            _mockExceptionHandler.Setup(handler => handler.HandleException(exception))
+            _mockExceptionHandler.Setup(handler => handler.HandleException(exception, It.IsAny<Guid>(), It.IsAny<string>(), _loggerMock.Object))
                 .Returns(errorHttpResponseMessage);
 
             var response = await _redactPdf.Run(_httpRequestMessage);
@@ -121,7 +128,7 @@ namespace pdf_generator.tests.Functions
         public async Task Run_ReturnsBadRequest_WhenValidationFailed()
         {
             var errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
-            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>()))
+            _mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _loggerMock.Object))
                 .Returns(errorHttpResponseMessage);
 
             var request = _fixture.Create<RedactPdfRequest>();

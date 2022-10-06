@@ -19,7 +19,7 @@ namespace pdf_generator.tests.Services.PdfService
         public WordsPdfServiceTests()
         {
             _asposeItemFactory = new Mock<IAsposeItemFactory>();
-            _asposeItemFactory.Setup(x => x.CreateWordsDocument(It.IsAny<Stream>())).Returns(new Document());
+            _asposeItemFactory.Setup(x => x.CreateWordsDocument(It.IsAny<Stream>(), It.IsAny<Guid>())).Returns(new Document());
 
             _pdfService = new WordsPdfService(_asposeItemFactory.Object);
         }
@@ -41,11 +41,11 @@ namespace pdf_generator.tests.Services.PdfService
             using var pdfStream = new MemoryStream();
             using var inputStream = new MemoryStream(Encoding.UTF8.GetBytes("whatever"));
 
-            _pdfService.ReadToPdfStream(inputStream, pdfStream);
+            _pdfService.ReadToPdfStream(inputStream, pdfStream, Guid.NewGuid());
 
             using (new AssertionScope())
             {
-                _asposeItemFactory.Verify(x => x.CreateWordsDocument(It.IsAny<Stream>()));
+                _asposeItemFactory.Verify(x => x.CreateWordsDocument(It.IsAny<Stream>(), It.IsAny<Guid>()));
                 pdfStream.Should().NotBeNull();
                 pdfStream.Length.Should().BeGreaterThan(0);
             }

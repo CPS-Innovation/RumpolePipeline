@@ -7,6 +7,7 @@ using coordinator.Domain.DocumentExtraction;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -35,7 +36,8 @@ namespace coordinator.tests.Functions.ActivityFunctions
             mockDocumentExtractionClient.Setup(client => client.GetCaseDocumentsAsync(payload.CaseId.ToString(), payload.AccessToken, payload.CorrelationId))
                 .ReturnsAsync(_case);
 
-            _getCaseDocuments = new GetCaseDocuments(mockDocumentExtractionClient.Object);
+            var mockLogger = new Mock<ILogger<GetCaseDocuments>>();
+            _getCaseDocuments = new GetCaseDocuments(mockDocumentExtractionClient.Object, mockLogger.Object);
         }
 
         [Fact]

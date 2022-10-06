@@ -27,9 +27,9 @@ namespace pdf_generator.Services.PdfService
             _asposeItemFactory = asposeItemFactory ?? throw new ArgumentNullException(nameof(asposeItemFactory));
         }
 
-        public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
+        public void ReadToPdfStream(Stream inputStream, Stream pdfStream, Guid correlationId)
         {
-            using var image = _asposeItemFactory.CreateImage(inputStream);
+            using var image = _asposeItemFactory.CreateImage(inputStream, correlationId);
             image.Save(pdfStream, new PdfOptions { PdfDocumentInfo = new PdfDocumentInfo() });
             pdfStream.Seek(0, System.IO.SeekOrigin.Begin);
         }

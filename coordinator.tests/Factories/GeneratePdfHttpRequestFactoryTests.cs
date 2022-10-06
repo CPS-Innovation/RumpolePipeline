@@ -10,6 +10,7 @@ using coordinator.Domain.Requests;
 using coordinator.Factories;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -27,12 +28,11 @@ namespace coordinator.tests.Factories
 
         private readonly Mock<IIdentityClientAdapter> _mockIdentityClientAdapter;
         
-
 		private readonly GeneratePdfHttpRequestFactory _generatePdfHttpRequestFactory;
 
 		public GeneratePdfHttpRequestFactoryTests()
 		{
-            var fixture = new Fixture();
+			var fixture = new Fixture();
 			_caseId = fixture.Create<int>();
 			_documentId = fixture.Create<string>();
 			_fileName = fixture.Create<string>();
@@ -52,11 +52,13 @@ namespace coordinator.tests.Factories
 			mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.FileName == _fileName)))
 				.Returns(_content);
 
+			var mockLogger = new Mock<ILogger<GeneratePdfHttpRequestFactory>>();
+
 			mockConfiguration.Setup(config => config["PdfGeneratorScope"]).Returns(pdfGeneratorScope);
 			mockConfiguration.Setup(config => config["PdfGeneratorUrl"]).Returns(_pdfGeneratorUrl);
 			mockConfiguration.Setup(config => config["OnBehalfOfTokenTenantId"]).Returns(fixture.Create<string>());
 			
-			_generatePdfHttpRequestFactory = new GeneratePdfHttpRequestFactory(_mockIdentityClientAdapter.Object, mockJsonConvertWrapper.Object, mockConfiguration.Object);
+			_generatePdfHttpRequestFactory = new GeneratePdfHttpRequestFactory(_mockIdentityClientAdapter.Object, mockJsonConvertWrapper.Object, mockConfiguration.Object, mockLogger.Object);
 		}
 
 		[Fact]

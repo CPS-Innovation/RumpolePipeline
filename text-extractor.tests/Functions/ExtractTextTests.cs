@@ -11,6 +11,7 @@ using common.Handlers;
 using common.Wrappers;
 using FluentAssertions;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using Microsoft.Extensions.Logging;
 using Moq;
 using text_extractor.Domain.Requests;
 using text_extractor.Functions;
@@ -34,6 +35,9 @@ namespace text_extractor.tests.Functions
 		private readonly Mock<IExceptionHandler> _mockExceptionHandler;
 		private readonly Mock<AnalyzeResults> _mockAnalyzeResults;
 
+		private readonly Mock<ILogger<ExtractText>> _mockLogger;
+		private readonly Guid _correlationId;
+
 		private readonly ExtractText _extractText;
 
 		public ExtractTextTests()
@@ -54,13 +58,17 @@ namespace text_extractor.tests.Functions
 			_mockExceptionHandler = new Mock<IExceptionHandler>();
 			_mockAnalyzeResults = new Mock<AnalyzeResults>();
 
-			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<string>()))
+			_correlationId = fixture.Create<Guid>();
+
+			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
 				.ReturnsAsync(new Tuple<bool, string>(true, fixture.Create<string>()));
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<ExtractTextRequest>(_serializedExtractTextRequest))
 				.Returns(_extractTextRequest);
 			mockValidatorWrapper.Setup(wrapper => wrapper.Validate(_extractTextRequest)).Returns(new List<ValidationResult>());
-			mockOcrService.Setup(service => service.GetOcrResultsAsync(_extractTextRequest.BlobName))
+			mockOcrService.Setup(service => service.GetOcrResultsAsync(_extractTextRequest.BlobName, It.IsAny<Guid>()))
 				.ReturnsAsync(_mockAnalyzeResults.Object);
+
+			_mockLogger = new Mock<ILogger<ExtractText>>();
 
 			_extractText = new ExtractText(
 								_mockAuthorizationValidator.Object,
@@ -68,18 +76,35 @@ namespace text_extractor.tests.Functions
 								mockValidatorWrapper.Object,
 								mockOcrService.Object,
 								_mockSearchIndexService.Object,
-								_mockExceptionHandler.Object);
+								_mockExceptionHandler.Object,
+								_mockLogger.Object);
+		}
+		
+		[Fact]
+		public async Task Run_ReturnsExceptionWhenCorrelationIdIsMissing()
+		{
+			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
+				.ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
+			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
+			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<ILogger<ExtractText>>()))
+				.Returns(_errorHttpResponseMessage);
+			_httpRequestMessage.Content = new StringContent(" ");
+			
+			var response = await _extractText.Run(_httpRequestMessage);
+
+			response.Should().Be(_errorHttpResponseMessage);
 		}
 
 		[Fact]
 		public async Task Run_ReturnsUnauthorizedWhenUnauthorized()
 		{
-			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<string>()))
+			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
 				.ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
 			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
+			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
 				.Returns(_errorHttpResponseMessage);
 			_httpRequestMessage.Content = new StringContent(" ");
+			_httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
 
 			var response = await _extractText.Run(_httpRequestMessage);
 
@@ -90,9 +115,10 @@ namespace text_extractor.tests.Functions
 		public async Task Run_ReturnsBadRequestWhenContentIsInvalid()
         {
 			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>()))
+			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
 				.Returns(_errorHttpResponseMessage);
 			_httpRequestMessage.Content = new StringContent(" ");
+			_httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
 
 			var response = await _extractText.Run(_httpRequestMessage);
 
@@ -102,14 +128,16 @@ namespace text_extractor.tests.Functions
 		[Fact]
 		public async Task Run_StoresOcrResults()
 		{
+			_httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
 			await _extractText.Run(_httpRequestMessage);
 
-			_mockSearchIndexService.Verify(service => service.StoreResultsAsync(_mockAnalyzeResults.Object, _extractTextRequest.CaseId, _extractTextRequest.DocumentId));
+			_mockSearchIndexService.Verify(service => service.StoreResultsAsync(_mockAnalyzeResults.Object, _extractTextRequest.CaseId, _extractTextRequest.DocumentId, _correlationId));
 		}
 
 		[Fact]
 		public async Task Run_ReturnsOk()
 		{
+			_httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
 			var response = await _extractText.Run(_httpRequestMessage);
 
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -122,7 +150,7 @@ namespace text_extractor.tests.Functions
 			var exception = new Exception();
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<ExtractTextRequest>(_serializedExtractTextRequest))
 				.Throws(exception);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(exception))
+			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
 				.Returns(_errorHttpResponseMessage);
 
 			var response = await _extractText.Run(_httpRequestMessage);

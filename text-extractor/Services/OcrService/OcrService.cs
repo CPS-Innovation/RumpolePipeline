@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Common.Logging;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Logging;
@@ -15,8 +16,7 @@ namespace text_extractor.Services.OcrService
         private readonly ISasGeneratorService _sasGeneratorService;
         private readonly ILogger<OcrService> _log;
 
-        public OcrService(
-            IComputerVisionClientFactory computerVisionClientFactory,
+        public OcrService(IComputerVisionClientFactory computerVisionClientFactory,
             ISasGeneratorService sasGeneratorService, ILogger<OcrService> log)
         {
             _computerVisionClient = computerVisionClientFactory.Create();
@@ -24,12 +24,15 @@ namespace text_extractor.Services.OcrService
             _log = log;
         }
 
-        public async Task<AnalyzeResults> GetOcrResultsAsync(string blobName)
+        public async Task<AnalyzeResults> GetOcrResultsAsync(string blobName, Guid correlationId)
         {
-            var sasLink = await _sasGeneratorService.GenerateSasUrlAsync(blobName);
+            _log.LogMethodEntry(correlationId, nameof(GetOcrResultsAsync), blobName);
+            _log.LogMethodFlow(correlationId, nameof(GetOcrResultsAsync), "Generate Shared Access Signature encrypted uri to pass to the computer vision client to begin the OCR process");
+            var sasLink = await _sasGeneratorService.GenerateSasUrlAsync(blobName, correlationId);
 
             try
             {
+                _log.LogMethodFlow(correlationId, nameof(GetOcrResultsAsync), "Calling the computer vision client ReadAsync method to begin the OCR process");
                 var textHeaders = await _computerVisionClient.ReadAsync(sasLink);
 
                 var operationLocation = textHeaders.OperationLocation;
@@ -54,11 +57,16 @@ namespace text_extractor.Services.OcrService
                     }
                 }
 
+                _log.LogMethodFlow(correlationId, nameof(GetOcrResultsAsync), "OCR process completed successfully");
                 return results.AnalyzeResult;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new OcrServiceException(ex.Message);
+            }
+            finally
+            {
+                _log.LogMethodExit(correlationId, nameof(GetOcrResultsAsync), string.Empty);
             }
         }
     }

@@ -20,7 +20,7 @@ namespace pdf_generator.tests.Services.PdfService
             using var testImageStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestImage.png");
 
             _asposeItemFactory = new Mock<IAsposeItemFactory>();
-            _asposeItemFactory.Setup(x => x.CreateImage(It.IsAny<Stream>())).Returns(Aspose.Imaging.Image.Load(testImageStream));
+            _asposeItemFactory.Setup(x => x.CreateImage(It.IsAny<Stream>(), It.IsAny<Guid>())).Returns(Aspose.Imaging.Image.Load(testImageStream));
             _pdfService = new ImagingPdfService(_asposeItemFactory.Object);
         }
 
@@ -41,11 +41,11 @@ namespace pdf_generator.tests.Services.PdfService
             using var pdfStream = new MemoryStream();
             using var inputStream = new MemoryStream(Encoding.UTF8.GetBytes("whatever"));
 
-            _pdfService.ReadToPdfStream(inputStream, pdfStream);
+            _pdfService.ReadToPdfStream(inputStream, pdfStream, Guid.NewGuid());
 
             using (new AssertionScope())
             {
-                _asposeItemFactory.Verify(x => x.CreateImage(It.IsAny<Stream>()));
+                _asposeItemFactory.Verify(x => x.CreateImage(It.IsAny<Stream>(), It.IsAny<Guid>()));
                 pdfStream.Should().NotBeNull();
                 pdfStream.Length.Should().BeGreaterThan(0);
             }

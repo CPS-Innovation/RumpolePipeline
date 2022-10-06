@@ -7,6 +7,7 @@ using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -40,7 +41,8 @@ namespace coordinator.tests.Functions.ActivityFunctions
             identityClientAdapterMock.Setup(client => client.GetAccessTokenOnBehalfOfAsync(_accessToken, It.IsAny<string>(), It.IsAny<Guid>()))
                 .ReturnsAsync(_onBehalfOfAccessToken);
 
-            _getOnBehalfOfAccessToken = new GetOnBehalfOfAccessToken(identityClientAdapterMock.Object, mockConfiguration.Object);
+            var mockLogger = new Mock<ILogger<GetOnBehalfOfAccessToken>>();
+            _getOnBehalfOfAccessToken = new GetOnBehalfOfAccessToken(identityClientAdapterMock.Object, mockConfiguration.Object, mockLogger.Object);
         }
 
         [Fact]

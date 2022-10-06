@@ -1,6 +1,10 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
+using AutoFixture;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
 using pdf_generator.Factories;
 using Xunit;
 
@@ -8,18 +12,23 @@ namespace pdf_generator.tests.Factories
 {
     public class AsposeItemFactoryTests
     {
+        private readonly Guid _correlationId;
         private readonly IAsposeItemFactory _asposeItemFactory;
 
         public AsposeItemFactoryTests()
         {
-            _asposeItemFactory = new AsposeItemFactory();
+            var fixture = new Fixture();
+            _correlationId = fixture.Create<Guid>();
+
+            var loggerMock = new Mock<ILogger<AsposeItemFactory>>();
+            _asposeItemFactory = new AsposeItemFactory(loggerMock.Object);
         }
 
         [Fact]
         public void CreateWorkbook_ReturnsValidObject()
         {
             using var testStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestBook.xlsx");
-            var result = _asposeItemFactory.CreateWorkbook(testStream);
+            var result = _asposeItemFactory.CreateWorkbook(testStream, _correlationId);
 
             result.Should().NotBeNull();
         }
@@ -28,7 +37,7 @@ namespace pdf_generator.tests.Factories
         public void CreateDiagram_ReturnsValidObject()
         {
             using var testStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestDiagram.vsd");
-            var result = _asposeItemFactory.CreateDiagram(testStream);
+            var result = _asposeItemFactory.CreateDiagram(testStream, _correlationId);
 
             result.Should().NotBeNull();
         }
@@ -37,7 +46,7 @@ namespace pdf_generator.tests.Factories
         public void CreateMailMessage_ReturnsValidObject()
         {
             using var testStream = new MemoryStream(Encoding.UTF8.GetBytes("whatever"));
-            var result = _asposeItemFactory.CreateMailMessage(testStream);
+            var result = _asposeItemFactory.CreateMailMessage(testStream, _correlationId);
 
             result.Should().NotBeNull();
         }
@@ -46,7 +55,7 @@ namespace pdf_generator.tests.Factories
         public void CreateMhtmlDocument_ReturnsValidObject()
         {
             using var testStream = new MemoryStream(Encoding.UTF8.GetBytes("whatever"));
-            var result = _asposeItemFactory.CreateMhtmlDocument(testStream);
+            var result = _asposeItemFactory.CreateMhtmlDocument(testStream, _correlationId);
 
             result.Should().NotBeNull();
         }
@@ -55,7 +64,7 @@ namespace pdf_generator.tests.Factories
         public void CreateHtmlDocument_ReturnsValidObject()
         {
             using var testStream = new MemoryStream(Encoding.UTF8.GetBytes("whatever"));
-            var result = _asposeItemFactory.CreateHtmlDocument(testStream);
+            var result = _asposeItemFactory.CreateHtmlDocument(testStream, _correlationId);
 
             result.Should().NotBeNull();
         }
@@ -64,7 +73,7 @@ namespace pdf_generator.tests.Factories
         public void CreateImage_ReturnsValidObject()
         {
             using var testStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestImage.png");
-            var result = _asposeItemFactory.CreateImage(testStream);
+            var result = _asposeItemFactory.CreateImage(testStream, _correlationId);
 
             result.Should().NotBeNull();
         }
@@ -73,7 +82,7 @@ namespace pdf_generator.tests.Factories
         public void CreatePresentation_ReturnsValidObject()
         {
             using var testStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestPresentation.pptx");
-            var result = _asposeItemFactory.CreatePresentation(testStream);
+            var result = _asposeItemFactory.CreatePresentation(testStream, _correlationId);
 
             result.Should().NotBeNull();
         }
@@ -82,7 +91,7 @@ namespace pdf_generator.tests.Factories
         public void CreateWords_ReturnsValidObject()
         {
             using var testStream = new MemoryStream(Encoding.UTF8.GetBytes("whatever"));
-            var result = _asposeItemFactory.CreateWordsDocument(testStream);
+            var result = _asposeItemFactory.CreateWordsDocument(testStream, _correlationId);
 
             result.Should().NotBeNull();
         }

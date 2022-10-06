@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using common.Domain.Exceptions;
+using Common.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -56,7 +58,7 @@ namespace coordinator.Domain.Tracker
         public Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(arg.DocumentId, StringComparison.OrdinalIgnoreCase));
-            document.PdfBlobName = arg.BlobName;
+            document!.PdfBlobName = arg.BlobName;
             document.Status = DocumentStatus.PdfUploadedToBlob;
 
             Log(LogType.RegisteredPdfBlobName, arg.DocumentId);
@@ -64,12 +66,12 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterDocumentNotFoundInCDE(string documentId)
+        public Task RegisterDocumentNotFoundInCde(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document.Status = DocumentStatus.NotFoundInCDE;
+            document!.Status = DocumentStatus.NotFoundInCDE;
 
-            Log(LogType.DocumentNotFoundInCDE, documentId);
+            Log(LogType.DocumentNotFoundInCde, documentId);
 
             return Task.CompletedTask;
         }
@@ -77,7 +79,7 @@ namespace coordinator.Domain.Tracker
         public Task RegisterUnableToConvertDocumentToPdf(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document.Status = DocumentStatus.UnableToConvertToPdf;
+            document!.Status = DocumentStatus.UnableToConvertToPdf;
 
             Log(LogType.UnableToConvertDocumentToPdf, documentId);
 
@@ -87,17 +89,17 @@ namespace coordinator.Domain.Tracker
         public Task RegisterUnexpectedPdfDocumentFailure(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document.Status = DocumentStatus.UnexpectedFailure;
+            document!.Status = DocumentStatus.UnexpectedFailure;
 
             Log(LogType.UnexpectedDocumentFailure, documentId);
 
             return Task.CompletedTask;
         }
 
-        public Task RegisterNoDocumentsFoundInCDE()
+        public Task RegisterNoDocumentsFoundInCde()
         {
-            Status = TrackerStatus.NoDocumentsFoundInCDE;
-            Log(LogType.NoDocumentsFoundInCDE);
+            Status = TrackerStatus.NoDocumentsFoundInCde;
+            Log(LogType.NoDocumentsFoundInCde);
 
             return Task.CompletedTask;
         }
@@ -105,7 +107,7 @@ namespace coordinator.Domain.Tracker
         public Task RegisterIndexed(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document.Status = DocumentStatus.Indexed;
+            document!.Status = DocumentStatus.Indexed;
 
             Log(LogType.Indexed, documentId);
 
@@ -115,7 +117,7 @@ namespace coordinator.Domain.Tracker
         public Task RegisterOcrAndIndexFailure(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document.Status = DocumentStatus.OcrAndIndexFailure;
+            document!.Status = DocumentStatus.OcrAndIndexFailure;
 
             Log(LogType.OcrAndIndexFailure, documentId);
 
@@ -153,7 +155,7 @@ namespace coordinator.Domain.Tracker
 
         public Task<bool> IsAlreadyProcessed()
         {
-            return Task.FromResult(Status == TrackerStatus.Completed || Status == TrackerStatus.NoDocumentsFoundInCDE);
+            return Task.FromResult(Status == TrackerStatus.Completed || Status == TrackerStatus.NoDocumentsFoundInCde);
         }
 
         private void Log(LogType status, string documentId = null)
@@ -179,15 +181,36 @@ namespace coordinator.Domain.Tracker
             [DurableClient] IDurableEntityClient client,
             ILogger log)
         {
+            const string loggingName = $"TrackerStatus - {nameof(HttpStart)}";
+            const string correlationErrorMessage = "Invalid correlationId. A valid GUID is required.";
+            
+            req.Headers.TryGetValues("X-Correlation-ID", out var correlationIdValues);
+            if (correlationIdValues == null)
+            {
+                log.LogMethodFlow(Guid.Empty, loggingName, correlationErrorMessage);
+                return new BadRequestObjectResult(correlationErrorMessage);
+            }
+
+            var correlationId = correlationIdValues.FirstOrDefault();
+            if (!Guid.TryParse(correlationId, out var currentCorrelationId))
+                if (currentCorrelationId == Guid.Empty)
+                {
+                    log.LogMethodFlow(Guid.Empty, loggingName, correlationErrorMessage);
+                    return new BadRequestObjectResult(correlationErrorMessage);
+                }
+
+            log.LogMethodEntry(currentCorrelationId, loggingName, caseId);
+            
             var entityId = new EntityId(nameof(Tracker), caseId);
             var stateResponse = await client.ReadEntityStateAsync<Tracker>(entityId);
             if (!stateResponse.EntityExists)
             {
                 var baseMessage = $"No pipeline tracker found with id '{caseId}'";
-                log.LogError(baseMessage);
+                log.LogMethodFlow(currentCorrelationId, loggingName, baseMessage);
                 return new NotFoundObjectResult(baseMessage);
             }
 
+            log.LogMethodExit(currentCorrelationId, loggingName, string.Empty);
             return new OkObjectResult(stateResponse.EntityState);
         }
     }

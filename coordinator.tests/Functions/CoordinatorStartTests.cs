@@ -57,9 +57,9 @@ namespace coordinator.tests.Functions
             _mockDurableOrchestrationClient.Setup(client => client.CreateCheckStatusResponse(_httpRequestMessage, _caseId, false))
                 .Returns(_httpResponseMessage);
 
-            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsNotNull<AuthenticationHeaderValue>(), It.IsAny<string>()))
+            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsNotNull<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(true, _accessToken));
-            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(null, It.IsAny<string>()))
+            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(null, It.IsAny<Guid>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
 
             _coordinatorStart = new CoordinatorStart(_mockLogger.Object, mockAuthorizationValidator.Object);
@@ -171,16 +171,11 @@ namespace coordinator.tests.Functions
         }
 
         [Fact]
-        public async Task Run_LogsInstanceId()
+        public async Task Run_LogsAtLeastOnce()
         {
             await _coordinatorStart.Run(_httpRequestMessage, _caseId, _mockDurableOrchestrationClient.Object);
 
-            _mockLogger.Verify(x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((value, _) => value.ToString().Contains($"Started {nameof(CoordinatorOrchestrator)} with instance id '{_caseId}'")),
-                It.IsAny<Exception>(),
-                (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()));
+            _mockLogger.Verify(x => x.IsEnabled(LogLevel.Information), Times.AtLeastOnce);
         }
 
         [Fact]

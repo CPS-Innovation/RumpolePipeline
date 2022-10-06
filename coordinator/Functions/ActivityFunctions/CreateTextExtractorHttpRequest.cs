@@ -1,24 +1,30 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Common.Domain.Extensions;
+using Common.Logging;
 using coordinator.Domain;
 using coordinator.Factories;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 
 namespace coordinator.Functions.ActivityFunctions
 {
     public class CreateTextExtractorHttpRequest
     {
         private readonly ITextExtractorHttpRequestFactory _textExtractorHttpRequestFactory;
+        private readonly ILogger<CreateTextExtractorHttpRequest> _log;
 
-        public CreateTextExtractorHttpRequest(ITextExtractorHttpRequestFactory textExtractorHttpRequestFactory)
+        public CreateTextExtractorHttpRequest(ITextExtractorHttpRequestFactory textExtractorHttpRequestFactory, ILogger<CreateTextExtractorHttpRequest> logger)
         {
            _textExtractorHttpRequestFactory = textExtractorHttpRequestFactory;
+           _log = logger;
         }
 
         [FunctionName("CreateTextExtractorHttpRequest")]
         public async Task<DurableHttpRequest> Run([ActivityTrigger] IDurableActivityContext context)
         {
+            const string loggingName = $"{nameof(CreateTextExtractorHttpRequest)} - {nameof(Run)}";
             var payload = context.GetInput<CreateTextExtractorHttpRequestActivityPayload>();
             
             if (payload == null)
@@ -32,7 +38,11 @@ namespace coordinator.Functions.ActivityFunctions
             if (payload.CorrelationId == Guid.Empty)
                 throw new ArgumentException("CorrelationId must be valid GUID");
             
-            return await _textExtractorHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.BlobName, payload.CorrelationId);
+            _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
+            var result = await _textExtractorHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.BlobName, payload.CorrelationId);
+            
+            _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
+            return result;
         }
     }
 }

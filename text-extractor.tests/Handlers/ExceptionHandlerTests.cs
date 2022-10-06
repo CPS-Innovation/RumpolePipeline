@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using AutoFixture;
 using Azure;
 using common.Domain.Exceptions;
 using FluentAssertions;
@@ -13,20 +14,25 @@ namespace text_extractor.tests.Handlers
 {
     public class ExceptionHandlerTests
     {
-        private IExceptionHandler ExceptionHandler;
-        private Mock<ILogger<IExceptionHandler>> _mockLogger;
+        private readonly IExceptionHandler _exceptionHandler;
+        private readonly Mock<ILogger> _mockLogger;
+        private readonly Guid _correlationId;
+        private readonly string _source;
 
         public ExceptionHandlerTests()
         {
-            _mockLogger = new Mock<ILogger<IExceptionHandler>>();
+            var fixture = new Fixture();
+            _correlationId = fixture.Create<Guid>();
+            _source = fixture.Create<string>();
+            _mockLogger = new Mock<ILogger>();
 
-            ExceptionHandler = new ExceptionHandler(_mockLogger.Object);
+            _exceptionHandler = new ExceptionHandler();
         }
 
         [Fact]
         public void HandleException_ReturnsUnauthorizedWhenUnauthorizedExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new UnauthorizedException("Test unauthorized exception"));
+            var httpResponseMessage = _exceptionHandler.HandleException(new UnauthorizedException("Test unauthorized exception"), _correlationId, _source, _mockLogger.Object);
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
@@ -34,7 +40,7 @@ namespace text_extractor.tests.Handlers
         [Fact]
         public void HandleException_ReturnsBadRequestWhenBadRequestExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new BadRequestException("Test bad request exception", "id"));
+            var httpResponseMessage = _exceptionHandler.HandleException(new BadRequestException("Test bad request exception", "id"), _correlationId, _source, _mockLogger.Object);
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
@@ -42,8 +48,8 @@ namespace text_extractor.tests.Handlers
         [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenRequestFailedExceptionWithBadRequestOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(
-                new RequestFailedException((int)HttpStatusCode.BadRequest, "Test request failed exception"));
+            var httpResponseMessage = _exceptionHandler.HandleException(
+                new RequestFailedException((int)HttpStatusCode.BadRequest, "Test request failed exception"), _correlationId, _source, _mockLogger.Object);
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
@@ -51,8 +57,8 @@ namespace text_extractor.tests.Handlers
         [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenRequestFailedExceptionWithNotFoundOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(
-                new RequestFailedException((int)HttpStatusCode.NotFound, "Test request failed exception"));
+            var httpResponseMessage = _exceptionHandler.HandleException(
+                new RequestFailedException((int)HttpStatusCode.NotFound, "Test request failed exception"), _correlationId, _source, _mockLogger.Object);
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
@@ -61,8 +67,8 @@ namespace text_extractor.tests.Handlers
         public void HandleException_ReturnsExpectedStatusCodeWhenRequestFailedExceptionOccurs()
         {
             var expectedStatusCode = HttpStatusCode.ExpectationFailed;
-            var httpResponseMessage = ExceptionHandler.HandleException(
-                new RequestFailedException((int)expectedStatusCode, "Test request failed exception"));
+            var httpResponseMessage = _exceptionHandler.HandleException(
+                new RequestFailedException((int)expectedStatusCode, "Test request failed exception"), _correlationId, _source, _mockLogger.Object);
 
             httpResponseMessage.StatusCode.Should().Be(expectedStatusCode);
         }
@@ -70,7 +76,7 @@ namespace text_extractor.tests.Handlers
         [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenOcrServiceExceptionOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new OcrServiceException("Test message"));
+            var httpResponseMessage = _exceptionHandler.HandleException(new OcrServiceException("Test message"), _correlationId, _source, _mockLogger.Object);
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
@@ -78,7 +84,7 @@ namespace text_extractor.tests.Handlers
         [Fact]
         public void HandleException_ReturnsInternalServerErrorWhenUnhandledErrorOccurs()
         {
-            var httpResponseMessage = ExceptionHandler.HandleException(new ApplicationException());
+            var httpResponseMessage = _exceptionHandler.HandleException(new ApplicationException(), _correlationId, _source, _mockLogger.Object);
 
             httpResponseMessage.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }

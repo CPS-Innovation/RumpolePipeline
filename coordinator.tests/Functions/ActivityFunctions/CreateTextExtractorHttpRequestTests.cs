@@ -7,6 +7,7 @@ using coordinator.Factories;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -35,7 +36,8 @@ namespace coordinator.tests.Functions.ActivityFunctions
             mockTextExtractorHttpFactory.Setup(client => client.Create(payload.CaseId, payload.DocumentId, payload.BlobName, payload.CorrelationId))
                 .ReturnsAsync(_durableRequest);
 
-            _createTextExtractorHttpRequest = new CreateTextExtractorHttpRequest(mockTextExtractorHttpFactory.Object);
+            var mockLogger = new Mock<ILogger<CreateTextExtractorHttpRequest>>();
+            _createTextExtractorHttpRequest = new CreateTextExtractorHttpRequest(mockTextExtractorHttpFactory.Object, mockLogger.Object);
         }
 
         [Fact]

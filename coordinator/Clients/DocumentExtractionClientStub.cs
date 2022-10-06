@@ -1,20 +1,35 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Common.Domain.Extensions;
+using Common.Logging;
 using coordinator.Domain.DocumentExtraction;
+using Microsoft.Extensions.Logging;
 
 namespace coordinator.Clients
 {
 	public class DocumentExtractionClientStub : IDocumentExtractionClient
-	{
+    {
+        private ILogger<DocumentExtractionClientStub> _logger;
+
+        public DocumentExtractionClientStub(ILogger<DocumentExtractionClientStub> logger)
+        {
+            _logger = logger;
+        }
+
         public Task<Case> GetCaseDocumentsAsync(string caseId, string accessToken, Guid correlationId)
         {
-            return Task.FromResult(caseId switch
+            _logger.LogMethodEntry(correlationId, nameof(GetCaseDocumentsAsync), caseId);
+            
+            var result = Task.FromResult(caseId switch
             {
                 "18846" => McLoveCase(caseId),
                 "1000000" => McLoveCase(caseId),
                 "1000001" => MultipleFileTypeCase(caseId),
                 _ => null
             });
+            
+            _logger.LogMethodExit(correlationId, nameof(GetCaseDocumentsAsync), result.ToJson());
+            return result;
         }
 
         private static Case McLoveCase(string caseId)

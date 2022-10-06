@@ -25,9 +25,9 @@ namespace pdf_generator.Services.PdfService
             _asposeItemFactory = asposeItemFactory ?? throw new ArgumentNullException(nameof(asposeItemFactory));
         }
 
-        public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
+        public void ReadToPdfStream(Stream inputStream, Stream pdfStream, Guid correlationId)
         {
-            using var workbook = _asposeItemFactory.CreateWorkbook(inputStream);
+            using var workbook = _asposeItemFactory.CreateWorkbook(inputStream, correlationId);
             workbook.Save(pdfStream, new PdfSaveOptions { OnePagePerSheet = true });
             pdfStream.Seek(0, SeekOrigin.Begin);
         }

@@ -18,7 +18,7 @@ namespace pdf_generator.tests.Services.PdfService
         public DiagramPdfServiceTests()
         {
             _asposeItemFactory = new Mock<IAsposeItemFactory>();
-            _asposeItemFactory.Setup(x => x.CreateDiagram(It.IsAny<Stream>())).Returns(new Diagram());
+            _asposeItemFactory.Setup(x => x.CreateDiagram(It.IsAny<Stream>(), It.IsAny<Guid>())).Returns(new Diagram());
 
             _pdfService = new DiagramPdfService(_asposeItemFactory.Object);
         }
@@ -40,11 +40,11 @@ namespace pdf_generator.tests.Services.PdfService
             using var pdfStream = new MemoryStream();
             using var inputStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestDiagram.vsd");
 
-            _pdfService.ReadToPdfStream(inputStream, pdfStream);
+            _pdfService.ReadToPdfStream(inputStream, pdfStream, Guid.NewGuid());
 
             using (new AssertionScope())
             {
-                _asposeItemFactory.Verify(x => x.CreateDiagram(It.IsAny<Stream>()));
+                _asposeItemFactory.Verify(x => x.CreateDiagram(It.IsAny<Stream>(), It.IsAny<Guid>()));
                 pdfStream.Should().NotBeNull();
                 pdfStream.Length.Should().BeGreaterThan(0);
             }

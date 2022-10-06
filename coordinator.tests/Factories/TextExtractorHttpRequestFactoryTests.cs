@@ -10,6 +10,7 @@ using coordinator.Domain.Requests;
 using coordinator.Factories;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -26,12 +27,11 @@ namespace coordinator.tests.Factories
         private readonly Guid _correlationId;
 
         private readonly Mock<IIdentityClientAdapter> _mockIdentityClientAdapter;
-        
-		private readonly ITextExtractorHttpRequestFactory _textExtractorHttpRequestFactory;
+        private readonly ITextExtractorHttpRequestFactory _textExtractorHttpRequestFactory;
 
 		public TextExtractorHttpRequestFactoryTests()
 		{
-            var fixture = new Fixture();
+			var fixture = new Fixture();
 			_caseId = fixture.Create<int>();
 			_documentId = fixture.Create<string>();
 			_blobName = fixture.Create<string>();
@@ -54,7 +54,9 @@ namespace coordinator.tests.Factories
 			mockConfiguration.Setup(config => config["TextExtractorScope"]).Returns(textExtractorScope);
 			mockConfiguration.Setup(config => config["TextExtractorUrl"]).Returns(_textExtractorUrl);
 
-			_textExtractorHttpRequestFactory = new TextExtractorHttpRequestFactory(_mockIdentityClientAdapter.Object, mockJsonConvertWrapper.Object, mockConfiguration.Object);
+			var mockLogger = new Mock<ILogger<TextExtractorHttpRequestFactory>>();
+
+			_textExtractorHttpRequestFactory = new TextExtractorHttpRequestFactory(_mockIdentityClientAdapter.Object, mockJsonConvertWrapper.Object, mockConfiguration.Object, mockLogger.Object);
 		}
 
 		[Fact]

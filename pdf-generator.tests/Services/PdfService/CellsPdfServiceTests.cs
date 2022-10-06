@@ -18,7 +18,7 @@ namespace pdf_generator.tests.Services.PdfService
         public CellsPdfServiceTests()
         {
             _asposeItemFactory = new Mock<IAsposeItemFactory>();
-            _asposeItemFactory.Setup(x => x.CreateWorkbook(It.IsAny<Stream>())).Returns(new Workbook());
+            _asposeItemFactory.Setup(x => x.CreateWorkbook(It.IsAny<Stream>(), It.IsAny<Guid>())).Returns(new Workbook());
 
             _pdfService = new CellsPdfService(_asposeItemFactory.Object);
         }
@@ -40,11 +40,11 @@ namespace pdf_generator.tests.Services.PdfService
             using var pdfStream = new MemoryStream();
             using var inputStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestBook.xlsx");
 
-            _pdfService.ReadToPdfStream(inputStream, pdfStream);
+            _pdfService.ReadToPdfStream(inputStream, pdfStream, Guid.NewGuid());
 
             using (new AssertionScope())
             {
-                _asposeItemFactory.Verify(x => x.CreateWorkbook(It.IsAny<Stream>()));
+                _asposeItemFactory.Verify(x => x.CreateWorkbook(It.IsAny<Stream>(), It.IsAny<Guid>()));
                 pdfStream.Should().NotBeNull();
                 pdfStream.Length.Should().BeGreaterThan(0);
             }

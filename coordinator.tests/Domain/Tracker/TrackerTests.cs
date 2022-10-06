@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -15,30 +16,31 @@ namespace coordinator.tests.Domain.Tracker
 {
     public class TrackerTests
     {
-        private Fixture _fixture;
-        private string _transactionId;
-        private IEnumerable<string> _documentIds;
-        private RegisterPdfBlobNameArg _pdfBlobNameArg;
-        private List<TrackerDocument> _trackerDocuments;
-        private string _caseId;
-        private EntityStateResponse<coordinator.Domain.Tracker.Tracker> _entityStateResponse;
+        private readonly string _transactionId;
+        private readonly IEnumerable<string> _documentIds;
+        private readonly RegisterPdfBlobNameArg _pdfBlobNameArg;
+        private readonly List<TrackerDocument> _trackerDocuments;
+        private readonly string _caseId;
+        private readonly Guid _correlationId;
+        private readonly EntityStateResponse<coordinator.Domain.Tracker.Tracker> _entityStateResponse;
 
-        private Mock<IDurableEntityContext> _mockDurableEntityContext;
-        private Mock<IDurableEntityClient> _mockDurableEntityClient;
-        private Mock<ILogger> _mockLogger;
+        private readonly Mock<IDurableEntityContext> _mockDurableEntityContext;
+        private readonly Mock<IDurableEntityClient> _mockDurableEntityClient;
+        private readonly Mock<ILogger> _mockLogger;
 
-        private coordinator.Domain.Tracker.Tracker Tracker;
+        private readonly coordinator.Domain.Tracker.Tracker _tracker;
 
         public TrackerTests()
         {
-            _fixture = new Fixture();
-            _transactionId = _fixture.Create<string>();
-            _documentIds = _fixture.Create<IEnumerable<string>>();
-            _pdfBlobNameArg = _fixture.Build<RegisterPdfBlobNameArg>()
+            var fixture = new Fixture();
+            _transactionId = fixture.Create<string>();
+            _documentIds = fixture.Create<IEnumerable<string>>();
+            _correlationId = fixture.Create<Guid>();
+            _pdfBlobNameArg = fixture.Build<RegisterPdfBlobNameArg>()
                                 .With(a => a.DocumentId, _documentIds.First())
                                 .Create();
-            _trackerDocuments = _fixture.Create<List<TrackerDocument>>();
-            _caseId = _fixture.Create<string>();
+            _trackerDocuments = fixture.Create<List<TrackerDocument>>();
+            _caseId = fixture.Create<string>();
             _entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = true };
 
             _mockDurableEntityContext = new Mock<IDurableEntityContext>();
@@ -51,150 +53,150 @@ namespace coordinator.tests.Domain.Tracker
                     null, null))
                 .ReturnsAsync(_entityStateResponse);
 
-            Tracker = new coordinator.Domain.Tracker.Tracker();
+            _tracker = new coordinator.Domain.Tracker.Tracker();
         }
 
         [Fact]
         public async Task Initialise_Initialises()
         {
-            await Tracker.Initialise(_transactionId);
+            await _tracker.Initialise(_transactionId);
 
-            Tracker.TransactionId.Should().Be(_transactionId);
-            Tracker.Documents.Should().NotBeNull();
-            Tracker.Logs.Should().NotBeNull();
-            Tracker.Status.Should().Be(TrackerStatus.Running);
+            _tracker.TransactionId.Should().Be(_transactionId);
+            _tracker.Documents.Should().NotBeNull();
+            _tracker.Logs.Should().NotBeNull();
+            _tracker.Status.Should().Be(TrackerStatus.Running);
 
-            Tracker.Logs.Count().Should().Be(1);
+            _tracker.Logs.Count().Should().Be(1);
         }
 
         [Fact]
         public async Task RegisterDocumentIds_RegistersDocumentIds()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
 
-            Tracker.Documents.Count().Should().Be(_documentIds.Count());
+            _tracker.Documents.Count().Should().Be(_documentIds.Count());
 
-            Tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count().Should().Be(2);
         }
 
         [Fact]
         public async Task RegisterPdfBlobName_RegistersPdfBlobName()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterPdfBlobName(_pdfBlobNameArg);
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterPdfBlobName(_pdfBlobNameArg);
 
-            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
-            document.Status.Should().Be(DocumentStatus.PdfUploadedToBlob);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document?.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
+            document?.Status.Should().Be(DocumentStatus.PdfUploadedToBlob);
 
-            Tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count().Should().Be(3);
         }
 
         [Fact]
         public async Task RegisterDocumentNotFoundInCDE_Registers()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterDocumentNotFoundInCDE(_pdfBlobNameArg.DocumentId);
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentNotFoundInCde(_pdfBlobNameArg.DocumentId);
 
-            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document.Status.Should().Be(DocumentStatus.NotFoundInCDE);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document?.Status.Should().Be(DocumentStatus.NotFoundInCDE);
 
-            Tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count().Should().Be(3);
         }
 
         [Fact]
         public async Task RegisterFailedToConvertToPdf_Registers()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterUnableToConvertDocumentToPdf(_pdfBlobNameArg.DocumentId);
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterUnableToConvertDocumentToPdf(_pdfBlobNameArg.DocumentId);
 
-            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document.Status.Should().Be(DocumentStatus.UnableToConvertToPdf);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document?.Status.Should().Be(DocumentStatus.UnableToConvertToPdf);
 
-            Tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count().Should().Be(3);
         }
 
         [Fact]
         public async Task RegisterUnexpectedDocumentFailure_Registers()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterUnexpectedPdfDocumentFailure(_pdfBlobNameArg.DocumentId);
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterUnexpectedPdfDocumentFailure(_pdfBlobNameArg.DocumentId);
 
-            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document.Status.Should().Be(DocumentStatus.UnexpectedFailure);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document?.Status.Should().Be(DocumentStatus.UnexpectedFailure);
 
-            Tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count().Should().Be(3);
         }
 
         [Fact]
         public async Task RegisterNoDocumentsFoundInCDE_RegistersNoDocumentsFoundInCDE()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterNoDocumentsFoundInCDE();
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterNoDocumentsFoundInCde();
 
-            Tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCDE);
+            _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCde);
 
-            Tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count().Should().Be(2);
         }
 
         [Fact]
         public async Task RegisterIndexed_RegistersIndexed()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterIndexed(_documentIds.First());
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterIndexed(_documentIds.First());
 
-            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document.Status.Should().Be(DocumentStatus.Indexed);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document?.Status.Should().Be(DocumentStatus.Indexed);
 
-            Tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count().Should().Be(3);
         }
 
         [Fact]
         public async Task RegisterIndexed_RegistersOcrAndIndexFailure()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterDocumentIds(_documentIds);
-            await Tracker.RegisterOcrAndIndexFailure(_documentIds.First());
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterOcrAndIndexFailure(_documentIds.First());
 
-            var document = Tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document.Status.Should().Be(DocumentStatus.OcrAndIndexFailure);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            document?.Status.Should().Be(DocumentStatus.OcrAndIndexFailure);
 
-            Tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count().Should().Be(3);
         }
 
         [Fact]
         public async Task RegisterCompleted_RegistersCompleted()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterCompleted();
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterCompleted();
 
-            Tracker.Status.Should().Be(TrackerStatus.Completed);
+            _tracker.Status.Should().Be(TrackerStatus.Completed);
 
-            Tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count().Should().Be(2);
         }
 
         [Fact]
         public async Task RegisterFailed_RegistersFailed()
         {
-            await Tracker.Initialise(_transactionId);
-            await Tracker.RegisterFailed();
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterFailed();
 
-            Tracker.Status.Should().Be(TrackerStatus.Failed);
+            _tracker.Status.Should().Be(TrackerStatus.Failed);
 
-            Tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count().Should().Be(2);
         }
 
         [Fact]
         public async Task GetDocuments_ReturnsDocuments()
         {
-            Tracker.Documents = _trackerDocuments;
-            var documents = await Tracker.GetDocuments();
+            _tracker.Documents = _trackerDocuments;
+            var documents = await _tracker.GetDocuments();
 
             documents.Should().BeEquivalentTo(_trackerDocuments);
         }
@@ -202,13 +204,13 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task AllDocumentsFailed_ReturnsTrueIfAllDocumentsFailed()
         {
-            Tracker.Documents = new List<TrackerDocument> {
+            _tracker.Documents = new List<TrackerDocument> {
                 new TrackerDocument { Status = DocumentStatus.NotFoundInCDE},
                 new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
                 new TrackerDocument { Status = DocumentStatus.UnexpectedFailure}
             };
 
-            var output = await Tracker.AllDocumentsFailed();
+            var output = await _tracker.AllDocumentsFailed();
 
             output.Should().BeTrue();
         }
@@ -216,14 +218,14 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task AllDocumentsFailed_ReturnsFalseIfAllDocumentsHaveNotFailed()
         {
-            Tracker.Documents = new List<TrackerDocument> {
+            _tracker.Documents = new List<TrackerDocument> {
                 new TrackerDocument { Status = DocumentStatus.NotFoundInCDE},
                 new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
                 new TrackerDocument { Status = DocumentStatus.UnexpectedFailure},
                 new TrackerDocument { Status = DocumentStatus.PdfUploadedToBlob},
             };
 
-            var output = await Tracker.AllDocumentsFailed();
+            var output = await _tracker.AllDocumentsFailed();
 
             output.Should().BeFalse();
         }
@@ -231,9 +233,9 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsCompleted()
         {
-            Tracker.Status = TrackerStatus.Completed;
+            _tracker.Status = TrackerStatus.Completed;
 
-            var isAlreadyProcessed = await Tracker.IsAlreadyProcessed();
+            var isAlreadyProcessed = await _tracker.IsAlreadyProcessed();
 
             isAlreadyProcessed.Should().BeTrue();
         }
@@ -241,9 +243,9 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsNoDocumentsFoundInCDE()
         {
-            Tracker.Status = TrackerStatus.NoDocumentsFoundInCDE;
+            _tracker.Status = TrackerStatus.NoDocumentsFoundInCde;
 
-            var isAlreadyProcessed = await Tracker.IsAlreadyProcessed();
+            var isAlreadyProcessed = await _tracker.IsAlreadyProcessed();
 
             isAlreadyProcessed.Should().BeTrue();
         }
@@ -251,9 +253,9 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsFalseIfStatusIsNotCompletedAndNotNoDocumentsFoundInCDE()
         {
-            Tracker.Status = TrackerStatus.NotStarted;
+            _tracker.Status = TrackerStatus.NotStarted;
 
-            var isAlreadyProcessed = await Tracker.IsAlreadyProcessed();
+            var isAlreadyProcessed = await _tracker.IsAlreadyProcessed();
 
             isAlreadyProcessed.Should().BeFalse();
         }
@@ -269,7 +271,9 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task HttpStart_TrackerStatus_ReturnsOK()
         {
-            var response = await Tracker.HttpStart(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var message = new HttpRequestMessage();
+            message.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+            var response = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<OkObjectResult>();
         }
@@ -277,11 +281,13 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task HttpStart_TrackerStatus_ReturnsEntityState()
         {
-            var response  = await Tracker.HttpStart(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var message = new HttpRequestMessage();
+            message.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+            var response  = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             var okObjectResult = response as OkObjectResult;
 
-            okObjectResult.Value.Should().Be(_entityStateResponse.EntityState);
+            okObjectResult?.Value.Should().Be(_entityStateResponse.EntityState);
         }
 
         [Fact]
@@ -294,9 +300,27 @@ namespace coordinator.tests.Domain.Tracker
                     null, null))
                 .ReturnsAsync(entityStateResponse);
 
-            var response = await Tracker.HttpStart(new HttpRequestMessage(), _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var message = new HttpRequestMessage();
+            message.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+            var response = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<NotFoundObjectResult>();
+        }
+        
+        [Fact]
+        public async Task HttpStart_TrackerStatus_ReturnsBadRequestIfCorrelationIdNotFound()
+        {
+            var entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = false };
+            _mockDurableEntityClient.Setup(
+                    client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
+                        It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                        null, null))
+                .ReturnsAsync(entityStateResponse);
+
+            var message = new HttpRequestMessage();
+            var response = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+
+            response.Should().BeOfType<BadRequestObjectResult>();
         }
     }
 }

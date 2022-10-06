@@ -4,7 +4,7 @@
 	{
 		NotStarted,
 		Running,
-		NoDocumentsFoundInCDE,
+		NoDocumentsFoundInCde,
 		Completed,
 		Failed
 	}

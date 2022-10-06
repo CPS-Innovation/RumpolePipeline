@@ -7,6 +7,7 @@ using coordinator.Factories;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -35,7 +36,8 @@ namespace coordinator.tests.Functions.ActivityFunctions
             mockGeneratePdfHttpFactory.Setup(client => client.Create(payload.CaseId, payload.DocumentId, payload.FileName, payload.CorrelationId))
                 .ReturnsAsync(_durableRequest);
 
-            _createGeneratePdfHttpRequest = new CreateGeneratePdfHttpRequest(mockGeneratePdfHttpFactory.Object);
+            var mockLogger = new Mock<ILogger<CreateGeneratePdfHttpRequest>>();
+            _createGeneratePdfHttpRequest = new CreateGeneratePdfHttpRequest(mockGeneratePdfHttpFactory.Object, mockLogger.Object);
         }
 
         [Fact]
