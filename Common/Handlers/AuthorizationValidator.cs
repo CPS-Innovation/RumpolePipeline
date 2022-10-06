@@ -94,7 +94,7 @@ namespace common.Handlers
             
             if (claimsPrincipal == null)
             {
-                _log.LogMethodFlow(_correlationId, nameof(IsValid), "Claims Principal not found - returning");
+                _log.LogMethodFlow(_correlationId, nameof(IsValid), "Claims Principal not found - returning 'false' indicating an authorization failure");
                 return false;
             }
 
@@ -108,23 +108,16 @@ namespace common.Handlers
             }
 
             var hasAccessToRoles = !requiredRoles.Any() || requiredRoles.All(claimsPrincipal.IsInRole);
-            if (hasAccessToRoles)
-            {
-                _log.LogMethodFlow(_correlationId, nameof(IsValid), "At least one valid role found - allowing access - returning");
-                return true;
-            }
-
+            
             var scopeClaim = claimsPrincipal.HasClaim(x => x.Type == ScopeType)
                 ? claimsPrincipal.Claims.First(x => x.Type == ScopeType).Value
                 : string.Empty;
 
             var tokenScopes = scopeClaim.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries).ToList();
             var hasAccessToScopes = !requiredScopes.Any() || requiredScopes.All(x => tokenScopes.Any(y => string.Equals(x, y, StringComparison.OrdinalIgnoreCase)));
-            
-            _log.LogMethodFlow(_correlationId, nameof(IsValid),  
-                hasAccessToScopes ? "At least one valid scope found - allowing access - returning" : "No valid roles or scopes have been found - blocking access - returning");
-            _log.LogMethodExit(_correlationId, nameof(IsValid), string.Empty);
-            return hasAccessToScopes;
+
+            _log.LogMethodExit(_correlationId, nameof(IsValid), $"Outcome role and scope checks - hasAccessToRoles: {hasAccessToRoles}, hasAccessToScopes: {hasAccessToScopes}");
+            return hasAccessToRoles && hasAccessToScopes;
         }
     }
 }
