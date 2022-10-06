@@ -1,13 +1,13 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:String x:Key="/Default/Environment/Highlighting/HighlightingSourceSnapshotLocation/@EntryValue">C:\Users\marki\AppData\Local\JetBrains\Rider2022.1\resharper-host\temp\Rider\vAny\CoverageData\_RumpolePipeline.-666790462\Snapshot\snapshot.utdcvr</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=153d1776_002Dc8d9_002D4df4_002Da7ec_002D7ab33978e91e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Run_ReturnsExceptionWhenCorrelationIdIsMissing" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=153d1776_002Dc8d9_002D4df4_002Da7ec_002D7ab33978e91e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Run_ReturnsExceptionWhenCorrelationIdIsMissing" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::BBA95B70-D652-4440-9B3D-D9D73847F962::net6.0::pdf_generator.tests.Functions.GeneratePdfTests.Run_ReturnsExceptionWhenCorrelationIdIsMissing&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	
 	
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=94a354a5_002D9d6d_002D4c5b_002Da7f9_002D0e4739adc74b/@EntryIndexedValue">&lt;SessionState ContinuousTestingIsOn="True" ContinuousTestingMode="1" IsActive="True" Name="All tests from Solution" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=94a354a5_002D9d6d_002D4c5b_002Da7f9_002D0e4739adc74b/@EntryIndexedValue">&lt;SessionState ContinuousTestingIsOn="True" ContinuousTestingMode="1" Name="All tests from Solution" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;Solution /&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f6056d88_002D01d4_002D4e40_002D86dc_002D1336ebafb0cd/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Run_LogsInstanceId" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;

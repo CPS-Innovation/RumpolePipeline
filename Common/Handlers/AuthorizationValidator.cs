@@ -74,12 +74,12 @@ namespace common.Handlers
             }
             catch (SecurityTokenValidationException securityException)
             {
-                _log.LogError(securityException, "A security exception was caught");
+                _log.LogMethodError(correlationId, nameof(ValidateTokenAsync), "A security exception was caught", securityException);
                 return new Tuple<bool, string>(false, string.Empty);
             }
             catch (Exception ex)
             {
-                _log.LogError(ex, "An unexpected error was caught");
+                _log.LogMethodError(correlationId, nameof(ValidateTokenAsync), "An unexpected error was caught", ex);
                 return new Tuple<bool, string>(false, string.Empty);
             }
             finally
