@@ -117,9 +117,38 @@ namespace pdf_generator.Services.DocumentRedactionService
             }*/
             
             //4. Save the flattened PDF into BLOB storage but with a new filename (FOR NOW, until we have a tactical or "for-reals" API solution/integration in place)
+            // Check the redacted document version - if less than 1.7 then attempt to convert 
             _logger.LogMethodFlow(correlationId, nameof(RedactPdfAsync), $"Save the flattened PDF into 'local' BLOB storage but with a new filename, for now - new filename: {newFileName}");
+
             using var redactedDocumentStream = new MemoryStream();
-            redactedDocument.Save(redactedDocumentStream);
+            if (IsCandidateForConversion(redactedDocument.PdfFormat))
+            {
+                var conversionOptions = new PdfFormatConversionOptions(PdfFormat.v_1_7);
+                if (redactedDocument.Validate(conversionOptions))
+                {
+                    try
+                    {
+                        redactedDocument.Convert(redactedDocumentStream, PdfFormat.v_1_7, ConvertErrorAction.None);
+                        redactedDocument.Save(redactedDocumentStream);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogMethodError(correlationId, nameof(RedactPdfAsync), "Could not convert the PDF document to version 1.7, saving 'as-is' in original format", ex);
+                        redactedDocumentStream.Flush();
+                        redactedDocumentStream.Seek(0, SeekOrigin.Begin);
+                        redactedDocument.Save(redactedDocumentStream);
+                    }
+                }
+                else
+                {
+                    redactedDocument.Save(redactedDocumentStream);
+                }
+            }
+            else
+            {
+                redactedDocument.Save(redactedDocumentStream);
+            }
+            
             await _blobStorageService.UploadDocumentAsync(redactedDocumentStream, newFileName, correlationId);
 
             saveResult.Succeeded = true;
@@ -127,6 +156,11 @@ namespace pdf_generator.Services.DocumentRedactionService
 
             _logger.LogMethodExit(correlationId, nameof(RedactPdfAsync), saveResult.ToJson());
             return saveResult;
+        }
+        
+        private static bool IsCandidateForConversion(PdfFormat currentVersion)
+        {
+            return currentVersion is PdfFormat.v_1_0 or PdfFormat.v_1_1 or PdfFormat.v_1_2 or PdfFormat.v_1_3 or PdfFormat.v_1_4 or PdfFormat.v_1_5 or PdfFormat.v_1_6;
         }
     }
 }

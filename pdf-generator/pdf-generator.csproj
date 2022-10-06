@@ -52,7 +52,7 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
    </None>
     <None Update="Aspose.Total.NET.lic">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

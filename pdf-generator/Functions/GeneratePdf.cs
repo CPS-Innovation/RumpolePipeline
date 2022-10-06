@@ -101,20 +101,20 @@ namespace pdf_generator.Functions
                 var fileType = pdfRequest.FileName.Split('.').Last().ToFileType();
                 if (fileType == FileType.PDF)
                 {
-                    _log.LogMethodFlow(currentCorrelationId, loggingName,
-                        $"Retrieved document is already a PDF and so no conversion necessary; uploading and storing original file: '{pdfRequest.FileName}' to blob storage as file: '{blobName}'");
+                    _log.LogMethodFlow(currentCorrelationId, loggingName, $"Retrieved document is already a PDF and so no conversion necessary; uploading and storing original file: '{pdfRequest.FileName}' to blob storage as file: '{blobName}'");
+                    
                     await _blobStorageService.UploadDocumentAsync(documentStream, blobName, currentCorrelationId);
+                    
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"{blobName} uploaded successfully");
                 }
                 else
                 {
-                    _log.LogMethodFlow(currentCorrelationId, loggingName,
-                        $"Retrieved document, '{pdfRequest.FileName}', is not a PDF and so, beginning conversion to PDF...");
-                    var pdfStream =
-                        _pdfOrchestratorService.ReadToPdfStream(documentStream, fileType, pdfRequest.DocumentId, currentCorrelationId);
-                    _log.LogMethodFlow(currentCorrelationId, loggingName,
-                        $"Document converted to PDF successfully, beginning upload of '{blobName}'...");
+                    _log.LogMethodFlow(currentCorrelationId, loggingName, $"Retrieved document, '{pdfRequest.FileName}', is not a PDF and so, beginning conversion to PDF...");
+                    var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, fileType, pdfRequest.DocumentId, currentCorrelationId);
+                    
+                    _log.LogMethodFlow(currentCorrelationId, loggingName, $"Document converted to PDF successfully, beginning upload of '{blobName}'...");
                     await _blobStorageService.UploadDocumentAsync(pdfStream, blobName, currentCorrelationId);
+                    
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"'{blobName}' uploaded successfully");
                 }
 
