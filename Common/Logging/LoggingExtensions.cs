@@ -45,7 +45,7 @@ public static class LoggingExtensions
     
     public static void LogMethodFlow(this ILogger logger, Guid correlationId, string methodName, string message)
     {
-        MethodExitAction(logger, correlationId, methodName, message, null);
+        MethodFlowMessageAction(logger, correlationId, methodName, message, null);
     }
 
     public static void LogMethodError(this ILogger logger, Guid correlationId, string methodName,
