@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
 using pdf_generator.Domain.Exceptions;
@@ -20,6 +21,7 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
         private readonly string _documentId;
         private readonly string _fileName;
         private readonly string _accessToken;
+        private readonly Guid _correlationId;
         private readonly HttpResponseMessage _httpResponseMessage;
 
         private readonly IDocumentExtractionService _documentExtractionService;
@@ -30,13 +32,15 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
             _documentId = fixture.Create<string>();
             _fileName = fixture.Create<string>();
             _accessToken = fixture.Create<string>();
+            _correlationId = fixture.Create<Guid>();
             var httpRequestMessage = new HttpRequestMessage();
             Stream documentStream = new MemoryStream();
             _httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StreamContent(documentStream)
             };
-            
+
+            var loggerMock = new Mock<ILogger<pdf_generator.Services.DocumentExtractionService.DocumentExtractionService>>();
 
             var mockHttpMessageHandler = new Mock<HttpMessageHandler>();
             mockHttpMessageHandler.Protected()
@@ -46,16 +50,16 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
 
             var mockHttpRequestFactory = new Mock<IDocumentExtractionHttpRequestFactory>();
 
-            mockHttpRequestFactory.Setup(factory => factory.Create($"doc-fetch/{_documentId}/{_fileName}", _accessToken))
+            mockHttpRequestFactory.Setup(factory => factory.Create($"doc-fetch/{_documentId}/{_fileName}", _accessToken, _correlationId))
                 .Returns(httpRequestMessage);
 
-            _documentExtractionService = new pdf_generator.Services.DocumentExtractionService.DocumentExtractionService(httpClient, mockHttpRequestFactory.Object);
+            _documentExtractionService = new pdf_generator.Services.DocumentExtractionService.DocumentExtractionService(httpClient, mockHttpRequestFactory.Object, loggerMock.Object);
         }
 
         [Fact]
         public async Task GetDocumentAsync_ReturnsExpectedStream()
         {
-            var documentStream = await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
+            var documentStream = await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken, _correlationId);
 
             documentStream.Should().NotBeNull();
         }
@@ -65,7 +69,7 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
         {
             _httpResponseMessage.StatusCode = HttpStatusCode.NotFound;
 
-            await Assert.ThrowsAsync<HttpException>(() => _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken));
+            await Assert.ThrowsAsync<HttpException>(() => _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken, _correlationId));
         }
 
         [Fact]
@@ -76,7 +80,7 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
 
             try
             {
-                await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
+                await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken, _correlationId);
             }
             catch (HttpException exception)
             {
@@ -92,7 +96,7 @@ namespace pdf_generator.tests.Services.DocumentExtractionService
 
             try
             {
-                await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken);
+                await _documentExtractionService.GetDocumentAsync(_documentId, _fileName, _accessToken, _correlationId);
             }
             catch (HttpException exception)
             {

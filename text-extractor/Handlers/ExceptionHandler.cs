@@ -5,6 +5,7 @@ using System.Net.Mime;
 using System.Text;
 using Azure;
 using common.Domain.Exceptions;
+using Common.Logging;
 using Microsoft.Extensions.Logging;
 using text_extractor.Domain.Exceptions;
 
@@ -12,14 +13,7 @@ namespace text_extractor.Handlers
 {
     public class ExceptionHandler : IExceptionHandler
     {
-        private readonly ILogger<IExceptionHandler> _log;
-
-        public ExceptionHandler(ILogger<IExceptionHandler> log)
-        {
-            _log = log;
-        }
-
-        public HttpResponseMessage HandleException(Exception exception)
+        public HttpResponseMessage HandleException(Exception exception, Guid correlationId, string source, ILogger logger)
         {
             var baseErrorMessage = "An unhandled exception occurred";
             var statusCode = HttpStatusCode.InternalServerError;
@@ -49,13 +43,13 @@ namespace text_extractor.Handlers
                 baseErrorMessage = "An Ocr service exception occurred";
             }
 
+            logger.LogMethodError(correlationId, source, $"{baseErrorMessage}: {exception.Message}", exception);
+            logger.LogMethodExit(correlationId, nameof(ExceptionHandler), string.Empty);
             return ErrorResponse(baseErrorMessage, exception, statusCode);
         }
 
-        private HttpResponseMessage ErrorResponse(string baseErrorMessage, Exception exception, HttpStatusCode httpStatusCode)
+        private static HttpResponseMessage ErrorResponse(string baseErrorMessage, Exception exception, HttpStatusCode httpStatusCode)
         {
-            _log.LogError(exception, baseErrorMessage);
-
             var errorMessage = $"{baseErrorMessage}. Base exception message: {exception.GetBaseException().Message}";
             return new HttpResponseMessage(httpStatusCode)
             {

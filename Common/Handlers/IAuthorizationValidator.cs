@@ -6,7 +6,7 @@ namespace common.Handlers
 {
     public interface IAuthorizationValidator
     {
-        Task<Tuple<bool, string>> ValidateTokenAsync(AuthenticationHeaderValue authenticationHeader, string validAudience = "");
+        Task<Tuple<bool, string>> ValidateTokenAsync(AuthenticationHeaderValue authenticationHeader, Guid correlationId, string validAudience = "");
     }
 }
 

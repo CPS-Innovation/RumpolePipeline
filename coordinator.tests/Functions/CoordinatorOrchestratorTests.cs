@@ -23,19 +23,22 @@ namespace coordinator.tests.Functions
     {
         private readonly CoordinatorOrchestrationPayload _payload;
         private readonly string _accessToken;
+        private readonly Guid _correlationId;
         private readonly CaseDocument[] _caseDocuments;
         private readonly string _transactionId;
         private readonly List<TrackerDocument> _trackerDocuments;
 
         private readonly Mock<IDurableOrchestrationContext> _mockDurableOrchestrationContext;
         private readonly Mock<ITracker> _mockTracker;
-
+        private readonly Mock<ILogger<CoordinatorOrchestrator>> _mockLogger;
+        
         private readonly CoordinatorOrchestrator _coordinatorOrchestrator;
 
         public CoordinatorOrchestratorTests()
         {
             var fixture = new Fixture();
             _accessToken = fixture.Create<string>();
+            _correlationId = fixture.Create<Guid>();
             _payload = fixture.Build<CoordinatorOrchestrationPayload>()
                         .With(p => p.ForceRefresh, false)
                         .With(p => p.AccessToken, _accessToken)
@@ -45,11 +48,13 @@ namespace coordinator.tests.Functions
             _trackerDocuments = fixture.Create<List<TrackerDocument>>();
 
             var mockConfiguration = new Mock<IConfiguration>();
-            var mockLogger = new Mock<ILogger<CoordinatorOrchestrator>>();
+            _mockLogger = new Mock<ILogger<CoordinatorOrchestrator>>();
             _mockDurableOrchestrationContext = new Mock<IDurableOrchestrationContext>();
             _mockTracker = new Mock<ITracker>();
-
+            
             mockConfiguration.Setup(config => config["CoordinatorOrchestratorTimeoutSecs"]).Returns("300");
+
+            _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CoordinatorOrchestrationPayload>())
                 .Returns(_payload);
@@ -61,10 +66,8 @@ namespace coordinator.tests.Functions
                 .ReturnsAsync(_accessToken);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.AccessToken == _payload.AccessToken)))
                 .ReturnsAsync(_caseDocuments);
-
-            _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
-
-            _coordinatorOrchestrator = new CoordinatorOrchestrator(mockConfiguration.Object, mockLogger.Object);
+            
+            _coordinatorOrchestrator = new CoordinatorOrchestrator(mockConfiguration.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -123,7 +126,7 @@ namespace coordinator.tests.Functions
 
             await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            _mockTracker.Verify(tracker => tracker.RegisterNoDocumentsFoundInCDE());
+            _mockTracker.Verify(tracker => tracker.RegisterNoDocumentsFoundInCde());
         }
 
 

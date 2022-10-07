@@ -1,9 +1,7 @@
 ﻿namespace coordinator.Domain
 {
-    public class GetCaseDocumentsActivityPayload
+    public class GetCaseDocumentsActivityPayload : BasePipelinePayload
     {
-        public int CaseId { get; set; }
-
         public string AccessToken { get; set; }
     }
 }

@@ -8,10 +8,10 @@ namespace coordinator.Domain.Tracker
         Task Initialise(string transactionId);
         Task RegisterDocumentIds(IEnumerable<string> documentIds);
         Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg);
-        Task RegisterDocumentNotFoundInCDE(string documentId);
+        Task RegisterDocumentNotFoundInCde(string documentId);
         Task RegisterUnableToConvertDocumentToPdf(string documentId);
         Task RegisterUnexpectedPdfDocumentFailure(string documentId);
-        Task RegisterNoDocumentsFoundInCDE();
+        Task RegisterNoDocumentsFoundInCde();
         Task RegisterIndexed(string documentId);
         Task RegisterOcrAndIndexFailure(string documentId);
         Task RegisterCompleted();

@@ -27,15 +27,15 @@ namespace pdf_generator.Services.PdfService
             _asposeItemFactory = asposeItemFactory ?? throw new ArgumentNullException(nameof(asposeItemFactory));
         }
 
-        public void ReadToPdfStream(Stream inputStream, Stream pdfStream)
+        public void ReadToPdfStream(Stream inputStream, Stream pdfStream, Guid correlationId)
         {
-            var mailMsg = _asposeItemFactory.CreateMailMessage(inputStream);
+            var mailMsg = _asposeItemFactory.CreateMailMessage(inputStream, correlationId);
             using var memoryStream = new MemoryStream();
             memoryStream.Seek(0, SeekOrigin.Begin);
             mailMsg.Save(memoryStream, SaveOptions.DefaultMhtml);
 
             //// load the MTHML from memoryStream into a document
-            var document = _asposeItemFactory.CreateMhtmlDocument(inputStream);
+            var document = _asposeItemFactory.CreateMhtmlDocument(inputStream, correlationId);
             document.Save(pdfStream, SaveFormat.Pdf);
             pdfStream.Seek(0, SeekOrigin.Begin);
         }

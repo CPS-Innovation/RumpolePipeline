@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using Common.Logging;
+using Microsoft.Extensions.Logging;
 using pdf_generator.Domain;
 using pdf_generator.Domain.Exceptions;
 
@@ -14,6 +16,7 @@ namespace pdf_generator.Services.PdfService
         private readonly IPdfService _diagramPdfService;
         private readonly IPdfService _htmlPdfService;
         private readonly IPdfService _emailPdfService;
+        private readonly ILogger<PdfOrchestratorService> _logger;
 
         public PdfOrchestratorService(
             IPdfService wordsPdfService,
@@ -22,7 +25,8 @@ namespace pdf_generator.Services.PdfService
             IPdfService imagingPdfService,
             IPdfService diagramPdfService,
             IPdfService htmlPdfService,
-            IPdfService emailPdfService)
+            IPdfService emailPdfService,
+            ILogger<PdfOrchestratorService> logger)
         {
             _wordsPdfService = wordsPdfService;
             _cellsPdfService = cellsPdfService;
@@ -31,12 +35,16 @@ namespace pdf_generator.Services.PdfService
             _diagramPdfService = diagramPdfService;
             _htmlPdfService = htmlPdfService;
             _emailPdfService = emailPdfService;
+            _logger = logger;
         }
 
-        public Stream ReadToPdfStream(Stream inputStream, FileType fileType, string documentId)
+        public Stream ReadToPdfStream(Stream inputStream, FileType fileType, string documentId, Guid correlationId)
         {
+            _logger.LogMethodEntry(correlationId, nameof(ReadToPdfStream), documentId);
+
             try
             {
+                _logger.LogMethodFlow(correlationId, nameof(ReadToPdfStream), "Analysing file type and matching to a converter");
                 var pdfStream = new MemoryStream();
                 switch (fileType)
                 {
@@ -45,15 +53,15 @@ namespace pdf_generator.Services.PdfService
                     case FileType.DOCM:
                     case FileType.RTF:
                     case FileType.TXT:
-                        _wordsPdfService.ReadToPdfStream(inputStream, pdfStream);
+                        _wordsPdfService.ReadToPdfStream(inputStream, pdfStream, correlationId);
                         break;
                     case FileType.XLS:
                     case FileType.XLSX:
-                        _cellsPdfService.ReadToPdfStream(inputStream, pdfStream);
+                        _cellsPdfService.ReadToPdfStream(inputStream, pdfStream, correlationId);
                         break;
                     case FileType.PPT:
                     case FileType.PPTX:
-                        _slidesPdfService.ReadToPdfStream(inputStream, pdfStream);
+                        _slidesPdfService.ReadToPdfStream(inputStream, pdfStream, correlationId);
                         break;
                     case FileType.BMP:
                     case FileType.GIF:
@@ -62,16 +70,16 @@ namespace pdf_generator.Services.PdfService
                     case FileType.TIF:
                     case FileType.TIFF:
                     case FileType.PNG:
-                        _imagingPdfService.ReadToPdfStream(inputStream, pdfStream);
+                        _imagingPdfService.ReadToPdfStream(inputStream, pdfStream, correlationId);
                         break;
                     case FileType.VSD:
-                        _diagramPdfService.ReadToPdfStream(inputStream, pdfStream);
+                        _diagramPdfService.ReadToPdfStream(inputStream, pdfStream, correlationId);
                         break;
                     case FileType.HTML:
-                        _htmlPdfService.ReadToPdfStream(inputStream, pdfStream);
+                        _htmlPdfService.ReadToPdfStream(inputStream, pdfStream, correlationId);
                         break;
                     case FileType.MSG:
-                        _emailPdfService.ReadToPdfStream(inputStream, pdfStream);
+                        _emailPdfService.ReadToPdfStream(inputStream, pdfStream, correlationId);
                         break;
                     case FileType.PDF:
                         inputStream.CopyTo(pdfStream);
@@ -82,9 +90,13 @@ namespace pdf_generator.Services.PdfService
 
                 return pdfStream;
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 throw new PdfConversionException(documentId, exception.Message);
+            }
+            finally
+            {
+                _logger.LogMethodExit(correlationId, nameof(ReadToPdfStream), string.Empty);
             }
         }
     }

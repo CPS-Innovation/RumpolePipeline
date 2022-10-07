@@ -18,35 +18,31 @@ namespace coordinator.tests.Functions.SubOrchestrators
 {
     public class CaseDocumentOrchestratorTests
     {
-        private Fixture _fixture;
-        private CaseDocumentOrchestrationPayload _payload;
-        private DurableHttpRequest _durableRequest;
-        private DurableHttpResponse _durableResponse;
-        private string _content;
-        private GeneratePdfResponse _pdfResponse;
+        private readonly CaseDocumentOrchestrationPayload _payload;
+        private readonly DurableHttpRequest _durableRequest;
+        private readonly string _content;
+        private readonly GeneratePdfResponse _pdfResponse;
 
-        private Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
-        private Mock<ILogger<CaseDocumentOrchestrator>> _mockLogger;
-        private Mock<IDurableOrchestrationContext> _mockDurableOrchestrationContext;
-        private Mock<ITracker> _mockTracker;
+        private readonly Mock<IDurableOrchestrationContext> _mockDurableOrchestrationContext;
+        private readonly Mock<ITracker> _mockTracker;
 
-        private CaseDocumentOrchestrator CaseDocumentOrchestrator;
+        private readonly CaseDocumentOrchestrator _caseDocumentOrchestrator;
 
         public CaseDocumentOrchestratorTests()
         {
-            _fixture = new Fixture();
-            _payload = _fixture.Create<CaseDocumentOrchestrationPayload>();
+            var fixture = new Fixture();
+            _payload = fixture.Create<CaseDocumentOrchestrationPayload>();
             _durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("http://www.google.co.uk"));
-            _content = _fixture.Create<string>();
-            _durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: _content);
-            _pdfResponse = _fixture.Create<GeneratePdfResponse>();
+            _content = fixture.Create<string>();
+            var durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: _content);
+            _pdfResponse = fixture.Create<GeneratePdfResponse>();
 
-            _mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
-            _mockLogger = new Mock<ILogger<CaseDocumentOrchestrator>>();
+            var mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
+            var mockLogger = new Mock<ILogger<CaseDocumentOrchestrator>>();
             _mockDurableOrchestrationContext = new Mock<IDurableOrchestrationContext>();
             _mockTracker = new Mock<ITracker>();
 
-            _mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<GeneratePdfResponse>(_content)).Returns(_pdfResponse);
+            mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<GeneratePdfResponse>(_content)).Returns(_pdfResponse);
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CaseDocumentOrchestrationPayload>()).Returns(_payload);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
@@ -57,11 +53,11 @@ namespace coordinator.tests.Functions.SubOrchestrators
                 nameof(CreateTextExtractorHttpRequest),
                 It.Is<CreateTextExtractorHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.BlobName == _pdfResponse.BlobName)))
                     .ReturnsAsync(_durableRequest);
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest)).ReturnsAsync(_durableResponse);
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest)).ReturnsAsync(durableResponse);
             _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
                 .Returns(_mockTracker.Object);
 
-            CaseDocumentOrchestrator = new CaseDocumentOrchestrator(_mockJsonConvertWrapper.Object, _mockLogger.Object);
+            _caseDocumentOrchestrator = new CaseDocumentOrchestrator(mockJsonConvertWrapper.Object, mockLogger.Object);
         }
 
         [Fact]
@@ -69,13 +65,13 @@ namespace coordinator.tests.Functions.SubOrchestrators
         {
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CaseDocumentOrchestrationPayload>()).Returns(default(CaseDocumentOrchestrationPayload));
 
-            await Assert.ThrowsAsync<ArgumentException>(() => CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object));
+            await Assert.ThrowsAsync<ArgumentException>(() => _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object));
         }
 
         [Fact]
         public async Task Run_Tracker_RegistersPdfBlobName()
         {
-            await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+            await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
             _mockTracker.Verify(tracker => tracker.RegisterPdfBlobName(It.Is<RegisterPdfBlobNameArg>(a => a.DocumentId == _payload.DocumentId && a.BlobName == _pdfResponse.BlobName)));
         }
@@ -83,7 +79,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
         [Fact]
         public async Task Run_Tracker_RegistersIndexed()
         {
-            await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+            await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
             _mockTracker.Verify(tracker => tracker.RegisterIndexed(_payload.DocumentId));
         }
@@ -94,7 +90,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest))
                 .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.InternalServerError, content: _content));
 
-            await Assert.ThrowsAsync<HttpRequestException>(() => CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object));
+            await Assert.ThrowsAsync<HttpRequestException>(() => _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object));
         }
 
         [Fact]
@@ -105,12 +101,12 @@ namespace coordinator.tests.Functions.SubOrchestrators
 
             try
             {
-                await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
                 Assert.False(true);
             }
             catch
             {
-                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInCDE(_payload.DocumentId));
+                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInCde(_payload.DocumentId));
             }
         }
 
@@ -122,7 +118,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
 
             try
             {
-                await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
                 Assert.False(true);
             }
             catch
@@ -139,7 +135,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
 
             try
             {
-                await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
                 Assert.False(true);
             }
             catch
@@ -156,7 +152,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
 
             try
             {
-                await CaseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
                 Assert.False(true);
             }
             catch

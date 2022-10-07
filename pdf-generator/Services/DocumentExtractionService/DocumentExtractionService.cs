@@ -1,6 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Common.Logging;
+using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.Exceptions;
 using pdf_generator.Factories;
 
@@ -10,25 +13,33 @@ namespace pdf_generator.Services.DocumentExtractionService
     {
         private readonly HttpClient _httpClient;
         private readonly IDocumentExtractionHttpRequestFactory _documentExtractionHttpRequestFactory;
+        private readonly ILogger<DocumentExtractionService> _logger;
 
         public DocumentExtractionService(
             HttpClient httpClient,
-            IDocumentExtractionHttpRequestFactory documentExtractionHttpRequestFactory)
+            IDocumentExtractionHttpRequestFactory documentExtractionHttpRequestFactory, ILogger<DocumentExtractionService> logger)
         {
             _httpClient = httpClient;
             _documentExtractionHttpRequestFactory = documentExtractionHttpRequestFactory;
+            _logger = logger;
         }
 
-        public async Task<Stream> GetDocumentAsync(string documentId, string fileName, string accessToken)
+        public async Task<Stream> GetDocumentAsync(string documentId, string fileName, string accessToken,
+            Guid correlationId)
         {
+            _logger.LogMethodEntry(correlationId, nameof(GetDocumentAsync), $"DocumentId: {documentId}, FileName: {fileName}");
             //TODO ive assumed here that CDE will return 404 not found when document cant be found. Test this when hooked up properly
-            var content = await GetHttpContentAsync($"doc-fetch/{documentId}/{fileName}", accessToken);
-            return await content.ReadAsStreamAsync();
+            var content = await GetHttpContentAsync($"doc-fetch/{documentId}/{fileName}", accessToken, correlationId);
+            var result = await content.ReadAsStreamAsync();
+            _logger.LogMethodExit(correlationId, nameof(GetDocumentAsync), string.Empty);
+            return result;
         }
 
-        private async Task<HttpContent> GetHttpContentAsync(string requestUri, string accessToken)
+        private async Task<HttpContent> GetHttpContentAsync(string requestUri, string accessToken, Guid correlationId)
         {
-            var request = _documentExtractionHttpRequestFactory.Create(requestUri, accessToken);
+            _logger.LogMethodEntry(correlationId, nameof(GetHttpContentAsync), $"RequestUri: {requestUri}");
+            
+            var request = _documentExtractionHttpRequestFactory.Create(requestUri, accessToken, correlationId);
             var response = await _httpClient.SendAsync(request);
 
             try
@@ -40,7 +51,9 @@ namespace pdf_generator.Services.DocumentExtractionService
                 throw new HttpException(response.StatusCode, exception);
             }
 
-            return response.Content;
+            var result = response.Content;
+            _logger.LogMethodExit(correlationId, nameof(GetHttpContentAsync), string.Empty);
+            return result;
         }
     }
 }

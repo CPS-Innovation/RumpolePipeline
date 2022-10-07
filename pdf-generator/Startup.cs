@@ -10,6 +10,7 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.Requests;
 using pdf_generator.Factories;
 using pdf_generator.Handlers;
@@ -55,9 +56,10 @@ namespace pdf_generator
                 var diagramPdfService = servicesList.First(s => s.GetType() == typeof(DiagramPdfService));
                 var htmlPdfService = servicesList.First(s => s.GetType() == typeof(HtmlPdfService));
                 var emailPdfService = servicesList.First(s => s.GetType() == typeof(EmailPdfService));
+                var loggingService = provider.GetService<ILogger<PdfOrchestratorService>>();
 
                 return new PdfOrchestratorService(wordsPdfService, cellsPdfService, slidesPdfService, imagingPdfService, 
-                    diagramPdfService, htmlPdfService, emailPdfService);
+                    diagramPdfService, htmlPdfService, emailPdfService, loggingService);
             });
 
             builder.Services.AddTransient<ICoordinateCalculator, CoordinateCalculator>();
@@ -73,8 +75,18 @@ namespace pdf_generator
                 azureClientFactoryBuilder.AddBlobServiceClient(new Uri(configuration["BlobServiceUrl"]))
                     .WithCredential(new DefaultAzureCredential());
             });
-            builder.Services.AddTransient<IBlobStorageService>(serviceProvider => new BlobStorageService(serviceProvider.GetRequiredService<BlobServiceClient>(), configuration["BlobServiceContainerName"]));
-            builder.Services.AddTransient<IDocumentExtractionService>(_ => new DocumentExtractionServiceStub(configuration["StubBlobStorageConnectionString"]));
+            builder.Services.AddTransient<IBlobStorageService>(serviceProvider =>
+            {
+                var loggingService = serviceProvider.GetService<ILogger<BlobStorageService>>();
+                
+                return new BlobStorageService(serviceProvider.GetRequiredService<BlobServiceClient>(),
+                        configuration["BlobServiceContainerName"], loggingService);
+            });
+            builder.Services.AddTransient<IDocumentExtractionService>(extractionProvider =>
+            {
+                var loggingService = extractionProvider.GetService<ILogger<DocumentExtractionServiceStub>>();
+                return new DocumentExtractionServiceStub(configuration["StubBlobStorageConnectionString"], loggingService);
+            });
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
         }
     }

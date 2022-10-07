@@ -1,9 +1,7 @@
 namespace coordinator.Domain
 {
-    public class CoordinatorOrchestrationPayload
+    public class CoordinatorOrchestrationPayload : BasePipelinePayload
     {
-        public int CaseId { get; set; }
-
         public bool ForceRefresh { get; set; }
 
         public string AccessToken { get; set; }

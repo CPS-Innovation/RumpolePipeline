@@ -1,12 +1,25 @@
-﻿using Aspose.Pdf.Facades;
+﻿using System;
+using Aspose.Pdf.Facades;
+using Aspose.Slides;
+using Common.Logging;
+using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.Redaction;
 
 namespace pdf_generator.Services.DocumentRedactionService
 {
     public class CoordinateCalculator : ICoordinateCalculator
     {
-        public RedactionCoordinates CalculateRelativeCoordinates(double pageWidth, double pageHeight, int pageIndex, RedactionCoordinates originatorCoordinates, PdfFileInfo targetPdfInfo)
+        private readonly ILogger<CoordinateCalculator> _logger;
+
+        public CoordinateCalculator(ILogger<CoordinateCalculator> logger)
         {
+            _logger = logger;
+        }
+        
+        public RedactionCoordinates CalculateRelativeCoordinates(double pageWidth, double pageHeight, int pageIndex, RedactionCoordinates originatorCoordinates, PdfFileInfo targetPdfInfo, Guid correlationId)
+        {
+            _logger.LogMethodEntry(correlationId, nameof(CalculateRelativeCoordinates), string.Empty);
+            
             var pdfTranslatedCoordinates = new RedactionCoordinates();
             var x1Cent = originatorCoordinates.X1 * 100 / pageWidth;
             var y1Cent = originatorCoordinates.Y1 * 100 / pageHeight;
@@ -21,6 +34,7 @@ namespace pdf_generator.Services.DocumentRedactionService
             pdfTranslatedCoordinates.X2 = pdfWidth / 100 * x2Cent;
             pdfTranslatedCoordinates.Y2 = pdfHeight / 100 * y2Cent;
 
+            _logger.LogMethodExit(correlationId, nameof(CalculateRelativeCoordinates), string.Empty);
             return pdfTranslatedCoordinates;
         }
     }

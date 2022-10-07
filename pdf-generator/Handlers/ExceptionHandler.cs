@@ -5,6 +5,7 @@ using System.Net.Mime;
 using System.Text;
 using Azure;
 using common.Domain.Exceptions;
+using Common.Logging;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.Exceptions;
 
@@ -12,15 +13,9 @@ namespace pdf_generator.Handlers
 {
     public class ExceptionHandler : IExceptionHandler
     {
-        private readonly ILogger<IExceptionHandler> _log;
-
-        public ExceptionHandler(ILogger<ExceptionHandler> log)
+        public HttpResponseMessage HandleException(Exception exception, Guid correlationId, string source, ILogger logger)
         {
-            _log = log;
-        }
-
-        public HttpResponseMessage HandleException(Exception exception)
-        {
+            logger.LogMethodEntry(correlationId, nameof(ExceptionHandler), string.Empty);
             var baseErrorMessage = "An unhandled exception occurred";
             var statusCode = HttpStatusCode.InternalServerError;
 
@@ -57,11 +52,12 @@ namespace pdf_generator.Handlers
                     break;
             }
 
-            _log.LogError(exception, "{BaseErrorMessage}: {Message}", baseErrorMessage, exception.Message);
+            logger.LogMethodError(correlationId, source, $"{baseErrorMessage}: {exception.Message}", exception);
+            logger.LogMethodExit(correlationId, nameof(ExceptionHandler), string.Empty);
             return ErrorResponse(baseErrorMessage, exception, statusCode);
         }
 
-        private HttpResponseMessage ErrorResponse(string baseErrorMessage, Exception exception, HttpStatusCode httpStatusCode)
+        private static HttpResponseMessage ErrorResponse(string baseErrorMessage, Exception exception, HttpStatusCode httpStatusCode)
         {
             var errorMessage = $"{baseErrorMessage}. Base exception message: {exception.GetBaseException().Message}";
             return new HttpResponseMessage(httpStatusCode)
