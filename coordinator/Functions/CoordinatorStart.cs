@@ -37,7 +37,7 @@ namespace coordinator.Functions
 
             try
             {
-                req.Headers.TryGetValues("X-Correlation-ID", out var correlationIdValues);
+                req.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
                 if (correlationIdValues == null)
                     throw new BadRequestException("Invalid correlationId. A valid GUID is required.", nameof(req));
 

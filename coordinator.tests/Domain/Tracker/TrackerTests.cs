@@ -272,7 +272,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task HttpStart_TrackerStatus_ReturnsOK()
         {
             var message = new HttpRequestMessage();
-            message.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+            message.Headers.Add("Correlation-Id", _correlationId.ToString());
             var response = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<OkObjectResult>();
@@ -282,7 +282,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task HttpStart_TrackerStatus_ReturnsEntityState()
         {
             var message = new HttpRequestMessage();
-            message.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+            message.Headers.Add("Correlation-Id", _correlationId.ToString());
             var response  = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             var okObjectResult = response as OkObjectResult;
@@ -301,7 +301,7 @@ namespace coordinator.tests.Domain.Tracker
                 .ReturnsAsync(entityStateResponse);
 
             var message = new HttpRequestMessage();
-            message.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+            message.Headers.Add("Correlation-Id", _correlationId.ToString());
             var response = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<NotFoundObjectResult>();

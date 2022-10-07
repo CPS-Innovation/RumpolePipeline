@@ -104,7 +104,7 @@ namespace text_extractor.tests.Functions
 			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
 				.Returns(_errorHttpResponseMessage);
 			_httpRequestMessage.Content = new StringContent(" ");
-			_httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
 
 			var response = await _extractText.Run(_httpRequestMessage);
 
@@ -118,7 +118,7 @@ namespace text_extractor.tests.Functions
 			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
 				.Returns(_errorHttpResponseMessage);
 			_httpRequestMessage.Content = new StringContent(" ");
-			_httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
 
 			var response = await _extractText.Run(_httpRequestMessage);
 
@@ -128,7 +128,7 @@ namespace text_extractor.tests.Functions
 		[Fact]
 		public async Task Run_StoresOcrResults()
 		{
-			_httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
 			await _extractText.Run(_httpRequestMessage);
 
 			_mockSearchIndexService.Verify(service => service.StoreResultsAsync(_mockAnalyzeResults.Object, _extractTextRequest.CaseId, _extractTextRequest.DocumentId, _correlationId));
@@ -137,7 +137,7 @@ namespace text_extractor.tests.Functions
 		[Fact]
 		public async Task Run_ReturnsOk()
 		{
-			_httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
 			var response = await _extractText.Run(_httpRequestMessage);
 
 			response.StatusCode.Should().Be(HttpStatusCode.OK);

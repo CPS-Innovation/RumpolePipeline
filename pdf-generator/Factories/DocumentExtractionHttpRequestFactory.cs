@@ -21,7 +21,7 @@ namespace pdf_generator.Factories
             
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            request.Headers.Add("X-Correlation-ID", correlationId.ToString());
+            request.Headers.Add("Correlation-Id", correlationId.ToString());
             
             _logger.LogMethodExit(correlationId, nameof(Create), string.Empty);
             return request;

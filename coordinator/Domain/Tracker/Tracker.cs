@@ -184,7 +184,7 @@ namespace coordinator.Domain.Tracker
             const string loggingName = $"TrackerStatus - {nameof(HttpStart)}";
             const string correlationErrorMessage = "Invalid correlationId. A valid GUID is required.";
             
-            req.Headers.TryGetValues("X-Correlation-ID", out var correlationIdValues);
+            req.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
             if (correlationIdValues == null)
             {
                 log.LogMethodFlow(Guid.Empty, loggingName, correlationErrorMessage);

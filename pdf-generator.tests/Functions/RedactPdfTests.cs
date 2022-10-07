@@ -43,7 +43,7 @@ namespace pdf_generator.tests.Functions
             {
                 Content = new StringContent(serializedRedactPdfRequest, Encoding.UTF8, "application/json")
             };
-            _httpRequestMessage.Headers.Add("X-Correlation-ID", _correlationId.ToString());
+            _httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
             _serializedRedactPdfResponse = _fixture.Create<string>();
 
             _mockAuthorizationValidator = new Mock<IAuthorizationValidator>();

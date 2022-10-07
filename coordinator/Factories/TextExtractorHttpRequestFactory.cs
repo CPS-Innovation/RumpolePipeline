@@ -46,7 +46,7 @@ namespace coordinator.Factories
                 {
                     {"Content-Type", "application/json"},
                     {"Authorization", $"Bearer {result}"},
-                    {"X-Correlation-ID", correlationId.ToString()}
+                    {"Correlation-Id", correlationId.ToString()}
                 };
                 var content = _jsonConvertWrapper.SerializeObject(
                     new TextExtractorRequest {CaseId = caseId, DocumentId = documentId, BlobName = blobName});
