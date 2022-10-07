@@ -49,7 +49,7 @@ namespace coordinator.tests.Functions
             var mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
 
             _httpRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
-            _httpRequestHeaders.Add("X-Correlation-Id", _correlationId.ToString());
+            _httpRequestHeaders.Add("Correlation-Id", _correlationId.ToString());
 
             _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_caseId, false, false, true))
                .ReturnsAsync(default(DurableOrchestrationStatus));
@@ -69,7 +69,7 @@ namespace coordinator.tests.Functions
         public async Task Run_ReturnsUnauthorizedWhenAuthorizationHeaderIsMissing()
         {
             _httpRequestHeaders.Clear();
-            _httpRequestHeaders.Add("X-Correlation-Id", _correlationId.ToString());
+            _httpRequestHeaders.Add("Correlation-Id", _correlationId.ToString());
             //_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>()))
             //     .Returns(new HttpResponseMessage(HttpStatusCode.Unauthorized));
 
