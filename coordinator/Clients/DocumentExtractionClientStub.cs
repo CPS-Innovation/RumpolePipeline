@@ -24,7 +24,7 @@ namespace coordinator.Clients
             {
                 "18846" => McLoveCase(caseId),
                 "1000000" => McLoveCase(caseId),
-                "1000001" => MultipleFileTypeCase(caseId),
+                "18848" => MultipleFileTypeCase(caseId),
                 _ => null
             });
             
