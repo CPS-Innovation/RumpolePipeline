@@ -9,7 +9,7 @@ namespace coordinator.Clients
 {
 	public class DocumentExtractionClientStub : IDocumentExtractionClient
     {
-        private ILogger<DocumentExtractionClientStub> _logger;
+        private readonly ILogger<DocumentExtractionClientStub> _logger;
 
         public DocumentExtractionClientStub(ILogger<DocumentExtractionClientStub> logger)
         {
@@ -233,7 +233,7 @@ namespace coordinator.Clients
             };
         }
 
-        private Case MultipleFileTypeCase(string caseId)
+        private static Case MultipleFileTypeCase(string caseId)
         {
             return new Case
             {
