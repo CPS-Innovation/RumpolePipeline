@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Common.Constants;
 using Common.Domain.Exceptions;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,7 @@ namespace Common.Adapters
             try
             {
                 var userAssertion = new UserAssertion(currentAccessToken,
-                    Constants.Authentication.AzureAuthenticationAssertionType);
+                    AuthenticationKeys.AzureAuthenticationAssertionType);
                 var requestedScopes = new Collection<string> {scopes};
                 var result = await _confidentialClientApplication.AcquireTokenOnBehalfOf(requestedScopes, userAssertion)
                     .WithCorrelationId(correlationId).ExecuteAsync();

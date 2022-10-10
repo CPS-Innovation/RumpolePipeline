@@ -1,6 +1,6 @@
 ﻿namespace Common.Constants
 {
-    public static class Authentication
+    public static class AuthenticationKeys
     {
         public const string Authorization = "Authorization";
         public const string AzureAuthenticationInstanceUrl = "https://login.microsoftonline.com/";

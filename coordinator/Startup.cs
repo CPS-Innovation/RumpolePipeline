@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using Common.Adapters;
+using Common.Constants;
 using common.Handlers;
 using common.Wrappers;
 using coordinator;
@@ -27,7 +28,7 @@ namespace coordinator
             builder.Services.AddTransient<IDocumentExtractionClient, DocumentExtractionClientStub>();
             builder.Services.AddSingleton(_ =>
             {
-                const string instance = Common.Constants.Authentication.AzureAuthenticationInstanceUrl;
+                const string instance = AuthenticationKeys.AzureAuthenticationInstanceUrl;
                 var onBehalfOfTokenTenantId = GetValueFromConfig(configuration, "OnBehalfOfTokenTenantId");
                 var onBehalfOfTokenClientId = GetValueFromConfig(configuration, "OnBehalfOfTokenClientId");
                 var onBehalfOfTokenClientSecret = GetValueFromConfig(configuration, "OnBehalfOfTokenClientSecret");
