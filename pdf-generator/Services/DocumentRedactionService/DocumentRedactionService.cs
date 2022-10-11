@@ -128,14 +128,13 @@ namespace pdf_generator.Services.DocumentRedactionService
                 {
                     try
                     {
-                        redactedDocument.Convert(redactedDocumentStream, PdfFormat.v_1_7, ConvertErrorAction.None);
+                        using var convertedDocumentSteam = new MemoryStream();
+                        redactedDocument.Convert(convertedDocumentSteam, PdfFormat.v_1_7, ConvertErrorAction.Delete);
                         redactedDocument.Save(redactedDocumentStream);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogMethodError(correlationId, nameof(RedactPdfAsync), "Could not convert the PDF document to version 1.7, saving 'as-is' in original format", ex);
-                        redactedDocumentStream.Flush();
-                        redactedDocumentStream.Seek(0, SeekOrigin.Begin);
                         redactedDocument.Save(redactedDocumentStream);
                     }
                 }
