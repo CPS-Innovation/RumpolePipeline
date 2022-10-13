@@ -4,8 +4,7 @@
     "applicationInsights": {
       "samplingSettings": {
         "isEnabled": true,
-        "excludedTypes": "Request;Exception;Dependency;Event",
-        "includedTypes": "PageView;Trace"
+        "excludedTypes": "Request;Exception;Event"
       }
     },
     "enableLiveMetrics": true,
@@ -18,10 +17,10 @@
     },
     "fileLoggingMode": "always",
     "logLevel": {
-      "default": "Warning",
-      "Host.Results": "Information",
+      "default": "Information",
+      "Host.Results": "Error",
       "Function": "Information",
-      "Host.Aggregator": "Warning"
+      "Host.Aggregator": "Trace"
     }
   }
 }

@@ -95,7 +95,7 @@ namespace text_extractor.Services.SearchIndexService
             
             var searchOptions = new SearchOptions
             {
-                Filter = $"caseId eq {caseId} and documentId eq {documentId}"
+                Filter = $"caseId eq {caseId} and documentId eq '{documentId}'"
             };
             var results = await _searchClient.SearchAsync<SearchLine>("*", searchOptions);
             var searchLines = new List<SearchLine>();
