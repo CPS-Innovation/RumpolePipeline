@@ -82,5 +82,73 @@ namespace text_extractor.Services.SearchIndexService
                 throw new RequestFailedException("At least one indexing action failed.");
             }
         }
+
+        public async Task RemoveResultsForDocumentAsync(int caseId, string documentId, Guid correlationId)
+        {
+            _logger.LogMethodEntry(correlationId, nameof(RemoveResultsForDocumentAsync), $"CaseId: {caseId}, DocumentId: {documentId}");
+
+            if (caseId == 0)
+                throw new ArgumentException("Invalid argument", nameof(caseId));
+
+            if (string.IsNullOrWhiteSpace(documentId))
+                throw new ArgumentException("Invalid document identifier", nameof(documentId));
+            
+            var searchOptions = new SearchOptions
+            {
+                Filter = $"caseId eq {caseId} and documentId eq {documentId}"
+            };
+            var results = await _searchClient.SearchAsync<SearchLine>("*", searchOptions);
+            var searchLines = new List<SearchLine>();
+            await foreach (var searchResult in results.Value.GetResultsAsync())
+            {
+                searchLines.Add(searchResult.Document);
+            }
+
+            if (searchLines.Count == 0)
+            {
+                _logger.LogMethodFlow(correlationId, nameof(RemoveResultsForDocumentAsync), "No results found - all documents for this case have been previously removed");
+            }
+            else
+            {
+                await using var indexer = _searchIndexingBufferedSenderFactory.Create(_searchClient);
+                var indexTaskCompletionSource = new TaskCompletionSource<bool>();
+
+                var failureCount = 0;
+                indexer.ActionFailed += _ =>
+                {
+                    failureCount++;
+                    if (!indexTaskCompletionSource.Task.IsCompleted)
+                    {
+                        indexTaskCompletionSource.SetResult(false);
+                    }
+
+                    return Task.CompletedTask;
+                };
+
+                var successCount = 0;
+                indexer.ActionCompleted += _ =>
+                {
+                    successCount++;
+                    if (successCount == searchLines.Count)
+                    {
+                        indexTaskCompletionSource.SetResult(true);
+                    }
+                
+                    return Task.CompletedTask;
+                };
+
+                await indexer.DeleteDocumentsAsync(searchLines);
+                await indexer.FlushAsync();
+                _logger.LogMethodFlow(correlationId, nameof(StoreResultsAsync),
+                    $"Updating the search index completed following a deletion request for caseId '{caseId}' and documentId '{documentId}' - number of lines: {searchLines.Count}, successes: {successCount}, failures: {failureCount}");
+
+                if (!await indexTaskCompletionSource.Task)
+                {
+                    throw new RequestFailedException("At least one indexing action failed.");
+                }
+            }
+            
+            _logger.LogMethodFlow(correlationId, nameof(RemoveResultsForDocumentAsync), "Beginning search index update");
+        }
     }
 }
