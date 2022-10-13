@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 
@@ -26,7 +27,7 @@ namespace common.Handlers
             _log = log;
         }
 
-        public async Task<Tuple<bool, string>> ValidateTokenAsync(AuthenticationHeaderValue authenticationHeader, Guid correlationId, string validAudience = "")
+        public async Task<Tuple<bool, string>> ValidateTokenAsync(AuthenticationHeaderValue authenticationHeader, Guid correlationId, string requiredScopes = null, string requiredRoles = null)
         {
             _log.LogMethodEntry(correlationId, nameof(ValidateTokenAsync), string.Empty);
             _correlationId = correlationId;
@@ -35,7 +36,7 @@ namespace common.Handlers
             if (string.IsNullOrEmpty(authenticationHeader.Parameter)) throw new ArgumentNullException(nameof(authenticationHeader));
 
             var issuer = $"https://sts.windows.net/{Environment.GetEnvironmentVariable("CallingAppTenantId")}/";
-            var audience = string.IsNullOrWhiteSpace(validAudience) ? Environment.GetEnvironmentVariable("CallingAppValidAudience") : validAudience;
+            var audience = Environment.GetEnvironmentVariable("CallingAppValidAudience");
             var configurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(issuer + "/.well-known/openid-configuration", new OpenIdConnectConfigurationRetriever(),
                 new HttpDocumentRetriever());
 
@@ -60,13 +61,7 @@ namespace common.Handlers
             try
             {
                 var tokenValidator = new JwtSecurityTokenHandler();
-                var claimsPrincipal =
-                    tokenValidator.ValidateToken(authenticationHeader.Parameter, validationParameters, out _);
-
-                var requiredScopes = Environment.GetEnvironmentVariable("CallingAppValidScopes")
-                    ?.Replace(" ", string.Empty).Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries).ToList();
-                var requiredRoles = Environment.GetEnvironmentVariable("CallingAppValidRoles")
-                    ?.Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries).ToList();
+                var claimsPrincipal = tokenValidator.ValidateToken(authenticationHeader.Parameter, validationParameters, out _);
 
                 return IsValid(claimsPrincipal, requiredScopes, requiredRoles)
                     ? new Tuple<bool, string>(true, authenticationHeader.Parameter)
@@ -88,7 +83,7 @@ namespace common.Handlers
             }
         }
 
-        private bool IsValid(ClaimsPrincipal claimsPrincipal, List<string> requiredScopes = null, List<string> requiredRoles = null)
+        private bool IsValid(ClaimsPrincipal claimsPrincipal, string scopes = null, string roles = null)
         {
             _log.LogMethodEntry(_correlationId, nameof(IsValid), string.Empty);
             
@@ -98,8 +93,8 @@ namespace common.Handlers
                 return false;
             }
 
-            requiredScopes = requiredScopes?.ToList() ?? new List<string>();
-            requiredRoles = requiredRoles?.ToList() ?? new List<string>();
+            var requiredScopes = LoadRequiredItems(scopes);
+            var requiredRoles = LoadRequiredItems(roles);
 
             if (!requiredScopes.Any() && !requiredRoles.Any())
             {
@@ -126,6 +121,13 @@ namespace common.Handlers
                 hasAccessToScopes ? "Scope(s) found - allowing access - returning" : "No required scope(s) found - access denied - returning");
             
             return hasAccessToScopes;
+        }
+
+        private static List<string> LoadRequiredItems(string items)
+        {
+            return string.IsNullOrWhiteSpace(items) 
+                ? new List<string>() 
+                : items.Replace(" ", string.Empty).Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
     }
 }

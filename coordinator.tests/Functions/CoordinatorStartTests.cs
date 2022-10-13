@@ -57,9 +57,9 @@ namespace coordinator.tests.Functions
             _mockDurableOrchestrationClient.Setup(client => client.CreateCheckStatusResponse(_httpRequestMessage, _caseId, false))
                 .Returns(_httpResponseMessage);
 
-            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsNotNull<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
+            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsNotNull<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(true, _accessToken));
-            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(null, It.IsAny<Guid>(), It.IsAny<string>()))
+            mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(null, It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
 
             _coordinatorStart = new CoordinatorStart(_mockLogger.Object, mockAuthorizationValidator.Object);
