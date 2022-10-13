@@ -72,7 +72,7 @@ namespace pdf_generator.tests.Functions
 			_mockLogger = new Mock<ILogger<GeneratePdf>>();
 			_correlationId = _fixture.Create<Guid>();
 
-			_mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
+			_mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
 				.ReturnsAsync(new Tuple<bool, string>(true, _fixture.Create<string>()));
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<GeneratePdfRequest>(_serializedGeneratePdfRequest))
 				.Returns(_generatePdfRequest);
@@ -98,7 +98,7 @@ namespace pdf_generator.tests.Functions
 		[Fact]
 		public async Task Run_ReturnsExceptionWhenCorrelationIdIsMissing()
 		{
-			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
+			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
 				.ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
 			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
 			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<ILogger<GeneratePdf>>()))
@@ -113,7 +113,7 @@ namespace pdf_generator.tests.Functions
 		[Fact]
 		public async Task Run_ReturnsUnauthorizedWhenUnauthorized()
 		{
-            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>()))
+            _mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
 				.ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
 			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
 			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Common.Constants;
 using common.Domain.Exceptions;
 using common.Handlers;
 using Common.Logging;
@@ -61,7 +62,7 @@ namespace text_extractor.Functions
                 _log.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
                 var authValidation =
-                    await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId);
+                    await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId, PipelineScopes.ExtractText, PipelineRoles.ExtractText);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
 
