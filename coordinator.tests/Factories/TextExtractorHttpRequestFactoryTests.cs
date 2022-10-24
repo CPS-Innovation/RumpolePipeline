@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Azure.Core;
 using Common.Adapters;
-using common.Wrappers;
+using Common.Domain.Requests;
+using Common.Wrappers;
 using coordinator.Domain.Exceptions;
-using coordinator.Domain.Requests;
 using coordinator.Factories;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
@@ -48,7 +48,7 @@ namespace coordinator.tests.Factories
             _mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>(), _correlationId))
 	            .ReturnsAsync(_clientAccessToken.Token);
 
-            mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<TextExtractorRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.BlobName == _blobName)))
+            mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<ExtractTextRequest>(r => r.CaseId == _caseId && r.DocumentId == _documentId && r.BlobName == _blobName)))
 				.Returns(_content);
 
 			mockConfiguration.Setup(config => config["TextExtractorScope"]).Returns(textExtractorScope);

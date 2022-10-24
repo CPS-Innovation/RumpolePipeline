@@ -4,17 +4,20 @@ using System.Linq;
 using System.Net.Http.Headers;
 using Azure.Identity;
 using Azure.Storage.Blobs;
-using common.Handlers;
-using common.Wrappers;
+using Common.Domain.Requests;
+using Common.Handlers;
+using Common.Wrappers;
+using FluentValidation;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using pdf_generator.Domain.Requests;
+using pdf_generator.Domain.Validators;
 using pdf_generator.Factories;
 using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
+using pdf_generator.Services.DocumentEvaluationService;
 using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.DocumentRedactionService;
 using pdf_generator.Services.PdfService;
@@ -88,6 +91,8 @@ namespace pdf_generator
                 return new DocumentExtractionServiceStub(configuration["StubBlobStorageConnectionString"], loggingService);
             });
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
+            builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
+            builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();
         }
     }
 }

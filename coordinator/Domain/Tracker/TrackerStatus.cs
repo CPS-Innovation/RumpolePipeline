@@ -6,7 +6,8 @@
 		Running,
 		NoDocumentsFoundInCde,
 		Completed,
-		Failed
+		Failed,
+		UnableToEvaluateExistingDocuments
 	}
 }
 

@@ -1,14 +1,14 @@
 ﻿using AutoFixture;
-using common.Wrappers;
+using Common.Domain.Requests;
+using Common.Wrappers;
 using FluentAssertions;
-using pdf_generator.Domain.Requests;
 using Xunit;
 
 namespace pdf_generator.tests.Wrappers
 {
 	public class ValidatorWrapperTests
 	{
-        private Fixture _fixture;
+        private readonly Fixture _fixture;
 
         public ValidatorWrapperTests()
         {

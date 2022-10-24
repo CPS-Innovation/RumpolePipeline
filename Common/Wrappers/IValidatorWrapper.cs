@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace common.Wrappers
+namespace Common.Wrappers
 {
     public interface IValidatorWrapper<TRequest>
     {

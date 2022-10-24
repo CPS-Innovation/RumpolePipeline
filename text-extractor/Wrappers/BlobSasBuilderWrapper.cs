@@ -1,8 +1,6 @@
 ﻿using System;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
-using Common.Logging;
-using Microsoft.Extensions.Logging;
 
 namespace text_extractor.Wrappers
 {

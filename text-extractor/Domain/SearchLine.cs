@@ -13,6 +13,12 @@ namespace text_extractor.Domain
 
         [JsonProperty("documentId")]
         public string DocumentId { get; set; }
+        
+        [JsonProperty("materialId")] 
+        public string MaterialId { get; set; }
+        
+        [JsonProperty("lastUpdatedDate")]
+        public string LastUpdatedDate { get; set; }
 
         [JsonProperty("pageIndex")]
         public int PageIndex { get; set; }

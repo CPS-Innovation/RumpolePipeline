@@ -6,10 +6,10 @@ using Aspose.Pdf.Annotations;
 //using Aspose.Pdf.Devices;
 using Aspose.Pdf.Facades;
 using Common.Domain.Extensions;
+using Common.Domain.Requests;
+using Common.Domain.Responses;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
-using pdf_generator.Domain.Requests;
-using pdf_generator.Domain.Responses;
 using pdf_generator.Services.BlobStorageService;
 
 namespace pdf_generator.Services.DocumentRedactionService
@@ -75,48 +75,7 @@ namespace pdf_generator.Services.DocumentRedactionService
             _logger.LogMethodFlow(correlationId, nameof(RedactPdfAsync), "Remove redacted document metadata");
             redactedDocument.RemoveMetadata();
 
-            //3. now flatten the redacted document to remove "hidden" tags and data by converting each page to a Bitmap and then adding it back as an ASPOSE PDF page to a new PDF document, built up in-memory
-            //_logger.LogMethodFlow(correlationId, nameof(RedactPdfAsync), "Flatten the redacted document to remove 'hidden' tags and data by converting each page to a Bitmap and then adding it back as an ASPOSE PDF page to a new PDF document, built up in-memory");
-            /*using var flattenedDocumentStream = new MemoryStream();
-            using var flattenedDoc = new Document();
-            var pos = 0;
-            foreach (var page in redactedDocument.Pages)
-            {
-                pos++;
-    
-                using var imageMs = new MemoryStream();
-                var currentPageWidth = pdfInfo.GetPageWidth(pos);
-                var currentPageHeight = pdfInfo.GetPageHeight(pos);
-                var resolution = new Resolution(Convert.ToInt32(currentPageWidth), Convert.ToInt32(currentPageHeight));
-                var device = new BmpDevice(resolution);
-
-                // Convert a particular page and save the image to stream
-                device.Process(page, imageMs);
-    
-                var newPage = flattenedDoc.Pages.Add();
-                // Set margins so image will fit, etc.
-                newPage.PageInfo.Margin.Bottom = 0;
-                newPage.PageInfo.Margin.Top = 0;    
-                newPage.PageInfo.Margin.Left = 0;
-                newPage.PageInfo.Margin.Right = 0;
-
-
-                // Create an image object
-                var image1 = new Image
-                {
-                    // Set the image file stream
-                    ImageStream = imageMs,
-                    IsBlackWhite = true
-                };
-
-                // Add the image into paragraphs collection of the section
-                newPage.Paragraphs.Add(image1);
-
-                // YES, save after every page otherwise we get an out of memory exception
-                flattenedDoc.Save(flattenedDocumentStream);
-            }*/
-            
-            //4. Save the flattened PDF into BLOB storage but with a new filename (FOR NOW, until we have a tactical or "for-reals" API solution/integration in place)
+            //3. Save the flattened PDF into BLOB storage but with a new filename (FOR NOW, until we have a tactical or "for-reals" API solution/integration in place)
             // Check the redacted document version - if less than 1.7 then attempt to convert 
             _logger.LogMethodFlow(correlationId, nameof(RedactPdfAsync), $"Save the flattened PDF into 'local' BLOB storage but with a new filename, for now - new filename: {newFileName}");
 
@@ -148,7 +107,7 @@ namespace pdf_generator.Services.DocumentRedactionService
                 redactedDocument.Save(redactedDocumentStream);
             }
             
-            await _blobStorageService.UploadDocumentAsync(redactedDocumentStream, newFileName, correlationId);
+            await _blobStorageService.UploadDocumentAsync(redactedDocumentStream, newFileName, redactPdfRequest.CaseId, redactPdfRequest.DocumentId, redactPdfRequest.MaterialId, redactPdfRequest.LastUpdateDate, correlationId);
 
             saveResult.Succeeded = true;
             saveResult.RedactedDocumentName = newFileName;

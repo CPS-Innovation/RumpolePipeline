@@ -9,11 +9,10 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics.CodeAnalysis;
-using System.Net;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 
-namespace common.Handlers
+namespace Common.Handlers
 {
     [ExcludeFromCodeCoverage]
     public class AuthorizationValidator : IAuthorizationValidator

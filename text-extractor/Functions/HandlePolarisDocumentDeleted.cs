@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using Azure.Messaging.EventGrid;
 using Azure.Messaging.EventGrid.SystemEvents;
+using Common.Constants;
 using Common.Logging;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
@@ -15,7 +16,6 @@ namespace text_extractor.Functions;
 
 public class HandlePolarisDocumentDeleted
 {
-    private const string BlobDeletedEvent = "Microsoft.Storage.BlobDeleted";
     private readonly ILogger<HandlePolarisDocumentDeleted> _logger;
     private readonly ISearchIndexService _searchIndexService;
     
@@ -49,7 +49,7 @@ public class HandlePolarisDocumentDeleted
 
             _logger.LogMethodEntry(correlationId, loggerSource, ReturnEventGridTopLevel(eventGridEvent));
 
-            if (eventGridEvent.EventType == BlobDeletedEvent)
+            if (eventGridEvent.EventType == EventGridEvents.BlobDeletedEvent)
             {
                 var eventData = eventGridEvent.Data.ToObjectFromJson<StorageBlobDeletedEventData>();
                 if (eventData == null)
@@ -96,7 +96,7 @@ public class HandlePolarisDocumentDeleted
 
     private static string ReturnEventGridEventLevel(StorageBlobDeletedEventData eventData)
     {
-        return $@"Received {BlobDeletedEvent} Event: 
+        return $@"Received {EventGridEvents.BlobDeletedEvent} Event: 
             - Api=[{eventData.Api}]
             - BlobType=[{eventData.BlobType}]
             - ClientRequestId=[{eventData.ClientRequestId}]

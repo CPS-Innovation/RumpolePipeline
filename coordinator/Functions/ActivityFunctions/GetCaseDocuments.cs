@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Logging;
 using coordinator.Clients;
 using coordinator.Domain;
-using coordinator.Domain.DocumentExtraction;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;

@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AutoFixture;
-using common.Handlers;
+using Common.Handlers;
 using coordinator.Domain;
 using coordinator.Functions;
 using FluentAssertions;

@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Common.Adapters;
+using Common.Domain.Requests;
 using Common.Logging;
-using common.Wrappers;
+using Common.Wrappers;
 using coordinator.Domain.Exceptions;
-using coordinator.Domain.Requests;
-using coordinator.Functions.ActivityFunctions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -49,7 +48,7 @@ namespace coordinator.Factories
                     {"Correlation-Id", correlationId.ToString()}
                 };
                 var content = _jsonConvertWrapper.SerializeObject(
-                    new TextExtractorRequest {CaseId = caseId, DocumentId = documentId, BlobName = blobName});
+                    new ExtractTextRequest {CaseId = caseId, DocumentId = documentId, BlobName = blobName});
 
                 return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration["TextExtractorUrl"]), headers,
                     content);

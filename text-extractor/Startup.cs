@@ -1,9 +1,8 @@
-﻿using common.Wrappers;
+﻿using Common.Wrappers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using text_extractor.Domain.Requests;
 using text_extractor.Handlers;
 using text_extractor.Services.OcrService;
 using text_extractor.Services.SearchIndexService;
@@ -13,7 +12,8 @@ using text_extractor.Wrappers;
 using Azure.Identity;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using common.Handlers;
+using Common.Domain.Requests;
+using Common.Handlers;
 using text_extractor.Domain;
 
 [assembly: FunctionsStartup(typeof(text_extractor.Startup))]

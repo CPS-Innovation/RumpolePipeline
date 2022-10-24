@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using pdf_generator.Domain.Requests;
-using pdf_generator.Domain.Responses;
+using Common.Domain.Requests;
+using Common.Domain.Responses;
 
 namespace pdf_generator.Services.DocumentRedactionService
 {

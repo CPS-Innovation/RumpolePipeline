@@ -5,17 +5,18 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
-using common.Domain.Exceptions;
+using Common.Constants;
+using Common.Domain.Exceptions;
 using Common.Domain.Extensions;
-using common.Handlers;
+using Common.Domain.Requests;
+using Common.Domain.Responses;
+using Common.Handlers;
 using Common.Logging;
-using common.Wrappers;
+using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain;
-using pdf_generator.Domain.Requests;
-using pdf_generator.Domain.Responses;
 using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
 using pdf_generator.Services.DocumentExtractionService;
@@ -63,14 +64,13 @@ namespace pdf_generator.Functions
                     throw new BadRequestException("Invalid correlationId. A valid GUID is required.", nameof(request));
 
                 var correlationId = correlationIdValues.First();
-                if (!Guid.TryParse(correlationId, out currentCorrelationId))
-                    if (currentCorrelationId == Guid.Empty)
+                if (!Guid.TryParse(correlationId, out currentCorrelationId) || currentCorrelationId == Guid.Empty)
                         throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
 
                 _log.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
-                var authValidation =
-                    await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId);
+                var authValidation = await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId, 
+                    PipelineScopes.GeneratePdf, PipelineRoles.GeneratePdf);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
 
@@ -103,7 +103,7 @@ namespace pdf_generator.Functions
                 {
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"Retrieved document is already a PDF and so no conversion necessary; uploading and storing original file: '{pdfRequest.FileName}' to blob storage as file: '{blobName}'");
                     
-                    await _blobStorageService.UploadDocumentAsync(documentStream, blobName, currentCorrelationId);
+                    await _blobStorageService.UploadDocumentAsync(documentStream, blobName, pdfRequest.CaseId.ToString(), pdfRequest.DocumentId, pdfRequest.MaterialId, pdfRequest.LastUpdatedDate, currentCorrelationId);
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"{blobName} uploaded successfully");
                 }
@@ -113,7 +113,7 @@ namespace pdf_generator.Functions
                     var pdfStream = _pdfOrchestratorService.ReadToPdfStream(documentStream, fileType, pdfRequest.DocumentId, currentCorrelationId);
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"Document converted to PDF successfully, beginning upload of '{blobName}'...");
-                    await _blobStorageService.UploadDocumentAsync(pdfStream, blobName, currentCorrelationId);
+                    await _blobStorageService.UploadDocumentAsync(pdfStream, blobName, pdfRequest.CaseId.ToString(), pdfRequest.DocumentId, pdfRequest.MaterialId, pdfRequest.LastUpdatedDate, currentCorrelationId);
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"'{blobName}' uploaded successfully");
                 }

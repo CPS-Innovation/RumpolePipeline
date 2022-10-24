@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using AutoFixture;
 using Common.Adapters;
-using coordinator.Domain.Requests;
+using Common.Domain.Requests;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
