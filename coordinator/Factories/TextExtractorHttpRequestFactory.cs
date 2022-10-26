@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Common.Adapters;
+using Common.Constants;
 using Common.Domain.Requests;
 using Common.Logging;
 using Common.Wrappers;
@@ -43,9 +44,9 @@ namespace coordinator.Factories
 
                 var headers = new Dictionary<string, StringValues>()
                 {
-                    {"Content-Type", "application/json"},
-                    {"Authorization", $"Bearer {result}"},
-                    {"Correlation-Id", correlationId.ToString()}
+                    { HttpHeaderKeys.ContentType, HttpHeaderValues.ApplicationJson },
+                    { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
+                    { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
                 };
                 var content = _jsonConvertWrapper.SerializeObject(
                     new ExtractTextRequest {CaseId = caseId, DocumentId = documentId, BlobName = blobName});

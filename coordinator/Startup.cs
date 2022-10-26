@@ -52,7 +52,7 @@ namespace coordinator
             builder.Services.AddSingleton<ITextExtractorHttpRequestFactory, TextExtractorHttpRequestFactory>();
         }
         
-        private string GetValueFromConfig(IConfiguration configuration, string key)
+        private static string GetValueFromConfig(IConfiguration configuration, string key)
         {
             var value = configuration[key];
             if (string.IsNullOrWhiteSpace(value))

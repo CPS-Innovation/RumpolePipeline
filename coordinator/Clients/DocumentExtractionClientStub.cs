@@ -43,7 +43,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG12",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG12.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -55,7 +55,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "stmt Shelagh McLove MG11",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "stmt Shelagh McLove MG11.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -67,7 +67,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG00",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG00.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -79,7 +79,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "stmt JONES 1989 1 JUNE mg11",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "stmt JONES 1989 1 JUNE mg11.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -91,7 +91,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG20 10 JUNE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG20 10 JUNE.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -103,7 +103,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "UNUSED 1 - STORM LOG 1881 01.6.20 - EDITED 2020-11-23 MCLOVE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "UNUSED 1 - STORM LOG 1881 01.6.20 - EDITED 2020-11-23 MCLOVE.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -115,7 +115,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "Shelagh McLove VPS mg11",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "Shelagh McLove VPS mg11.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -127,7 +127,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "UNUSED 6 - DA CHECKLIST MCLOVE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "UNUSED 6 - DA CHECKLIST MCLOVE.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -139,7 +139,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG0",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG0.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -151,7 +151,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG06 3 June",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG06 3 June.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -163,7 +163,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "SDC items to be Disclosed (1-6) MCLOVE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "SDC items to be Disclosed (1-6) MCLOVE.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -175,7 +175,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "stmt BLAYNEE 2034 1 JUNE mg11",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "stmt BLAYNEE 2034 1 JUNE mg11.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -187,7 +187,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "PRE CONS D",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "PRE CONS D.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -199,7 +199,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG05 MCLOVE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG05 MCLOVE.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -211,7 +211,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG20 5 JUNE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG20 5 JUNE.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -223,7 +223,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG02 SHELAGH MCLOVE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG02 SHELAGH MCLOVE.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -235,7 +235,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MG06 10 june",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MG06 10 june.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -247,7 +247,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "stmt Lucy Doyle MG11",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "stmt Lucy Doyle MG11.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -259,7 +259,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "MCLOVE MG3",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "MCLOVE MG3.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -282,7 +282,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "docCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "docCDE.doc",
                         CmsDocType = new CmsDocType
                         {
@@ -294,7 +294,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "docxCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "docxCDE.docx",
                         CmsDocType = new CmsDocType
                         {
@@ -306,7 +306,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "docmCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "docmCDE.docm",
                         CmsDocType = new CmsDocType
                         {
@@ -318,7 +318,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "xlsxCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "xlsxCDE.xlsx",
                         CmsDocType = new CmsDocType
                         {
@@ -330,7 +330,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "xlsCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "xlsCDE.xls",
                         CmsDocType = new CmsDocType
                         {
@@ -342,7 +342,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "pptCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "pptCDE.ppt",
                         CmsDocType = new CmsDocType
                         {
@@ -354,7 +354,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "pptxCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "pptxCDE.pptx",
                         CmsDocType = new CmsDocType
                         {
@@ -366,7 +366,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "htmlCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "htmlCDE.html",
                         CmsDocType = new CmsDocType
                         {
@@ -378,7 +378,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "msgCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "msgCDE.msg",
                         CmsDocType = new CmsDocType
                         {
@@ -390,7 +390,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "vsdCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "vsdCDE.vsd",
                         CmsDocType = new CmsDocType
                         {
@@ -402,7 +402,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "bmpCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "bmpCDE.bmp",
                         CmsDocType = new CmsDocType
                         {
@@ -414,7 +414,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "gifCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "gifCDE.gif",
                         CmsDocType = new CmsDocType
                         {
@@ -426,7 +426,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "jpgCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "jpgCDE.jpg",
                         CmsDocType = new CmsDocType
                         {
@@ -438,7 +438,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "pngCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "pngCDE.png",
                         CmsDocType = new CmsDocType
                         {
@@ -450,7 +450,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "tiffCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "tiffCDE.tiff",
                         CmsDocType = new CmsDocType
                         {
@@ -462,7 +462,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "rtfCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "rtfCDE.rtf",
                         CmsDocType = new CmsDocType
                         {
@@ -474,7 +474,7 @@ namespace coordinator.Clients
                     {
                         DocumentId = "txtCDE",
                         MaterialId = null,
-                        LastUpdatedDate = "2022-10-17T16:23:02.123Z",
+                        LastUpdatedDate = DateTime.Now.ToString("yyyy-MM-dd"),
                         FileName = "txtCDE.txt",
                         CmsDocType = new CmsDocType
                         {

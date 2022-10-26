@@ -21,6 +21,7 @@ using pdf_generator.Services.DocumentEvaluationService;
 using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.DocumentRedactionService;
 using pdf_generator.Services.PdfService;
+using pdf_generator.Services.SearchService;
 
 [assembly: FunctionsStartup(typeof(pdf_generator.Startup))]
 namespace pdf_generator
@@ -93,6 +94,8 @@ namespace pdf_generator
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
             builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
             builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();
+            builder.Services.AddTransient<ISearchServiceProcessor, SearchServiceProcessor>();
+            builder.Services.AddTransient<ISearchService, SearchService>();
         }
     }
 }

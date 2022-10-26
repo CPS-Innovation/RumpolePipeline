@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Common.Constants;
 using Common.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -256,7 +257,7 @@ namespace coordinator.Domain.Tracker
             const string loggingName = $"TrackerStatus - {nameof(HttpStart)}";
             const string correlationErrorMessage = "Invalid correlationId. A valid GUID is required.";
             
-            req.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
+            req.Headers.TryGetValues(HttpHeaderKeys.CorrelationId, out var correlationIdValues);
             if (correlationIdValues == null)
             {
                 log.LogMethodFlow(Guid.Empty, loggingName, correlationErrorMessage);

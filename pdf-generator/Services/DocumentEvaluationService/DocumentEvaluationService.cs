@@ -10,18 +10,21 @@ using Common.Domain.Responses;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Services.BlobStorageService;
+using pdf_generator.Services.SearchService;
 
 namespace pdf_generator.Services.DocumentEvaluationService;
 
 public class DocumentEvaluationService : IDocumentEvaluationService
 {
     private readonly IBlobStorageService _blobStorageService;
+    private readonly ISearchService _searchService;
     private readonly ILogger<DocumentEvaluationService> _logger;
     
-    public DocumentEvaluationService(IBlobStorageService blobStorageService, ILogger<DocumentEvaluationService> logger)
+    public DocumentEvaluationService(IBlobStorageService blobStorageService, ISearchService searchService, ILogger<DocumentEvaluationService> logger)
     {
-        _blobStorageService = blobStorageService ?? throw new ArgumentNullException(nameof(blobStorageService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _blobStorageService = blobStorageService;
+        _searchService = searchService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -36,21 +39,21 @@ public class DocumentEvaluationService : IDocumentEvaluationService
         _logger.LogMethodEntry(correlationId, nameof(EvaluateExistingDocumentsAsync), caseId);
         var response = new List<EvaluateDocumentResponse>();
 
-        var currentlyStoredDocuments = await _blobStorageService.ListDocumentsForCaseAsync(caseId, correlationId);
+        var currentlyStoredDocuments = await _searchService.ListDocumentsForCaseAsync(caseId, correlationId);
         if (currentlyStoredDocuments.Count == 0)
             return response;
 
         foreach (var storedDocument in currentlyStoredDocuments)
         {
-            var storedDocumentId = storedDocument.BlobItemTags[DocumentTags.DocumentId];
-            var storedMaterialId = storedDocument.BlobItemTags[DocumentTags.MaterialId];
-            var storedLastUpdatedDate = storedDocument.BlobItemTags[DocumentTags.LastUpdatedDate];
+            var storedDocumentId = storedDocument.DocumentMetadata[DocumentTags.DocumentId];
+            var storedMaterialId = storedDocument.DocumentMetadata[DocumentTags.MaterialId];
+            var storedLastUpdatedDate = storedDocument.DocumentMetadata[DocumentTags.LastUpdatedDate];
 
             var storedDocumentInCms = incomingDocuments.Any(incomingDocument => incomingDocument.DocumentId == storedDocumentId && incomingDocument.MaterialId == storedMaterialId && incomingDocument.LastUpdatedDate == storedLastUpdatedDate);
 
             if (!storedDocumentInCms)
             {
-                await _blobStorageService.RemoveDocumentAsync(storedDocument.BlobItemName, correlationId);
+                await _blobStorageService.RemoveDocumentAsync(storedDocument.BlobName, correlationId);
                 
                 response.Add(new EvaluateDocumentResponse
                 {
@@ -80,7 +83,7 @@ public class DocumentEvaluationService : IDocumentEvaluationService
             DocumentId = request.DocumentId
         };
 
-        var currentlyStoredDocument = await _blobStorageService.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, correlationId);
+        var currentlyStoredDocument = await _searchService.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, correlationId);
         if (currentlyStoredDocument == null)
         {
             response.EvaluationResult = DocumentEvaluationResult.AcquireDocument;
@@ -88,8 +91,8 @@ public class DocumentEvaluationService : IDocumentEvaluationService
             return response;
         }
 
-        var storedMaterialId = currentlyStoredDocument.BlobItemTags[DocumentTags.MaterialId];
-        var storedLastUpdatedDate = currentlyStoredDocument.BlobItemTags[DocumentTags.LastUpdatedDate];
+        var storedMaterialId = currentlyStoredDocument.DocumentMetadata[DocumentTags.MaterialId];
+        var storedLastUpdatedDate = currentlyStoredDocument.DocumentMetadata[DocumentTags.LastUpdatedDate];
 
         if (request.MaterialId == storedMaterialId && request.LastUpdatedDate == storedLastUpdatedDate)
         {
@@ -98,7 +101,7 @@ public class DocumentEvaluationService : IDocumentEvaluationService
         }
         else
         {
-            await _blobStorageService.RemoveDocumentAsync(currentlyStoredDocument.BlobItemName, correlationId);
+            await _blobStorageService.RemoveDocumentAsync(currentlyStoredDocument.BlobName, correlationId);
             response.EvaluationResult = DocumentEvaluationResult.AcquireDocument;
             response.UpdateSearchIndex = true;
         }

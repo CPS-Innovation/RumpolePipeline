@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Azure;
 using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -26,7 +25,6 @@ namespace pdf_generator.tests.Services.BlobStorageService
 		private readonly string _lastUpdatedDate;
 
 		private readonly Mock<Response<bool>> _mockBlobContainerExistsResponse;
-		private readonly Mock<BlobContainerClient> _mockBlobContainerClient;
 		private readonly Mock<BlobClient> _mockBlobClient;
 
 		private readonly IBlobStorageService _blobStorageService;
@@ -44,17 +42,17 @@ namespace pdf_generator.tests.Services.BlobStorageService
 			_lastUpdatedDate = _fixture.Create<string>();
 
 			var mockBlobServiceClient = new Mock<BlobServiceClient>();
-			_mockBlobContainerClient = new Mock<BlobContainerClient>();
+			var mockBlobContainerClient = new Mock<BlobContainerClient>();
 			_mockBlobClient = new Mock<BlobClient>();
 
 			mockBlobServiceClient.Setup(client => client.GetBlobContainerClient(blobContainerName))
-				.Returns(_mockBlobContainerClient.Object);
+				.Returns(mockBlobContainerClient.Object);
 
 			_mockBlobContainerExistsResponse = new Mock<Response<bool>>();
 			_mockBlobContainerExistsResponse.Setup(response => response.Value).Returns(true);
-			_mockBlobContainerClient.Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
+			mockBlobContainerClient.Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
 				.ReturnsAsync(_mockBlobContainerExistsResponse.Object);
-			_mockBlobContainerClient.Setup(client => client.GetBlobClient(_blobName)).Returns(_mockBlobClient.Object);
+			mockBlobContainerClient.Setup(client => client.GetBlobClient(_blobName)).Returns(_mockBlobClient.Object);
 			var mockLogger = new Mock<ILogger<pdf_generator.Services.BlobStorageService.BlobStorageService>>();
 
 			_blobStorageService = new pdf_generator.Services.BlobStorageService.BlobStorageService(mockBlobServiceClient.Object, blobContainerName, mockLogger.Object);
@@ -94,22 +92,6 @@ namespace pdf_generator.tests.Services.BlobStorageService
 			_mockBlobClient.Verify(client => client.UploadAsync(_stream, true, It.IsAny<CancellationToken>()));
 		}
 		
-		[Fact]
-		public async Task ListDocumentsForCaseAsync_ThrowsRequestFailedException_WhenBlobContainerDoesNotExist()
-		{
-			_mockBlobContainerExistsResponse.Setup(response => response.Value).Returns(false);
-
-			await Assert.ThrowsAsync<RequestFailedException>(() => _blobStorageService.ListDocumentsForCaseAsync(_caseId, _correlationId));
-		}
-
-		[Fact]
-		public async Task FindDocumentForCaseAsync_ThrowsRequestFailedException_WhenBlobContainerDoesNotExist()
-		{
-			_mockBlobContainerExistsResponse.Setup(response => response.Value).Returns(false);
-
-			await Assert.ThrowsAsync<RequestFailedException>(() => _blobStorageService.FindDocumentForCaseAsync(_caseId, _documentId, _correlationId));
-		}
-
 		[Fact]
 		public async Task RemoveDocumentAsync_ThrowsRequestFailedException_WhenBlobContainerDoesNotExist()
 		{

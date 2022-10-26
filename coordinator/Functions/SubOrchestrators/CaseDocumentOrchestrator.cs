@@ -116,7 +116,7 @@ namespace coordinator.Functions.SubOrchestrators
                         break;
                 }
 
-                request.Headers.TryGetValue("Authorization", out var tokenUsed);
+                request.Headers.TryGetValue(HttpHeaderKeys.Authorization, out var tokenUsed);
                 throw new HttpRequestException($"Failed to update search index for caseId: '{payload.CaseId}' and document id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
             }
 
@@ -179,7 +179,7 @@ namespace coordinator.Functions.SubOrchestrators
                         break;
                 }
 
-                request.Headers.TryGetValue("Authorization", out var tokenUsed);
+                request.Headers.TryGetValue(HttpHeaderKeys.Authorization, out var tokenUsed);
                 throw new HttpRequestException($"Failed to evaluate a document id '{payload.DocumentId}', lastUpdated '{payload.LastUpdatedDate}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
             }
 
@@ -241,7 +241,7 @@ namespace coordinator.Functions.SubOrchestrators
                         break;
                 }
 
-                request.Headers.TryGetValue("Authorization", out var tokenUsed);
+                request.Headers.TryGetValue(HttpHeaderKeys.Authorization, out var tokenUsed);
                 throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
             }
 
@@ -289,7 +289,7 @@ namespace coordinator.Functions.SubOrchestrators
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                request.Headers.TryGetValue("Authorization", out var tokenUsed);
+                request.Headers.TryGetValue(HttpHeaderKeys.Authorization, out var tokenUsed);
                 throw new HttpRequestException($"Failed to ocr/index document with id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
             }
             

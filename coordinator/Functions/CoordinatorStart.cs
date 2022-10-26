@@ -6,6 +6,7 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using Common.Constants;
 using Common.Domain.Exceptions;
 using Common.Handlers;
 using Common.Logging;
@@ -37,7 +38,7 @@ namespace coordinator.Functions
 
             try
             {
-                req.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
+                req.Headers.TryGetValues(HttpHeaderKeys.CorrelationId, out var correlationIdValues);
                 if (correlationIdValues == null)
                     throw new BadRequestException("Invalid correlationId. A valid GUID is required.", nameof(req));
 

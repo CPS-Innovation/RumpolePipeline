@@ -48,7 +48,7 @@ public class EvaluateExistingDocuments
         
         try
         {
-            request.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
+            request.Headers.TryGetValues(HttpHeaderKeys.CorrelationId, out var correlationIdValues);
             if (correlationIdValues == null)
                 throw new BadRequestException("Invalid correlationId. A valid GUID is required.", nameof(request));
 

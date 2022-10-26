@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Net;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Common.Constants;
-using Common.Domain.DocumentEvaluation;
-using Common.Domain.Extensions;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
@@ -62,86 +58,19 @@ namespace pdf_generator.Services.BlobStorageService
             await blobClient.UploadAsync(stream, true);
             stream.Close();
 
-            var tags = new Dictionary<string, string>
+            var metadata = new Dictionary<string, string>
             {
                 {DocumentTags.CaseId, caseId},
                 {DocumentTags.DocumentId, documentId},
-                {DocumentTags.MaterialId, materialId},
-                {DocumentTags.LastUpdatedDate, lastUpdatedDate}
+                {DocumentTags.MaterialId, materialId ?? documentId},
+                {DocumentTags.LastUpdatedDate, lastUpdatedDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd")}
             };
-            await blobClient.SetTagsAsync(tags);
+
+            await blobClient.SetMetadataAsync(metadata);
 
             _logger.LogMethodExit(correlationId, nameof(UploadDocumentAsync), string.Empty);
         }
 
-        public async Task<List<TaggedBlobItemWrapper>> ListDocumentsForCaseAsync(string caseId, Guid correlationId)
-        {
-            _logger.LogMethodEntry(correlationId, nameof(ListDocumentsForCaseAsync), caseId);
-            var documentsFound = new List<TaggedBlobItemWrapper>();
-            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
-            
-            if (!await blobContainerClient.ExistsAsync())
-                throw new RequestFailedException((int)HttpStatusCode.NotFound, $"Blob container '{_blobServiceContainerName}' does not exist");
-
-            var searchQuery = $"@container = '{_blobServiceContainerName}' AND \"{DocumentTags.CaseId}\" = '{caseId}'";
-            await foreach (var page in blobContainerClient.FindBlobsByTagsAsync(searchQuery).AsPages())
-            {
-                foreach (var pageValue in page.Values)
-                {
-                    var newWrapper = new TaggedBlobItemWrapper
-                    {
-                        BlobItemTags = new Dictionary<string, string>(),
-                        BlobItemName = pageValue.BlobName,
-                        BlobItemContainerName = pageValue.BlobContainerName
-                    };
-
-                    foreach (var item in pageValue.Tags)
-                    {
-                        newWrapper.BlobItemTags.Add(item.Key, item.Value);
-                    }
-                    
-                    documentsFound.Add(newWrapper);
-                }
-            }
-
-            _logger.LogMethodExit(correlationId, nameof(ListDocumentsForCaseAsync), documentsFound.ToJson());
-            return documentsFound;
-        }
-        
-        public async Task<TaggedBlobItemWrapper> FindDocumentForCaseAsync(string caseId, string documentId, Guid correlationId)
-        {
-            _logger.LogMethodEntry(correlationId, nameof(FindDocumentForCaseAsync), caseId);
-            var documentsFound = new List<TaggedBlobItemWrapper>();
-            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
-            
-            if (!await blobContainerClient.ExistsAsync())
-                throw new RequestFailedException((int)HttpStatusCode.NotFound, $"Blob container '{_blobServiceContainerName}' does not exist");
-
-            var searchQuery = $"@container = '{_blobServiceContainerName}' AND \"{DocumentTags.CaseId}\" = '{caseId}' AND \"{DocumentTags.DocumentId}\" = '{documentId}'";
-            await foreach (var page in blobContainerClient.FindBlobsByTagsAsync(searchQuery).AsPages())
-            {
-                foreach (var pageValue in page.Values)
-                {
-                    var newWrapper = new TaggedBlobItemWrapper
-                    {
-                        BlobItemTags = new Dictionary<string, string>(),
-                        BlobItemName = pageValue.BlobName,
-                        BlobItemContainerName = pageValue.BlobContainerName
-                    };
-
-                    foreach (var item in pageValue.Tags)
-                    {
-                        newWrapper.BlobItemTags.Add(item.Key, item.Value);
-                    }
-                    
-                    documentsFound.Add(newWrapper);
-                }
-            }
-
-            _logger.LogMethodExit(correlationId, nameof(FindDocumentForCaseAsync), documentsFound.ToJson());
-            return documentsFound.FirstOrDefault();
-        }
-        
         public async Task<bool> RemoveDocumentAsync(string blobName, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(RemoveDocumentAsync), blobName);

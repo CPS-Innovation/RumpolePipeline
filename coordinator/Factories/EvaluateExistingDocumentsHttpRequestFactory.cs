@@ -46,9 +46,9 @@ public class EvaluateExistingDocumentsHttpRequestFactory : IEvaluateExistingDocu
                 
             var headers = new Dictionary<string, StringValues>
             {
-                { "Content-Type", "application/json" },
-                { "Authorization", $"Bearer {result}"},
-                { "Correlation-Id", correlationId.ToString() }
+                { HttpHeaderKeys.ContentType, HttpHeaderValues.ApplicationJson },
+                { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
+                { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
             };
             var content = _jsonConvertWrapper.SerializeObject(
                 new EvaluateExistingDocumentsRequest { CaseId = caseId.ToString(), CaseDocuments = incomingDocuments });
