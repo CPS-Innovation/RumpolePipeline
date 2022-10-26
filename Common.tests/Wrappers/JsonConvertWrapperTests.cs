@@ -1,6 +1,5 @@
 ﻿using AutoFixture;
 using Common.Wrappers;
-using Common.tests.Wrappers;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Xunit;

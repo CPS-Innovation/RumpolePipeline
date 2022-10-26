@@ -13,7 +13,6 @@ using pdf_generator.Handlers;
 using pdf_generator.Services.DocumentRedactionService;
 using Xunit;
 using System;
-using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading;
 using Common.Domain.Extensions;

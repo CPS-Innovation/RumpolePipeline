@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Aspose.Email.Clients.Exchange.WebService.Schema_2016;
-using Aspose.Imaging.MemoryManagement;
 using Azure.Search.Documents;
 using Common.Constants;
 using Common.Domain.DocumentEvaluation;
 using Common.Domain.Extensions;
 using Common.Logging;
-using DnsClient.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.SearchResults;

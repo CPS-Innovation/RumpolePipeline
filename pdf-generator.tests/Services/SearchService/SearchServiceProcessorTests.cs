@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Aspose.Pdf;
 using AutoFixture;
 using Azure;
 using Azure.Search.Documents;

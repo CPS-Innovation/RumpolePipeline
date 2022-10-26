@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Common.Domain.Extensions;
 using FluentAssertions;
 using Xunit;

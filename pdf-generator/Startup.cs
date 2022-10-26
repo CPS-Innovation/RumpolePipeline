@@ -94,6 +94,7 @@ namespace pdf_generator
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
             builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
             builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();
+            builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
             builder.Services.AddTransient<ISearchServiceProcessor, SearchServiceProcessor>();
             builder.Services.AddTransient<ISearchService, SearchService>();
         }
