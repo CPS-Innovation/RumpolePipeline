@@ -223,32 +223,6 @@ namespace coordinator.tests.Functions.SubOrchestrators
         }
         
         [Fact]
-        public async Task Run_ThrowsExceptionWhenCallToUpdateSearchIndexReturnsNonOkResponse()
-        {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_updateSearchIndexDurableRequest))
-                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.InternalServerError, content: _content));
-
-            await Assert.ThrowsAsync<HttpRequestException>(() => _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object));
-        }
-
-        [Fact]
-        public async Task Run_Tracker_RegisterUnexpectedSearchIndexRemovalFailure_WhenNotFoundStatusCodeReturned()
-        {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_updateSearchIndexDurableRequest))
-                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotFound, content: _content));
-
-            try
-            {
-                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-                Assert.False(true);
-            }
-            catch
-            {
-                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedSearchIndexRemovalFailure(_payload.DocumentId));
-            }
-        }
-
-        [Fact]
         public async Task Run_Tracker_RegisterDocumentNotFoundInCDE_WhenNotFoundStatusCodeReturned_WhenUpdatingSearchIndex()
         {
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_updateSearchIndexDurableRequest))
