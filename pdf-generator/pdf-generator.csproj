@@ -48,6 +48,7 @@
     <None Remove="Aspose.PDF" />
     <None Remove="Aspose.Email" />
     <None Remove="Microsoft.Extensions.Azure" />
+    <None Remove="local.settings.json.example" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
