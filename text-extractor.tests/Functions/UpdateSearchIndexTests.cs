@@ -103,7 +103,7 @@ public class UpdateSearchIndexTests
 	}
 
 	[Fact]
-	public async Task Run_ReturnsBadRequestWhenContentIsInvalid()
+	public async Task Run_ReturnsOKWhenContentIsInvalid()
     {
 		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
 		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))

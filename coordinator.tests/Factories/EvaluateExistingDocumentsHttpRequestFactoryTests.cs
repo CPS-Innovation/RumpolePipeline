@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Azure.Core;
 using Common.Adapters;
+using Common.Constants;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Requests;
 using Common.Wrappers;
@@ -55,9 +56,9 @@ namespace coordinator.tests.Factories
 
 			var mockLogger = new Mock<ILogger<EvaluateExistingDocumentsHttpRequestFactory>>();
 
-			mockConfiguration.Setup(config => config["PdfGeneratorScope"]).Returns(pdfGeneratorScope);
-			mockConfiguration.Setup(config => config["ExistingDocumentsEvaluatorUrl"]).Returns(_existingDocumentsEvaluatorUrl);
-			mockConfiguration.Setup(config => config["OnBehalfOfTokenTenantId"]).Returns(fixture.Create<string>());
+			mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.PdfGeneratorScope]).Returns(pdfGeneratorScope);
+			mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.ExistingDocumentsEvaluatorUrl]).Returns(_existingDocumentsEvaluatorUrl);
+			mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.OnBehalfOfTokenTenantId]).Returns(fixture.Create<string>());
 			
 			_evaluateExistingDocumentsHttpRequestFactory = new EvaluateExistingDocumentsHttpRequestFactory(_mockIdentityClientAdapter.Object, mockJsonConvertWrapper.Object, mockConfiguration.Object, mockLogger.Object);
 		}

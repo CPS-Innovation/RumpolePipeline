@@ -39,7 +39,7 @@ namespace text_extractor.Functions
         }
 
         [FunctionName("UpdateSearchIndex")]
-        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "extract")] HttpRequestMessage request)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "updateSearchIndex")] HttpRequestMessage request)
         {
             Guid currentCorrelationId = default;
             const string loggingName = "UpdateSearchIndex - Run";

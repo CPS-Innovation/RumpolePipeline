@@ -1,6 +1,6 @@
 using Azure.Search.Documents;
 
-namespace pdf_generator.Factories;
+namespace Common.Factories.Contracts;
 
 public interface ISearchClientFactory
 {

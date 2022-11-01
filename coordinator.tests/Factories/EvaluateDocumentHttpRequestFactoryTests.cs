@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Azure.Core;
 using Common.Adapters;
+using Common.Constants;
 using Common.Domain.Requests;
 using Common.Wrappers;
 using coordinator.Domain.Exceptions;
@@ -20,7 +21,6 @@ namespace coordinator.tests.Factories
 	{
 	private readonly int _caseId;
 	private readonly string _documentId;
-	private readonly string _materialId;
 	private readonly string _lastUpdatedDate;
 	private readonly AccessToken _clientAccessToken;
 	private readonly string _content;
@@ -36,7 +36,6 @@ namespace coordinator.tests.Factories
 		var fixture = new Fixture();
 		_caseId = fixture.Create<int>();
 		_documentId = fixture.Create<string>();
-		_materialId = fixture.Create<string>();
 		_lastUpdatedDate = fixture.Create<string>();
 		_clientAccessToken = fixture.Create<AccessToken>();
 		_content = fixture.Create<string>();
@@ -53,13 +52,13 @@ namespace coordinator.tests.Factories
 
 		mockJsonConvertWrapper.Setup(wrapper =>
 				wrapper.SerializeObject(It.Is<EvaluateDocumentRequest>(r => r.CaseId == _caseId && 
-				                                                            r.DocumentId == _documentId && r.MaterialId == _materialId && r.LastUpdatedDate == _lastUpdatedDate)))
+				                                                            r.DocumentId == _documentId && r.LastUpdatedDate == _lastUpdatedDate)))
 			.Returns(_content);
 
 		var mockLogger = new Mock<ILogger<EvaluateDocumentHttpRequestFactory>>();
 
-		mockConfiguration.Setup(config => config["PdfGeneratorScope"]).Returns(pdfGeneratorScope);
-		mockConfiguration.Setup(config => config["DocumentEvaluatorUrl"]).Returns(_documentEvaluatorUrl);
+		mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.PdfGeneratorScope]).Returns(pdfGeneratorScope);
+		mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.DocumentEvaluatorUrl]).Returns(_documentEvaluatorUrl);
 		mockConfiguration.Setup(config => config["OnBehalfOfTokenTenantId"]).Returns(fixture.Create<string>());
 
 		_evaluateDocumentHttpRequestFactory =
@@ -69,7 +68,7 @@ namespace coordinator.tests.Factories
 	[Fact]
 	public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 	{
-		var durableRequest = await _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _materialId, _lastUpdatedDate, _correlationId);
+		var durableRequest = await _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _correlationId);
 
 		durableRequest.Method.Should().Be(HttpMethod.Post);
 	}
@@ -77,7 +76,7 @@ namespace coordinator.tests.Factories
 	[Fact]
 	public async Task Create_SetsExpectedUriOnDurableRequest()
 	{
-		var durableRequest = await _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _materialId, _lastUpdatedDate, _correlationId);
+		var durableRequest = await _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _correlationId);
 
 		durableRequest.Uri.AbsoluteUri.Should().Be(_documentEvaluatorUrl);
 	}
@@ -85,7 +84,7 @@ namespace coordinator.tests.Factories
 	[Fact]
 	public async Task Create_SetsExpectedHeadersOnDurableRequest()
 	{
-		var durableRequest = await _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _materialId, _lastUpdatedDate, _correlationId);
+		var durableRequest = await _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _correlationId);
 
 		durableRequest.Headers.Should().Contain("Content-Type", "application/json");
 		durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_clientAccessToken.Token}");
@@ -94,7 +93,7 @@ namespace coordinator.tests.Factories
 	[Fact]
 	public async Task Create_SetsExpectedContentOnDurableRequest()
 	{
-		var durableRequest = await _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _materialId, _lastUpdatedDate, _correlationId);
+		var durableRequest = await _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _correlationId);
 
 		durableRequest.Content.Should().Be(_content);
 	}
@@ -105,7 +104,7 @@ namespace coordinator.tests.Factories
 		_mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>(), It.IsAny<Guid>()))
 			.Throws(new Exception());
 
-		await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _materialId, _lastUpdatedDate, _correlationId));
+		await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _evaluateDocumentHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _correlationId));
 	}
 	}
 }

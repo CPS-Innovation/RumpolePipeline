@@ -209,7 +209,7 @@ namespace pdf_generator.tests.Functions
 			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
 			await _generatePdf.Run(_httpRequestMessage);
 
-			_mockBlobStorageService.Verify(service => service.UploadDocumentAsync(_documentStream, _blobName, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentId, _generatePdfRequest.MaterialId, 
+			_mockBlobStorageService.Verify(service => service.UploadDocumentAsync(_documentStream, _blobName, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentId, 
 				_generatePdfRequest.LastUpdatedDate, _correlationId));
 		}
 
@@ -219,7 +219,7 @@ namespace pdf_generator.tests.Functions
 			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
 			await _generatePdf.Run(_httpRequestMessage);
 
-			_mockBlobStorageService.Verify(service => service.UploadDocumentAsync(_pdfStream, _blobName, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentId, _generatePdfRequest.MaterialId, 
+			_mockBlobStorageService.Verify(service => service.UploadDocumentAsync(_pdfStream, _blobName, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentId, 
 				_generatePdfRequest.LastUpdatedDate, _correlationId));
 		}
 

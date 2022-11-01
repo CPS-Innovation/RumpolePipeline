@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Common.Constants;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Domain.Responses;
@@ -53,7 +54,7 @@ namespace coordinator.Functions
             
             try
             {
-                var timeout = TimeSpan.FromSeconds(double.Parse(_configuration["CoordinatorOrchestratorTimeoutSecs"]));
+                var timeout = TimeSpan.FromSeconds(double.Parse(_configuration[ConfigKeys.CoordinatorKeys.CoordinatorOrchestratorTimeoutSecs]));
                 var deadline = context.CurrentUtcDateTime.Add(timeout);
 
                 using var cts = new CancellationTokenSource();
@@ -108,7 +109,7 @@ namespace coordinator.Functions
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Getting list of documents for case {payload.CaseId}");
             var documents = await context.CallActivityAsync<CaseDocument[]>(
                 nameof(GetCaseDocuments),
-                new GetCaseDocumentsActivityPayload { CaseId = payload.CaseId, AccessToken = payload.AccessToken, CorrelationId = payload.CorrelationId });
+                new GetCaseDocumentsActivityPayload(payload.CaseId, payload.AccessToken, payload.CorrelationId));
 
             if (documents.Length == 0)
             {
@@ -119,19 +120,22 @@ namespace coordinator.Functions
 
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
             await tracker.RegisterDocumentIds(documents.Select(item => item.DocumentId));
-            
-            log.LogMethodFlow(payload.CorrelationId, loggingName, $"Beginning evaluation of existing polaris documents against list of incoming documents for case {payload.CaseId}");
-            var evaluateExistingDocumentsRequest = await context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
-                new CreateEvaluateExistingDocumentsHttpRequestActivityPayload {CaseId = payload.CaseId, CaseDocuments = documents.ToList(), CorrelationId = payload.CorrelationId});
-            var response = await context.CallHttpAsync(evaluateExistingDocumentsRequest);
-            
-            if (response.StatusCode != HttpStatusCode.OK)
+
+            var includeDocumentEvaluation = bool.Parse(_configuration[FeatureFlags.EvaluateDocuments]);
+            if (includeDocumentEvaluation)
             {
-                log.LogMethodFlow(payload.CorrelationId, nameof(RunOrchestrator), $"Could not evaluate existing documents");
-                await tracker.RegisterUnexpectedExistingDocumentsEvaluationFailure();
-            }
-            else
-            {
+                log.LogMethodFlow(payload.CorrelationId, loggingName,
+                    $"Beginning evaluation of existing polaris documents against list of incoming documents for case {payload.CaseId}");
+                var evaluateExistingDocumentsRequest = await context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
+                    new CreateEvaluateExistingDocumentsHttpRequestActivityPayload(payload.CaseId, documents.ToList(), payload.CorrelationId));
+                var response = await context.CallHttpAsync(evaluateExistingDocumentsRequest);
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    log.LogMethodFlow(payload.CorrelationId, nameof(RunOrchestrator), $"Could not evaluate existing documents");
+                    await tracker.RegisterUnexpectedExistingDocumentsEvaluationFailure();
+                }
+                
                 var evaluateExistingDocumentsResult = _jsonConvertWrapper.DeserializeObject<List<EvaluateDocumentResponse>>(response.Content);
 
                 var documentsToRemove = evaluateExistingDocumentsResult.Select(x => x.UpdateSearchIndex).Count();
@@ -143,27 +147,19 @@ namespace coordinator.Functions
                     var existingDocumentTasks = (from result in evaluateExistingDocumentsResult
                         where result.UpdateSearchIndex
                         select context.CallActivityAsync(nameof(CreateUpdateSearchIndexHttpRequest),
-                            new CreateUpdateSearchIndexHttpRequestActivityPayload
-                                {CaseId = payload.CaseId, DocumentId = result.DocumentId, CorrelationId = payload.CorrelationId})).ToList();
+                            new CreateUpdateSearchIndexHttpRequestActivityPayload(payload.CaseId, result.DocumentId, payload.CorrelationId))).ToList();
 
                     await Task.WhenAll(existingDocumentTasks.Select(BufferCall));
                 }
-
-                log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
-                var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), new CaseDocumentOrchestrationPayload
-                    {
-                        CaseId = payload.CaseId,
-                        DocumentId = t.DocumentId,
-                        MaterialId = t.MaterialId,
-                        LastUpdatedDate = t.LastUpdatedDate,
-                        FileName = t.FileName,
-                        CorrelationId = payload.CorrelationId
-                    }))
-                    .ToList();
-
-                await Task.WhenAll(caseDocumentTasks.Select(BufferCall));
             }
 
+            log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
+            var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
+                    new CaseDocumentOrchestrationPayload(payload.CaseId, t.DocumentId, t.LastUpdatedDate, t.FileName, payload.CorrelationId)))
+                .ToList();
+
+            await Task.WhenAll(caseDocumentTasks.Select(BufferCall));
+            
             if (await tracker.AllDocumentsFailed())
                 throw new CoordinatorOrchestrationException("All documents failed to process during orchestration.");
             

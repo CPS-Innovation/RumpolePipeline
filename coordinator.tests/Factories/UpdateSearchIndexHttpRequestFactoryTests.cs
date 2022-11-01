@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Azure.Core;
 using Common.Adapters;
+using Common.Constants;
 using Common.Domain.Requests;
 using Common.Wrappers;
 using coordinator.Domain.Exceptions;
@@ -52,8 +53,8 @@ namespace coordinator.tests.Factories
 
 			var mockLogger = new Mock<ILogger<UpdateSearchIndexHttpRequestFactory>>();
 
-			mockConfiguration.Setup(config => config["TextExtractorScope"]).Returns(textExtractorScope);
-			mockConfiguration.Setup(config => config["SearchIndexUpdateUrl"]).Returns(_searchIndexUpdateUrl);
+			mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.TextExtractorScope]).Returns(textExtractorScope);
+			mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.SearchIndexUpdateUrl]).Returns(_searchIndexUpdateUrl);
 			
 			_updateSearchIndexHttpRequestFactory = new UpdateSearchIndexHttpRequestFactory(_mockIdentityClientAdapter.Object, mockJsonConvertWrapper.Object, mockConfiguration.Object, mockLogger.Object);
 		}

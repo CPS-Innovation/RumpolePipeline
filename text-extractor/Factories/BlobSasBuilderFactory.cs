@@ -1,29 +1,29 @@
 ﻿using System;
 using Azure.Storage.Sas;
-using Microsoft.Extensions.Options;
-using text_extractor.Services.SearchIndexService;
+using Common.Constants;
+using Microsoft.Extensions.Configuration;
 
 namespace text_extractor.Factories
 {
     public class BlobSasBuilderFactory : IBlobSasBuilderFactory
     {
-        private readonly BlobOptions _blobOptions;
+        private readonly IConfiguration _configuration;
 
-        public BlobSasBuilderFactory(IOptions<BlobOptions> blobOptions)
+        public BlobSasBuilderFactory(IConfiguration configuration)
         {
-            _blobOptions = blobOptions.Value;
+            _configuration = configuration;
         }
 
         public BlobSasBuilder Create(string blobName)
         {
             var sasBuilder = new BlobSasBuilder
             {
-                BlobContainerName = _blobOptions.BlobContainerName,
+                BlobContainerName = _configuration[ConfigKeys.SharedKeys.BlobServiceContainerName],
                 BlobName = blobName,
                 Resource = "b",
                 StartsOn = DateTimeOffset.UtcNow
             };
-            sasBuilder.ExpiresOn = sasBuilder.StartsOn.AddSeconds(_blobOptions.BlobExpirySecs);
+            sasBuilder.ExpiresOn = sasBuilder.StartsOn.AddSeconds(double.Parse(_configuration[ConfigKeys.SharedKeys.BlobExpirySecs]));
             sasBuilder.SetPermissions(BlobSasPermissions.Read);
 
             return sasBuilder;

@@ -80,13 +80,7 @@ namespace coordinator.Functions
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),
                         caseId,
-                        new CoordinatorOrchestrationPayload
-                        {
-                            CaseId = caseIdNum,
-                            ForceRefresh = forceRefresh,
-                            AccessToken = authValidation.Item2,
-                            CorrelationId = currentCorrelationId
-                        });
+                        new CoordinatorOrchestrationPayload(caseIdNum, forceRefresh, authValidation.Item2, currentCorrelationId));
 
                     _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'");
                 }

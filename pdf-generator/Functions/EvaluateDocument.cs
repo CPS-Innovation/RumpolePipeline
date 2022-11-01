@@ -40,7 +40,7 @@ public class EvaluateDocument
         _exceptionHandler = exceptionHandler;
     }
 
-    [FunctionName("EvaluateDocument")]
+    [FunctionName("evaluate-document")]
     public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "evaluateDocument")] HttpRequestMessage request)
     {
         Guid currentCorrelationId = default;
@@ -79,9 +79,9 @@ public class EvaluateDocument
             if (results.Any())
                 throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
             
-            _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for documentId {evaluateDocumentRequest.DocumentId}, materialId {evaluateDocumentRequest.MaterialId}, lastUpdatedDate {evaluateDocumentRequest.LastUpdatedDate}");
+            _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for documentId {evaluateDocumentRequest.DocumentId}, lastUpdatedDate {evaluateDocumentRequest.LastUpdatedDate}");
 
-            var evaluationResult = _documentEvaluationService.EvaluateDocumentAsync(evaluateDocumentRequest, currentCorrelationId);
+            var evaluationResult = await _documentEvaluationService.EvaluateDocumentAsync(evaluateDocumentRequest, currentCorrelationId);
             
             _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Document evaluation process completed for documentId {evaluateDocumentRequest.DocumentId}");
 

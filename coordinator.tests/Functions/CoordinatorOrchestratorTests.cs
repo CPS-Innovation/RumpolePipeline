@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture;
+using Common.Constants;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Domain.Responses;
@@ -16,6 +17,7 @@ using coordinator.Functions;
 using coordinator.Functions.ActivityFunctions;
 using coordinator.Functions.SubOrchestrators;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -37,6 +39,7 @@ namespace coordinator.tests.Functions
         
         private readonly Mock<IDurableOrchestrationContext> _mockDurableOrchestrationContext;
         private readonly Mock<ITracker> _mockTracker;
+        private readonly Mock<IConfiguration> _mockConfiguration;
 
         private readonly CoordinatorOrchestrator _coordinatorOrchestrator;
 
@@ -55,12 +58,13 @@ namespace coordinator.tests.Functions
             _trackerDocuments = fixture.Create<List<TrackerDocument>>();
             _evaluateDocumentsResponse = fixture.CreateMany<EvaluateDocumentResponse>().ToList();
 
-            var mockConfiguration = new Mock<IConfiguration>();
+            _mockConfiguration = new Mock<IConfiguration>();
             var mockLogger = new Mock<ILogger<CoordinatorOrchestrator>>();
             _mockDurableOrchestrationContext = new Mock<IDurableOrchestrationContext>();
             _mockTracker = new Mock<ITracker>();
             
-            mockConfiguration.Setup(config => config["CoordinatorOrchestratorTimeoutSecs"]).Returns("300");
+            _mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.CoordinatorOrchestratorTimeoutSecs]).Returns("300");
+            _mockConfiguration.Setup(config => config[FeatureFlags.EvaluateDocuments]).Returns("true");
 
             _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
 
@@ -81,7 +85,7 @@ namespace coordinator.tests.Functions
                 It.IsAny<CreateEvaluateExistingDocumentsHttpRequestActivityPayload>())).ReturnsAsync(_durableRequest);
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest)).ReturnsAsync(_durableResponse);
             
-            _coordinatorOrchestrator = new CoordinatorOrchestrator(mockConfiguration.Object, mockLogger.Object, new JsonConvertWrapper());
+            _coordinatorOrchestrator = new CoordinatorOrchestrator(_mockConfiguration.Object, mockLogger.Object, new JsonConvertWrapper());
         }
 
         [Fact]
@@ -228,6 +232,20 @@ namespace coordinator.tests.Functions
             var documents = await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
             documents.Should().BeEquivalentTo(_trackerDocuments);
+        }
+        
+        [Fact]
+        public async Task Run_ReturnsDocuments_WhenEvaluateDocuments_FeatureKey_TurnedOff()
+        {
+            _mockConfiguration.Setup(config => config[FeatureFlags.EvaluateDocuments]).Returns("false");
+            var documents = await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+
+            using (new AssertionScope())
+            {
+                documents.Should().BeEquivalentTo(_trackerDocuments);
+                _mockDurableOrchestrationContext.Verify(context => context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
+                    It.IsAny<CreateEvaluateExistingDocumentsHttpRequestActivityPayload>()), Times.Never);
+            }
         }
 
         [Fact]

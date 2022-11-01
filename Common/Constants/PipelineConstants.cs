@@ -32,8 +32,7 @@
         public const string EvaluateDocument = "";
         public const string EvaluateExistingDocuments = "";
         public const string ExtractText = "application.extracttext";
-        public const string HandlePolarisDocumentDeleted = "";
-        public const string UpdateSearchIndex = "application.updatesearchindex";
+        public const string UpdateSearchIndex = "";
     }
 
     public static class PipelineScopes
@@ -43,7 +42,6 @@
         public const string EvaluateDocument = "user_impersonation";
         public const string EvaluateExistingDocuments = "user_impersonation";
         public const string ExtractText = "";
-        public const string HandlePolarisDocumentDeleted = "";
         public const string UpdateSearchIndex = "";
     }
     
@@ -51,7 +49,58 @@
     {
         public const string CaseId = "caseId";
         public const string DocumentId = "documentId";
-        public const string MaterialId = "materialId";
         public const string LastUpdatedDate = "lastUpdatedDate";
+        public const string OriginalFileName = "originalFileName";
+    }
+
+    public static class FeatureFlags
+    {
+        public const string EvaluateDocuments = "FeatureFlags_EvaluateDocuments";
+    }
+
+    public static class ConfigKeys
+    {
+        public static class CoordinatorKeys
+        {
+            public const string CoordinatorOrchestratorTimeoutSecs = "CoordinatorOrchestratorTimeoutSecs";
+            public const string OnBehalfOfTokenTenantId = "OnBehalfOfTokenTenantId";
+            public const string OnBehalfOfTokenClientId = "OnBehalfOfTokenClientId";
+            public const string OnBehalfOfTokenClientSecret = "OnBehalfOfTokenClientSecret";
+            public const string PdfGeneratorScope = "PdfGeneratorScope";
+            public const string PdfGeneratorUrl = "PdfGeneratorUrl";
+            public const string DocumentEvaluatorUrl = "DocumentEvaluatorUrl";
+            public const string ExistingDocumentsEvaluatorUrl = "ExistingDocumentsEvaluatorUrl";
+            public const string TextExtractorScope = "TextExtractorScope";
+            public const string TextExtractorUrl = "TextExtractorUrl";
+            public const string SearchIndexUpdateUrl = "SearchIndexUpdateUrl";
+        }
+
+        public static class PdfGeneratorKeys
+        {
+            public const string FakeCmsDocumentsRepository = "FakeCmsDocumentsRepository";
+            public const string FakeCmsDocumentsRepository2 = "FakeCmsDocumentsRepository2";
+            public const string DocumentExtractionBaseUrl = "DocumentExtractionBaseUrl";
+        }
+
+        public static class TextExtractorKeys
+        {
+            public const string ComputerVisionClientServiceKey = "ComputerVisionClientServiceKey";
+            public const string ComputerVisionClientServiceUrl = "ComputerVisionClientServiceUrl";
+        }
+
+        public static class SharedKeys
+        {
+            public const string CallingAppTenantId = "CallingAppTenantId";
+            public const string CallingAppValidAudience = "CallingAppValidAudience";
+            public const string SearchClientEndpointUrl = "SearchClientEndpointUrl";
+            public const string SearchClientIndexName = "SearchClientIndexName";
+            public const string SearchClientAuthorizationKey = "SearchClientAuthorizationKey";
+            public const string BlobServiceContainerName = "BlobServiceContainerName";
+            public const string BlobExpirySecs = "BlobExpirySecs";
+            public const string BlobUserDelegationKeyExpirySecs = "BlobUserDelegationKeyExpirySecs";
+            public const string BlobServiceUrl = "BlobServiceUrl";
+            public const string StubBlobStorageConnectionString = "StubBlobStorageConnectionString";
+            public const string IsRunningLocally = "IsRunningLocally";
+        }
     }
 }

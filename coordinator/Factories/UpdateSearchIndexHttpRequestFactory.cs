@@ -37,7 +37,7 @@ public class UpdateSearchIndexHttpRequestFactory : IUpdateSearchIndexHttpRequest
 
         try
         {
-            var clientScopes = _configuration["TextExtractorScope"];
+            var clientScopes = _configuration[ConfigKeys.CoordinatorKeys.TextExtractorScope];
 
             _logger.LogMethodFlow(correlationId, nameof(Create), $"Getting client access token for '{clientScopes}'");
             var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes, correlationId);
@@ -48,10 +48,9 @@ public class UpdateSearchIndexHttpRequestFactory : IUpdateSearchIndexHttpRequest
                 { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
                 { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
             };
-            var content = _jsonConvertWrapper.SerializeObject(
-                new UpdateSearchIndexRequest {CaseId = caseId.ToString(), DocumentId = documentId});
+            var content = _jsonConvertWrapper.SerializeObject(new UpdateSearchIndexRequest(caseId.ToString(), documentId));
 
-            return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration["SearchIndexUpdateUrl"]), headers,
+            return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration[ConfigKeys.CoordinatorKeys.SearchIndexUpdateUrl]), headers,
                 content);
         }
         catch (Exception ex)

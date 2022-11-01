@@ -46,22 +46,21 @@ public class DocumentEvaluationService : IDocumentEvaluationService
         foreach (var storedDocument in currentlyStoredDocuments)
         {
             var storedDocumentId = storedDocument.DocumentMetadata[DocumentTags.DocumentId];
-            var storedMaterialId = storedDocument.DocumentMetadata[DocumentTags.MaterialId];
             var storedLastUpdatedDate = storedDocument.DocumentMetadata[DocumentTags.LastUpdatedDate];
 
-            var storedDocumentInCms = incomingDocuments.Any(incomingDocument => incomingDocument.DocumentId == storedDocumentId && incomingDocument.MaterialId == storedMaterialId && incomingDocument.LastUpdatedDate == storedLastUpdatedDate);
+            var storedDocumentInCms = incomingDocuments.Any(incomingDocument => incomingDocument.DocumentId == storedDocumentId
+                                                                                && incomingDocument.LastUpdatedDate == storedLastUpdatedDate);
 
-            if (!storedDocumentInCms)
-            {
-                await _blobStorageService.RemoveDocumentAsync(storedDocument.BlobName, correlationId);
+            if (storedDocumentInCms) continue;
+            
+            await _blobStorageService.RemoveDocumentAsync(storedDocument.BlobName, correlationId);
                 
-                response.Add(new EvaluateDocumentResponse
-                {
-                    CaseId = caseId,
-                    DocumentId = storedDocumentId,
-                    UpdateSearchIndex = true
-                });
-            }
+            response.Add(new EvaluateDocumentResponse
+            {
+                CaseId = caseId,
+                DocumentId = storedDocumentId,
+                UpdateSearchIndex = true
+            });
         }
 
         _logger.LogMethodExit(correlationId, nameof(EvaluateExistingDocumentsAsync), response.ToJson());
@@ -91,10 +90,9 @@ public class DocumentEvaluationService : IDocumentEvaluationService
             return response;
         }
 
-        var storedMaterialId = currentlyStoredDocument.DocumentMetadata[DocumentTags.MaterialId];
         var storedLastUpdatedDate = currentlyStoredDocument.DocumentMetadata[DocumentTags.LastUpdatedDate];
 
-        if (request.MaterialId == storedMaterialId && request.LastUpdatedDate == storedLastUpdatedDate)
+        if (request.LastUpdatedDate == storedLastUpdatedDate)
         {
             response.EvaluationResult = DocumentEvaluationResult.DocumentUnchanged;
             response.UpdateSearchIndex = false;

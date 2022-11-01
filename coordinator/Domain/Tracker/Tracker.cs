@@ -142,7 +142,7 @@ namespace coordinator.Domain.Tracker
 
         public Task RegisterNoDocumentsFoundInCDE()
         {
-            Status = TrackerStatus.NoDocumentsFoundInCde;
+            Status = TrackerStatus.NoDocumentsFoundInCDE;
             Log(LogType.NoDocumentsFoundInCDE);
 
             return Task.CompletedTask;
@@ -228,7 +228,7 @@ namespace coordinator.Domain.Tracker
 
         public Task<bool> IsAlreadyProcessed()
         {
-            return Task.FromResult(Status is TrackerStatus.Completed or TrackerStatus.NoDocumentsFoundInCde);
+            return Task.FromResult(Status is TrackerStatus.Completed or TrackerStatus.NoDocumentsFoundInCDE);
         }
 
         private void Log(LogType status, string documentId = null)

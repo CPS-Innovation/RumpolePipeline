@@ -77,7 +77,6 @@ public class DocumentEvaluationServiceTests
                 BlobContainerName = _fixture.Create<string>()
             };
             blobItemWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, incomingDoc.DocumentId);
-            blobItemWrapper.DocumentMetadata.Add(DocumentTags.MaterialId, incomingDoc.MaterialId);
             blobItemWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, incomingDoc.LastUpdatedDate);
             
             _documentsForCase.Add(blobItemWrapper);
@@ -107,7 +106,6 @@ public class DocumentEvaluationServiceTests
                 BlobContainerName = _fixture.Create<string>()
             };
             blobItemWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, pos % 2 == 0 ? incomingDoc.DocumentId : _fixture.Create<string>());
-            blobItemWrapper.DocumentMetadata.Add(DocumentTags.MaterialId, pos % 2 == 0 ? incomingDoc.MaterialId : _fixture.Create<string>());
             blobItemWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, incomingDoc.LastUpdatedDate);
             
             _documentsForCase.Add(blobItemWrapper);
@@ -155,7 +153,6 @@ public class DocumentEvaluationServiceTests
             BlobName = _fixture.Create<string>(),
             BlobContainerName = _fixture.Create<string>()
         };
-        storedDocument.DocumentMetadata.Add(DocumentTags.MaterialId, request.MaterialId);
         storedDocument.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, request.LastUpdatedDate);
         
         _mockSearchService.Setup(s => s.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, _correlationId))
@@ -175,35 +172,6 @@ public class DocumentEvaluationServiceTests
     }
     
     [Fact]
-    public async Task EvaluateDocumentAsync_WhenDocumentIsNotMatchedExactlyToBlobStorage_ByMaterialId_ShouldAcquireTheNewDocument_AndUpdateTheSearchIndexToRemoveTheOld()
-    {
-        var request = _fixture.Create<EvaluateDocumentRequest>();
-        var storedDocument = new DocumentInformation
-        {
-            DocumentMetadata = new Dictionary<string, string>(),
-            BlobName = _fixture.Create<string>(),
-            BlobContainerName = _fixture.Create<string>()
-        };
-        storedDocument.DocumentMetadata.Add(DocumentTags.MaterialId, _fixture.Create<string>());
-        storedDocument.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, request.LastUpdatedDate);
-        
-        _mockSearchService.Setup(s => s.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, _correlationId))
-            .ReturnsAsync(storedDocument);
-
-        var result = await _documentEvaluationService.EvaluateDocumentAsync(request, _correlationId);
-        
-        using (new AssertionScope())
-        {
-            result.CaseId.Should().Be(request.CaseId.ToString());
-            result.DocumentId.Should().Be(request.DocumentId);
-            result.EvaluationResult.Should().Be(DocumentEvaluationResult.AcquireDocument);
-            result.UpdateSearchIndex.Should().BeTrue();
-            
-            _mockBlobStorageService.Verify(v => v.RemoveDocumentAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Once);
-        }
-    }
-    
-    [Fact]
     public async Task EvaluateDocumentAsync_WhenDocumentIsNotMatchedExactlyToBlobStorage_ByLastUpdatedDate_ShouldAcquireTheNewDocument_AndUpdateTheSearchIndexToRemoveTheOld()
     {
         var request = _fixture.Create<EvaluateDocumentRequest>();
@@ -213,7 +181,6 @@ public class DocumentEvaluationServiceTests
             BlobName = _fixture.Create<string>(),
             BlobContainerName = _fixture.Create<string>()
         };
-        storedDocument.DocumentMetadata.Add(DocumentTags.MaterialId, request.MaterialId);
         storedDocument.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, _fixture.Create<string>());
         
         _mockSearchService.Setup(s => s.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, _correlationId))

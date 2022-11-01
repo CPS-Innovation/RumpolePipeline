@@ -6,7 +6,6 @@ using Common.Domain.Requests;
 using Common.Logging;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace coordinator.Functions.ActivityFunctions
@@ -14,13 +13,11 @@ namespace coordinator.Functions.ActivityFunctions
     public class GetOnBehalfOfAccessToken
     {
         private readonly IIdentityClientAdapter _identityClientAdapter;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<GetOnBehalfOfAccessToken> _log;
 
-        public GetOnBehalfOfAccessToken(IIdentityClientAdapter identityClientAdapter, IConfiguration configuration, ILogger<GetOnBehalfOfAccessToken> logger)
+        public GetOnBehalfOfAccessToken(IIdentityClientAdapter identityClientAdapter, ILogger<GetOnBehalfOfAccessToken> logger)
         {
             _identityClientAdapter = identityClientAdapter;
-            _configuration = configuration;
             _log = logger;
         }
 
@@ -35,11 +32,13 @@ namespace coordinator.Functions.ActivityFunctions
 
             if (request.CorrelationId == Guid.Empty)
                 throw new ArgumentException("CorrelationId must not be null");
+
+            if (string.IsNullOrWhiteSpace(request.RequestedScopes))
+                throw new ArgumentException("Cannot get an OBO token without at least one defined scope");
             
             _log.LogMethodEntry(request.CorrelationId, loggingName, request.ToJson());
-            var onBehalfOfScopes = _configuration["CoreDataApiScope"];
-
-            var onBehalfOfToken = await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(request.AccessToken, onBehalfOfScopes, request.CorrelationId);
+            
+            var onBehalfOfToken = await _identityClientAdapter.GetAccessTokenOnBehalfOfAsync(request.AccessToken, request.RequestedScopes, request.CorrelationId);
             
             _log.LogMethodExit(request.CorrelationId, loggingName, string.Empty);
             return onBehalfOfToken;

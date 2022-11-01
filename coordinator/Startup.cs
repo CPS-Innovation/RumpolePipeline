@@ -7,9 +7,11 @@ using Common.Wrappers;
 using coordinator;
 using coordinator.Clients;
 using coordinator.Factories;
+using coordinator.TempService;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 
 [assembly: FunctionsStartup(typeof(Startup))]
@@ -25,13 +27,13 @@ namespace coordinator
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            builder.Services.AddTransient<IDocumentExtractionClient, DocumentExtractionClientStub>();
+            builder.Services.AddSingleton<IConfiguration>(configuration);
             builder.Services.AddSingleton(_ =>
             {
                 const string instance = AuthenticationKeys.AzureAuthenticationInstanceUrl;
-                var onBehalfOfTokenTenantId = GetValueFromConfig(configuration, "OnBehalfOfTokenTenantId");
-                var onBehalfOfTokenClientId = GetValueFromConfig(configuration, "OnBehalfOfTokenClientId");
-                var onBehalfOfTokenClientSecret = GetValueFromConfig(configuration, "OnBehalfOfTokenClientSecret");
+                var onBehalfOfTokenTenantId = GetValueFromConfig(configuration, ConfigKeys.CoordinatorKeys.OnBehalfOfTokenTenantId);
+                var onBehalfOfTokenClientId = GetValueFromConfig(configuration, ConfigKeys.CoordinatorKeys.OnBehalfOfTokenClientId);
+                var onBehalfOfTokenClientSecret = GetValueFromConfig(configuration, ConfigKeys.CoordinatorKeys.OnBehalfOfTokenClientSecret);
                 var appOptions = new ConfidentialClientApplicationOptions
                 {
                     Instance = instance,
@@ -50,6 +52,18 @@ namespace coordinator
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory, GeneratePdfHttpRequestFactory>();
             builder.Services.AddSingleton<ITextExtractorHttpRequestFactory, TextExtractorHttpRequestFactory>();
+            builder.Services.AddSingleton<IEvaluateExistingDocumentsHttpRequestFactory, EvaluateExistingDocumentsHttpRequestFactory>();
+            builder.Services.AddSingleton<IEvaluateDocumentHttpRequestFactory, EvaluateDocumentHttpRequestFactory>();
+            builder.Services.AddSingleton<IUpdateSearchIndexHttpRequestFactory, UpdateSearchIndexHttpRequestFactory>();
+            
+            builder.Services.AddTransient<IBlobStorageService>(serviceProvider =>
+            {
+                var loggingService = serviceProvider.GetService<ILogger<BlobStorageService>>();
+                
+                return new BlobStorageService(configuration[ConfigKeys.SharedKeys.StubBlobStorageConnectionString],
+                    loggingService, configuration[ConfigKeys.SharedKeys.BlobServiceContainerName]);
+            });
+            builder.Services.AddTransient<IDocumentExtractionClient, DocumentExtractionClientStub>();
         }
         
         private static string GetValueFromConfig(IConfiguration configuration, string key)

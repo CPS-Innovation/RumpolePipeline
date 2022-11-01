@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Aspose.Cells;
 using AutoFixture;
+using Common.Constants;
 using Common.Domain.Redaction;
 using Common.Domain.Requests;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using pdf_generator.Factories;
@@ -40,9 +42,13 @@ public class DocumentRedactionServiceTests
         asposeItemFactory.Setup(x => x.CreateWorkbook(It.IsAny<Stream>(), It.IsAny<Guid>())).Returns(new Workbook());
 
         IPdfService pdfService = new CellsPdfService(asposeItemFactory.Object);
+        
+        var configuration = new Mock<IConfiguration>();
+
+        configuration.Setup(x => x[FeatureFlags.EvaluateDocuments]).Returns("true");
 
         _documentRedactionService = new pdf_generator.Services.DocumentRedactionService.DocumentRedactionService(_mockBlobStorageService.Object,
-            coordinateCalculator, mockLogger.Object);
+            coordinateCalculator, mockLogger.Object, configuration.Object);
 
         _redactPdfRequest = fixture.Create<RedactPdfRequest>();
         _redactPdfRequest.RedactionDefinitions = fixture.CreateMany<RedactionDefinition>(1).ToList();
@@ -60,7 +66,7 @@ public class DocumentRedactionServiceTests
             .ReturnsAsync(pdfStream);
 
         _mockBlobStorageService.Setup(s => s.UploadDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>())).Returns(Task.CompletedTask);
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>())).Returns(Task.CompletedTask);
     }
 
     [Fact]
@@ -88,7 +94,7 @@ public class DocumentRedactionServiceTests
             _mockBlobStorageService.Verify(x => x.GetDocumentAsync(_redactPdfRequest.FileName, _correlationId), Times.Once);
             
             _mockBlobStorageService.Verify(x => x.UploadDocumentAsync(It.IsAny<Stream>(), saveResult.RedactedDocumentName, _redactPdfRequest.CaseId, 
-                _redactPdfRequest.DocumentId, _redactPdfRequest.MaterialId, _redactPdfRequest.LastUpdateDate, _correlationId), Times.Once);
+                _redactPdfRequest.DocumentId, _redactPdfRequest.LastUpdateDate, _correlationId), Times.Once);
 
             saveResult.Succeeded.Should().BeTrue();
         }

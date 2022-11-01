@@ -31,27 +31,26 @@ namespace coordinator.Factories
             _logger = logger;
         }
 
-        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string blobName, Guid correlationId)
+        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string lastUpdatedDate, string blobName, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}, BlobName: {blobName}");
 
             try
             {
-                var clientScopes = _configuration["TextExtractorScope"];
+                var clientScopes = _configuration[ConfigKeys.CoordinatorKeys.TextExtractorScope];
 
                 _logger.LogMethodFlow(correlationId, nameof(Create), $"Getting client access token for '{clientScopes}'");
                 var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes, correlationId);
 
-                var headers = new Dictionary<string, StringValues>()
+                var headers = new Dictionary<string, StringValues>
                 {
                     { HttpHeaderKeys.ContentType, HttpHeaderValues.ApplicationJson },
                     { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
                     { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
                 };
-                var content = _jsonConvertWrapper.SerializeObject(
-                    new ExtractTextRequest {CaseId = caseId, DocumentId = documentId, BlobName = blobName});
+                var content = _jsonConvertWrapper.SerializeObject(new ExtractTextRequest(caseId, documentId, lastUpdatedDate, blobName));
 
-                return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration["TextExtractorUrl"]), headers,
+                return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration[ConfigKeys.CoordinatorKeys.TextExtractorUrl]), headers,
                     content);
             }
             catch (Exception ex)

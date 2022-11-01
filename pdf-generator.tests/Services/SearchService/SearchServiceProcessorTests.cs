@@ -7,13 +7,13 @@ using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using Common.Constants;
+using Common.Factories.Contracts;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using pdf_generator.Domain.SearchResults;
-using pdf_generator.Factories;
 using pdf_generator.Services.SearchService;
 using Xunit;
 
@@ -67,7 +67,7 @@ public class SearchServiceProcessorTests
         var loggerMock = new Mock<ILogger<SearchServiceProcessor>>();
         var configMock = new Mock<IConfiguration>();
         
-        configMock.Setup(config => config["BlobServiceContainerName"]).Returns(_fixture.Create<string>());
+        configMock.Setup(config => config[ConfigKeys.SharedKeys.BlobServiceContainerName]).Returns(_fixture.Create<string>());
         _searchServiceProcessor = new SearchServiceProcessor(loggerMock.Object, configMock.Object, mockSearchClientFactory.Object);
     }
     

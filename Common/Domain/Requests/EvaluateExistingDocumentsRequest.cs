@@ -6,6 +6,12 @@ namespace Common.Domain.Requests;
 
 public class EvaluateExistingDocumentsRequest
 {
+    public EvaluateExistingDocumentsRequest(string caseId, List<CaseDocument> caseDocuments)
+    {
+        CaseId = caseId;
+        CaseDocuments = caseDocuments;
+    }
+    
     [Required]
     public string CaseId { get; set; }
     

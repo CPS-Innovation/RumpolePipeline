@@ -5,11 +5,11 @@ using Azure.Search.Documents;
 using Common.Constants;
 using Common.Domain.DocumentEvaluation;
 using Common.Domain.Extensions;
+using Common.Factories.Contracts;
 using Common.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.SearchResults;
-using pdf_generator.Factories;
 
 namespace pdf_generator.Services.SearchService
 {
@@ -46,23 +46,25 @@ namespace pdf_generator.Services.SearchService
                 return documentsFound;
             }
 
-            var containerName = _configuration["BlobServiceContainerName"];
+            var containerName = _configuration[ConfigKeys.SharedKeys.BlobServiceContainerName];
             _logger.LogMethodFlow(correlationId, nameof(SearchForDocumentsAsync), $"{searchLines.Count} documents found in the index");
 
             foreach (var line in searchLines)
             {
                 var blobName = $"{line.CaseId}/pdfs/{line.DocumentId}.pdf";
+                var blobNameEncoded = blobName.UrlEncodeString();
+                if (documentsFound.FindIndex(x => x.BlobName == blobNameEncoded) != -1) continue;
+                
                 var newWrapper = new DocumentInformation
                 {
                     DocumentMetadata = new Dictionary<string, string>(),
-                    BlobName = blobName.EscapeUriDataStringRfc3986(),
+                    BlobName = blobNameEncoded,
                     BlobContainerName = containerName
                 };
 
                 newWrapper.DocumentMetadata.Add(DocumentTags.CaseId, line.CaseId.ToString());
                 newWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, line.DocumentId);
                 newWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, line.LastUpdatedDate);
-                newWrapper.DocumentMetadata.Add(DocumentTags.MaterialId, line.MaterialId);
 
                 documentsFound.Add(newWrapper);
             }

@@ -40,7 +40,7 @@ public class EvaluateExistingDocuments
         _exceptionHandler = exceptionHandler;
     }
 
-    [FunctionName("EvaluateExistingDocuments")]
+    [FunctionName("evaluate-existing-documents")]
     public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "evaluateExistingDocuments")] HttpRequestMessage request)
     {
         Guid currentCorrelationId = default;
@@ -81,7 +81,7 @@ public class EvaluateExistingDocuments
             
             _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for incoming documents for CaseId {evaluateExistingDocumentsRequest.CaseId}");
 
-            var evaluationResult = _documentEvaluationService.EvaluateExistingDocumentsAsync(evaluateExistingDocumentsRequest.CaseId, evaluateExistingDocumentsRequest.CaseDocuments, currentCorrelationId);
+            var evaluationResult = await _documentEvaluationService.EvaluateExistingDocumentsAsync(evaluateExistingDocumentsRequest.CaseId, evaluateExistingDocumentsRequest.CaseDocuments, currentCorrelationId);
             
             _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Document evaluation process completed for CaseId {evaluateExistingDocumentsRequest.CaseId}");
 

@@ -7,6 +7,7 @@ using text_extractor.Domain;
 using text_extractor.Factories;
 using Azure.Search.Documents;
 using Azure;
+using Common.Factories.Contracts;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 
@@ -31,7 +32,7 @@ namespace text_extractor.Services.SearchIndexService
             _logger = logger;
         }
 
-        public async Task StoreResultsAsync(AnalyzeResults analyzeResults, int caseId, string documentId, string materialId, string lastUpdatedDate, Guid correlationId)
+        public async Task StoreResultsAsync(AnalyzeResults analyzeResults, int caseId, string documentId, string lastUpdatedDate, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(StoreResultsAsync), $"CaseId: {caseId}, DocumentId: {documentId}");
             
@@ -40,7 +41,7 @@ namespace text_extractor.Services.SearchIndexService
             foreach (var readResult in analyzeResults.ReadResults)
             {
                 lines.AddRange(readResult.Lines.Select((line, index) =>
-                                    _searchLineFactory.Create(caseId, documentId, materialId, lastUpdatedDate, readResult, line, index)));
+                                    _searchLineFactory.Create(caseId, documentId, lastUpdatedDate, readResult, line, index)));
             }
 
             _logger.LogMethodFlow(correlationId, nameof(StoreResultsAsync), "Beginning search index update");

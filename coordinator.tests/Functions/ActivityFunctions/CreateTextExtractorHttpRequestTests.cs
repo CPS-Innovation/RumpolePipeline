@@ -34,7 +34,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateTextExtractorHttpRequestActivityPayload>())
                 .Returns(_payload);
 
-            mockTextExtractorHttpFactory.Setup(client => client.Create(_payload.CaseId, _payload.DocumentId, 
+            mockTextExtractorHttpFactory.Setup(client => client.Create(_payload.CaseId, _payload.DocumentId, _payload.LastUpdatedDate,
                     _payload.BlobName, _payload.CorrelationId))
                 .ReturnsAsync(_durableRequest);
 

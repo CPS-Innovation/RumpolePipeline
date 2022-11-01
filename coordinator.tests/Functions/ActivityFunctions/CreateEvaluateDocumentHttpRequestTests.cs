@@ -35,7 +35,7 @@ public class CreateEvaluateDocumentHttpRequestTests
             .Returns(_payload);
 
         mockEvaluateDocumentHttpRequestFactory.Setup(client => client.Create(_payload.CaseId, _payload.DocumentId, 
-            _payload.MaterialId, _payload.LastUpdatedDate, _payload.CorrelationId)).ReturnsAsync(_durableRequest);
+            _payload.LastUpdatedDate, _payload.CorrelationId)).ReturnsAsync(_durableRequest);
 
         var mockLogger = new Mock<ILogger<CreateEvaluateDocumentHttpRequest>>();
         _createEvaluateDocumentHttpRequest = new CreateEvaluateDocumentHttpRequest(mockEvaluateDocumentHttpRequestFactory.Object, mockLogger.Object);
@@ -67,19 +67,6 @@ public class CreateEvaluateDocumentHttpRequestTests
     public async Task Run_WhenDocumentIdIsNullOrWhitespace_ThrowsArgumentException(string documentId)
     {
         _payload.DocumentId = documentId;
-        _mockDurableActivityContext.Setup(context => context.GetInput<CreateEvaluateDocumentHttpRequestActivityPayload>())
-            .Returns(_payload);
-
-        await Assert.ThrowsAsync<ArgumentException>(() => _createEvaluateDocumentHttpRequest.Run(_mockDurableActivityContext.Object));
-    }
-    
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public async Task Run_WhenMaterialIdIsNullOrWhitespace_ThrowsArgumentException(string materialId)
-    {
-        _payload.MaterialId = materialId;
         _mockDurableActivityContext.Setup(context => context.GetInput<CreateEvaluateDocumentHttpRequestActivityPayload>())
             .Returns(_payload);
 

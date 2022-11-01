@@ -40,7 +40,7 @@ public class EvaluateExistingDocumentsHttpRequestFactory : IEvaluateExistingDocu
             
         try
         {
-            var clientScopes = _configuration["PdfGeneratorScope"];
+            var clientScopes = _configuration[ConfigKeys.CoordinatorKeys.PdfGeneratorScope];
                 
             var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes, correlationId);
                 
@@ -50,10 +50,9 @@ public class EvaluateExistingDocumentsHttpRequestFactory : IEvaluateExistingDocu
                 { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
                 { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
             };
-            var content = _jsonConvertWrapper.SerializeObject(
-                new EvaluateExistingDocumentsRequest { CaseId = caseId.ToString(), CaseDocuments = incomingDocuments });
+            var content = _jsonConvertWrapper.SerializeObject(new EvaluateExistingDocumentsRequest(caseId.ToString(), incomingDocuments));
 
-            return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration["ExistingDocumentsEvaluatorUrl"]), headers, content);
+            return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration[ConfigKeys.CoordinatorKeys.ExistingDocumentsEvaluatorUrl]), headers, content);
         }
         catch(Exception ex)
         {

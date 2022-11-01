@@ -2,9 +2,11 @@ using System;
 using Azure;
 using Azure.Core.Serialization;
 using Azure.Search.Documents;
+using Common.Constants;
+using Common.Factories.Contracts;
 using Microsoft.Extensions.Configuration;
 
-namespace pdf_generator.Factories;
+namespace Common.Factories;
 
 public class SearchClientFactory : ISearchClientFactory
 {
@@ -18,9 +20,9 @@ public class SearchClientFactory : ISearchClientFactory
     public SearchClient Create()
     {
         var sc = new SearchClient(
-            new Uri(_configuration["SearchClientEndpointUrl"]),
-            _configuration["SearchClientIndexName"],
-            new AzureKeyCredential(_configuration["SearchClientAuthorizationKey"]),
+            new Uri(_configuration[ConfigKeys.SharedKeys.SearchClientEndpointUrl]),
+            _configuration[ConfigKeys.SharedKeys.SearchClientIndexName],
+            new AzureKeyCredential(_configuration[ConfigKeys.SharedKeys.SearchClientAuthorizationKey]),
             new SearchClientOptions { Serializer = new NewtonsoftJsonObjectSerializer() });
         
         return sc;

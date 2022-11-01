@@ -32,13 +32,13 @@ public class EvaluateDocumentHttpRequestFactory : IEvaluateDocumentHttpRequestFa
         _logger = logger;
     }
     
-    public async Task<DurableHttpRequest> Create(int caseId, string documentId, string materialId, string lastUpdatedDate, Guid correlationId)
+    public async Task<DurableHttpRequest> Create(int caseId, string documentId, string lastUpdatedDate, Guid correlationId)
     {
-        _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}, MaterialId: {materialId}, LastUpdatedDate: {lastUpdatedDate}");
+        _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}, LastUpdatedDate: {lastUpdatedDate}");
             
         try
         {
-            var clientScopes = _configuration["PdfGeneratorScope"];
+            var clientScopes = _configuration[ConfigKeys.CoordinatorKeys.PdfGeneratorScope];
                 
             var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes, correlationId);
                 
@@ -48,10 +48,9 @@ public class EvaluateDocumentHttpRequestFactory : IEvaluateDocumentHttpRequestFa
                 { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
                 { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
             };
-            var content = _jsonConvertWrapper.SerializeObject(
-                new EvaluateDocumentRequest { CaseId = caseId, DocumentId = documentId, MaterialId = materialId, LastUpdatedDate = lastUpdatedDate });
+            var content = _jsonConvertWrapper.SerializeObject(new EvaluateDocumentRequest(caseId, documentId, lastUpdatedDate));
 
-            return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration["DocumentEvaluatorUrl"]), headers, content);
+            return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration[ConfigKeys.CoordinatorKeys.DocumentEvaluatorUrl]), headers, content);
         }
         catch(Exception ex)
         {

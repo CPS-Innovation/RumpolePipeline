@@ -140,7 +140,7 @@ namespace coordinator.tests.Domain.Tracker
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterNoDocumentsFoundInCDE();
 
-            _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCde);
+            _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCDE);
 
             _tracker.Logs.Count().Should().Be(2);
         }
@@ -357,7 +357,7 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsNoDocumentsFoundInCDE()
         {
-            _tracker.Status = TrackerStatus.NoDocumentsFoundInCde;
+            _tracker.Status = TrackerStatus.NoDocumentsFoundInCDE;
 
             var isAlreadyProcessed = await _tracker.IsAlreadyProcessed();
 
