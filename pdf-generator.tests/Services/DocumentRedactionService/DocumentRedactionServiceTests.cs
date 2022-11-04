@@ -29,6 +29,7 @@ public class DocumentRedactionServiceTests
     private readonly RedactPdfRequest _redactPdfRequest;
     private readonly string _accessToken;
     private readonly Guid _correlationId;
+    private readonly MemoryStream _pdfStream;
 
     public DocumentRedactionServiceTests()
     {
@@ -57,13 +58,13 @@ public class DocumentRedactionServiceTests
         _accessToken = fixture.Create<string>();
         _correlationId = Guid.NewGuid();
         
-        Stream pdfStream = new MemoryStream();
+        _pdfStream = new MemoryStream();
         using var inputStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestBook.xlsx");
         
-        pdfService.ReadToPdfStream(inputStream, pdfStream, Guid.NewGuid());
+        pdfService.ReadToPdfStream(inputStream, _pdfStream, Guid.NewGuid());
 
         _mockBlobStorageService.Setup(s => s.GetDocumentAsync(It.IsAny<string>(), It.IsAny<Guid>()))
-            .ReturnsAsync(pdfStream);
+            .ReturnsAsync(_pdfStream);
 
         _mockBlobStorageService.Setup(s => s.UploadDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>())).Returns(Task.CompletedTask);
@@ -87,6 +88,9 @@ public class DocumentRedactionServiceTests
     [Fact]
     public async Task WhenDocumentFoundInBlobStorage_VerifyApplicationFlow()
     {
+        _mockBlobStorageService.Setup(s => s.GetDocumentAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+            .ReturnsAsync(_pdfStream);
+        
         var saveResult = await _documentRedactionService.RedactPdfAsync(_redactPdfRequest, _accessToken, _correlationId);
 
         using (new AssertionScope())
