@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoFixture;
 using coordinator.Domain.Tracker;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -99,7 +100,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterDocumentNotFoundInCde(_pdfBlobNameArg.DocumentId);
+            await _tracker.RegisterDocumentNotFoundInCDE(_pdfBlobNameArg.DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
             document?.Status.Should().Be(DocumentStatus.NotFoundInCDE);
@@ -137,9 +138,9 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterNoDocumentsFoundInCDE_RegistersNoDocumentsFoundInCDE()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterNoDocumentsFoundInCde();
+            await _tracker.RegisterNoDocumentsFoundInCDE();
 
-            _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCde);
+            _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCDE);
 
             _tracker.Logs.Count().Should().Be(2);
         }
@@ -190,6 +191,119 @@ namespace coordinator.tests.Domain.Tracker
             _tracker.Status.Should().Be(TrackerStatus.Failed);
 
             _tracker.Logs.Count().Should().Be(2);
+        }
+        
+        [Fact]
+        public async Task RegisterDocumentEvaluated()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentEvaluated(_documentIds.First());
+
+            using (new AssertionScope())
+            {
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                document?.Status.Should().Be(DocumentStatus.DocumentEvaluated);
+                _tracker.Status.Should().Be(TrackerStatus.Running);
+
+                _tracker.Logs.Count().Should().Be(3);
+            }
+        }
+        
+        [Fact]
+        public async Task RegisterUnexpectedDocumentEvaluationFailure()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterUnexpectedDocumentEvaluationFailure(_documentIds.First());
+
+            using (new AssertionScope())
+            {
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                document?.Status.Should().Be(DocumentStatus.UnexpectedFailure);
+                _tracker.Status.Should().Be(TrackerStatus.Running);
+
+                _tracker.Logs.Count().Should().Be(3);
+            }
+        }
+        
+        [Fact]
+        public async Task RegisterUnexpectedExistingDocumentsEvaluationFailure()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterUnexpectedExistingDocumentsEvaluationFailure();
+
+            _tracker.Status.Should().Be(TrackerStatus.UnableToEvaluateExistingDocuments);
+
+            _tracker.Logs.Count().Should().Be(2);
+        }
+        
+        [Fact]
+        public async Task RegisterUnableToEvaluateDocument()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterUnableToEvaluateDocument(_documentIds.First());
+
+            using (new AssertionScope())
+            {
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                document?.Status.Should().Be(DocumentStatus.UnableToEvaluateDocument);
+                _tracker.Status.Should().Be(TrackerStatus.Running);
+
+                _tracker.Logs.Count().Should().Be(3);
+            }
+        }
+        
+        [Fact]
+        public async Task RegisterDocumentRemovedFromSearchIndex()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentRemovedFromSearchIndex(_documentIds.First());
+
+            using (new AssertionScope())
+            {
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                document?.Status.Should().Be(DocumentStatus.DocumentRemovedFromSearchIndex);
+                _tracker.Status.Should().Be(TrackerStatus.Running);
+
+                _tracker.Logs.Count().Should().Be(3);
+            }
+        }
+        
+        [Fact]
+        public async Task RegisterUnexpectedSearchIndexRemovalFailure()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterUnexpectedSearchIndexRemovalFailure(_documentIds.First());
+
+            using (new AssertionScope())
+            {
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                document?.Status.Should().Be(DocumentStatus.UnexpectedSearchIndexRemovalFailure);
+                _tracker.Status.Should().Be(TrackerStatus.Running);
+
+                _tracker.Logs.Count().Should().Be(3);
+            }
+        }
+        
+        [Fact]
+        public async Task RegisterUnableToUpdateSearchIndex()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterUnableToUpdateSearchIndex(_documentIds.First());
+
+            using (new AssertionScope())
+            {
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                document?.Status.Should().Be(DocumentStatus.SearchIndexUpdateFailure);
+                _tracker.Status.Should().Be(TrackerStatus.Running);
+
+                _tracker.Logs.Count().Should().Be(3);
+            }
         }
 
         [Fact]
@@ -243,7 +357,7 @@ namespace coordinator.tests.Domain.Tracker
         [Fact]
         public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsNoDocumentsFoundInCDE()
         {
-            _tracker.Status = TrackerStatus.NoDocumentsFoundInCde;
+            _tracker.Status = TrackerStatus.NoDocumentsFoundInCDE;
 
             var isAlreadyProcessed = await _tracker.IsAlreadyProcessed();
 

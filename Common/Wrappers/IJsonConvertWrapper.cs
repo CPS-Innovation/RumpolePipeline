@@ -1,4 +1,4 @@
-﻿namespace common.Wrappers
+﻿namespace Common.Wrappers
 {
     public interface IJsonConvertWrapper
     {

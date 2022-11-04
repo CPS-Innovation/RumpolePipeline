@@ -5,17 +5,18 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
-using common.Domain.Exceptions;
+using Common.Constants;
+using Common.Domain.Exceptions;
 using Common.Domain.Extensions;
-using common.Handlers;
+using Common.Domain.Requests;
+using Common.Domain.Responses;
+using Common.Handlers;
 using Common.Logging;
-using common.Wrappers;
+using Common.Wrappers;
+using FluentValidation;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using pdf_generator.Domain.Requests;
-using pdf_generator.Domain.Responses;
-using pdf_generator.Domain.Validators;
 using pdf_generator.Handlers;
 using pdf_generator.Services.DocumentRedactionService;
 
@@ -28,15 +29,17 @@ namespace pdf_generator.Functions
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
         private readonly IDocumentRedactionService _documentRedactionService;
         private readonly ILogger<RedactPdf> _logger;
+        private readonly IValidator<RedactPdfRequest> _requestValidator;
 
         public RedactPdf(IAuthorizationValidator authorizationValidator, IExceptionHandler exceptionHandler, IJsonConvertWrapper jsonConvertWrapper, IDocumentRedactionService documentRedactionService, 
-            ILogger<RedactPdf> logger)
+            ILogger<RedactPdf> logger, IValidator<RedactPdfRequest> requestValidator)
         {
-            _authorizationValidator = authorizationValidator ?? throw new ArgumentNullException(nameof(authorizationValidator));
-            _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
-            _jsonConvertWrapper = jsonConvertWrapper ?? throw new ArgumentNullException(nameof(jsonConvertWrapper));
-            _documentRedactionService = documentRedactionService ?? throw new ArgumentNullException(nameof(documentRedactionService));
-            _logger = logger;
+            _authorizationValidator = authorizationValidator;
+            _exceptionHandler = exceptionHandler;
+            _jsonConvertWrapper = jsonConvertWrapper;
+            _documentRedactionService = documentRedactionService;
+            _requestValidator = requestValidator ?? throw new ArgumentNullException(nameof(requestValidator));
+            _logger = logger ;
         }
 
         [FunctionName("redact-pdf")]
@@ -49,19 +52,18 @@ namespace pdf_generator.Functions
 
             try
             {
-                request.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
+                request.Headers.TryGetValues(HttpHeaderKeys.CorrelationId, out var correlationIdValues);
                 if (correlationIdValues == null)
                     throw new BadRequestException("Invalid correlationId. A valid GUID is required.", nameof(request));
 
                 var correlationId = correlationIdValues.First();
-                if (!Guid.TryParse(correlationId, out currentCorrelationId))
-                    if (currentCorrelationId == Guid.Empty)
+                if (!Guid.TryParse(correlationId, out currentCorrelationId) || currentCorrelationId == Guid.Empty)
                         throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
                 
                 _logger.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
                 var authValidation =
-                    await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId);
+                    await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId, PipelineScopes.RedactPdf, PipelineRoles.RedactPdf);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
 
@@ -74,14 +76,15 @@ namespace pdf_generator.Functions
                     throw new BadRequestException("Request body cannot be null.", nameof(request));
                 }
 
-                var redactions = await request.GetJsonBody<RedactPdfRequest, RedactPdfRequestValidator>();
-                if (!redactions.IsValid)
-                    throw new BadRequestException(redactions.FlattenErrors(), nameof(request));
-
+                var redactions = _jsonConvertWrapper.DeserializeObject<RedactPdfRequest>(content);
+                var validationResult = await _requestValidator.ValidateAsync(redactions);
+                if (!validationResult.IsValid)
+                    throw new BadRequestException(validationResult.FlattenErrors(), nameof(request));
+                
                 //TODO exchange access token via on behalf of?
                 //var accessToken = values.First().Replace("Bearer ", "");
-                _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning to apply redactions for documentId: '{redactions.Value.DocumentId}'");
-                redactPdfResponse = await _documentRedactionService.RedactPdfAsync(redactions.Value, "onBehalfOfAccessToken", currentCorrelationId);
+                _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning to apply redactions for documentId: '{redactions.DocumentId}'");
+                redactPdfResponse = await _documentRedactionService.RedactPdfAsync(redactions, "onBehalfOfAccessToken", currentCorrelationId);
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(_jsonConvertWrapper.SerializeObject(redactPdfResponse), Encoding.UTF8,

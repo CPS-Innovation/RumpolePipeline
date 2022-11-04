@@ -1,49 +1,48 @@
 ﻿using System;
 using AutoFixture;
+using Common.Constants;
 using FluentAssertions;
-using Microsoft.Extensions.Options;
 using Moq;
 using text_extractor.Factories;
-using text_extractor.Services.SearchIndexService;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 namespace text_extractor.tests.Factories
 {
     public class BlobSasBuilderFactoryTests
     {
-        private Fixture _fixture;
-        private BlobOptions _blobOptions;
-        private string _blobName;
+        private readonly string _blobName;
+        private readonly string _blobContainerName;
+        private readonly int _blobExpirySecs;
 
-        private Mock<IOptions<BlobOptions>> _mockBlobOptions;
-
-        private IBlobSasBuilderFactory BlobSasBuilderFactory;
+        private readonly IBlobSasBuilderFactory _blobSasBuilderFactory;
 
         public BlobSasBuilderFactoryTests()
         {
-            _fixture = new Fixture();
-            _blobOptions = _fixture.Create<BlobOptions>();
-            _blobName = _fixture.Create<string>();
+            var fixture = new Fixture();
+            _blobName = fixture.Create<string>();
+            _blobContainerName = fixture.Create<string>();
+            _blobExpirySecs = fixture.Create<int>();
+            var configuration = new Mock<IConfiguration>();
 
-            _mockBlobOptions = new Mock<IOptions<BlobOptions>>();
-
-            _mockBlobOptions.Setup(options => options.Value).Returns(_blobOptions);
-
-            BlobSasBuilderFactory = new BlobSasBuilderFactory(_mockBlobOptions.Object);
+            configuration.Setup(x => x[ConfigKeys.SharedKeys.BlobServiceContainerName]).Returns(_blobContainerName);
+            configuration.Setup(x => x[ConfigKeys.SharedKeys.BlobExpirySecs]).Returns(_blobExpirySecs.ToString());
+            
+            _blobSasBuilderFactory = new BlobSasBuilderFactory(configuration.Object);
         }
 
         [Fact]
         public void Create_ReturnsSasBuilderWithExpectedBlobContainerName()
         {
-            var sasBuilder = BlobSasBuilderFactory.Create(_blobName);
+            var sasBuilder = _blobSasBuilderFactory.Create(_blobName);
 
-            sasBuilder.BlobContainerName.Should().Be(_blobOptions.BlobContainerName);
+            sasBuilder.BlobContainerName.Should().Be(_blobContainerName);
         }
 
         [Fact]
         public void Create_ReturnsSasBuilderWithExpectedBlobName()
         {
-            var sasBuilder = BlobSasBuilderFactory.Create(_blobName);
+            var sasBuilder = _blobSasBuilderFactory.Create(_blobName);
 
             sasBuilder.BlobName.Should().Be(_blobName);
         }
@@ -51,7 +50,7 @@ namespace text_extractor.tests.Factories
         [Fact]
         public void Create_ReturnsSasBuilderWithExpectedResource()
         {
-            var sasBuilder = BlobSasBuilderFactory.Create(_blobName);
+            var sasBuilder = _blobSasBuilderFactory.Create(_blobName);
 
             sasBuilder.Resource.Should().Be("b");
         }
@@ -59,7 +58,7 @@ namespace text_extractor.tests.Factories
         [Fact]
         public void Create_ReturnsSasBuilderWithStartTimeBeforeNow()
         {
-            var sasBuilder = BlobSasBuilderFactory.Create(_blobName);
+            var sasBuilder = _blobSasBuilderFactory.Create(_blobName);
 
             sasBuilder.StartsOn.Should().BeBefore(DateTimeOffset.UtcNow);
         }
@@ -67,15 +66,15 @@ namespace text_extractor.tests.Factories
         [Fact]
         public void Create_ReturnsSasBuilderWithExpectedExpiresOn()
         {
-            var sasBuilder = BlobSasBuilderFactory.Create(_blobName);
+            var sasBuilder = _blobSasBuilderFactory.Create(_blobName);
 
-            sasBuilder.ExpiresOn.Should().Be(sasBuilder.StartsOn.AddSeconds(_blobOptions.BlobExpirySecs));
+            sasBuilder.ExpiresOn.Should().Be(sasBuilder.StartsOn.AddSeconds(_blobExpirySecs));
         }
 
         [Fact]
         public void Create_ReturnsSasBuilderWithExpectedPermissions()
         {
-            var sasBuilder = BlobSasBuilderFactory.Create(_blobName);
+            var sasBuilder = _blobSasBuilderFactory.Create(_blobName);
 
             sasBuilder.Permissions.Should().Be("r");
         }

@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http;
 using AutoFixture;
 using Azure;
-using common.Domain.Exceptions;
+using Common.Domain.Exceptions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;

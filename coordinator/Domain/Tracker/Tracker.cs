@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using common.Domain.Exceptions;
+using Common.Constants;
 using Common.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -54,6 +54,50 @@ namespace coordinator.Domain.Tracker
 
             return Task.CompletedTask;
         }
+        
+        public Task RegisterDocumentEvaluated(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document!.Status = DocumentStatus.DocumentEvaluated;
+
+            Log(LogType.DocumentEvaluated, documentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterUnexpectedDocumentEvaluationFailure(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document!.Status = DocumentStatus.UnexpectedFailure;
+
+            Log(LogType.UnexpectedDocumentEvaluationFailure, documentId);
+
+            return Task.CompletedTask;
+        }
+        
+        public Task RegisterUnexpectedExistingDocumentsEvaluationFailure()
+        {
+            Status = TrackerStatus.UnableToEvaluateExistingDocuments;
+            foreach (var doc in Documents)
+            {
+                doc.Status = DocumentStatus.UnexpectedFailure;
+            }
+            
+            Log(LogType.UnexpectedExistingDocumentsEvaluationFailure);
+
+            return Task.CompletedTask;
+        }
+        
+        public Task RegisterUnableToEvaluateDocument(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document!.Status = DocumentStatus.UnableToEvaluateDocument;
+
+            Log(LogType.UnableToEvaluateDocument, documentId);
+
+            return Task.CompletedTask;
+        }
+
 
         public Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg)
         {
@@ -66,12 +110,12 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterDocumentNotFoundInCde(string documentId)
+        public Task RegisterDocumentNotFoundInCDE(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
             document!.Status = DocumentStatus.NotFoundInCDE;
 
-            Log(LogType.DocumentNotFoundInCde, documentId);
+            Log(LogType.DocumentNotFoundInCDE, documentId);
 
             return Task.CompletedTask;
         }
@@ -96,10 +140,10 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterNoDocumentsFoundInCde()
+        public Task RegisterNoDocumentsFoundInCDE()
         {
-            Status = TrackerStatus.NoDocumentsFoundInCde;
-            Log(LogType.NoDocumentsFoundInCde);
+            Status = TrackerStatus.NoDocumentsFoundInCDE;
+            Log(LogType.NoDocumentsFoundInCDE);
 
             return Task.CompletedTask;
         }
@@ -120,6 +164,36 @@ namespace coordinator.Domain.Tracker
             document!.Status = DocumentStatus.OcrAndIndexFailure;
 
             Log(LogType.OcrAndIndexFailure, documentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterDocumentRemovedFromSearchIndex(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document!.Status = DocumentStatus.DocumentRemovedFromSearchIndex;
+
+            Log(LogType.DocumentRemovedFromSearchIndex, documentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterUnexpectedSearchIndexRemovalFailure(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document!.Status = DocumentStatus.UnexpectedSearchIndexRemovalFailure;
+
+            Log(LogType.IndexRemovalFailure, documentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterUnableToUpdateSearchIndex(string documentId)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
+            document!.Status = DocumentStatus.SearchIndexUpdateFailure;
+
+            Log(LogType.IndexRemovalFailure, documentId);
 
             return Task.CompletedTask;
         }
@@ -148,14 +222,13 @@ namespace coordinator.Domain.Tracker
         public Task<bool> AllDocumentsFailed()
         {
             return Task.FromResult(
-                Documents.All(d => d.Status == DocumentStatus.NotFoundInCDE ||
-                                   d.Status == DocumentStatus.UnableToConvertToPdf ||
-                                   d.Status == DocumentStatus.UnexpectedFailure));
+                Documents.All(d => d.Status is DocumentStatus.NotFoundInCDE 
+                    or DocumentStatus.UnableToConvertToPdf or DocumentStatus.UnexpectedFailure));
         }
 
         public Task<bool> IsAlreadyProcessed()
         {
-            return Task.FromResult(Status == TrackerStatus.Completed || Status == TrackerStatus.NoDocumentsFoundInCde);
+            return Task.FromResult(Status is TrackerStatus.Completed or TrackerStatus.NoDocumentsFoundInCDE);
         }
 
         private void Log(LogType status, string documentId = null)
@@ -184,7 +257,7 @@ namespace coordinator.Domain.Tracker
             const string loggingName = $"TrackerStatus - {nameof(HttpStart)}";
             const string correlationErrorMessage = "Invalid correlationId. A valid GUID is required.";
             
-            req.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
+            req.Headers.TryGetValues(HttpHeaderKeys.CorrelationId, out var correlationIdValues);
             if (correlationIdValues == null)
             {
                 log.LogMethodFlow(Guid.Empty, loggingName, correlationErrorMessage);

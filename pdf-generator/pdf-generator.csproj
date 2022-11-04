@@ -11,7 +11,13 @@
 
     <PackageReference Include="Aspose.Words" Version="22.2.0" />
 
+    <PackageReference Include="Azure.Search.Documents" Version="11.3.0" />
+
     <PackageReference Include="FluentValidation" Version="11.2.0" />
+
+    <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.0" />
+
+    <PackageReference Include="Microsoft.Azure.Core.NewtonsoftJson" Version="1.0.0" />
 
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.7.0" />
@@ -60,7 +66,6 @@
     <Folder Include="Handlers\" />
     <Folder Include="Domain\Exceptions\" />
     <Folder Include="Services\DocumentExtractionService\" />
-    <Folder Include="Factories\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

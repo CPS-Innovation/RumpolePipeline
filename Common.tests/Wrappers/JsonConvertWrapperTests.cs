@@ -1,11 +1,10 @@
 ﻿using AutoFixture;
-using common.Wrappers;
-using Common.tests.Wrappers;
+using Common.Wrappers;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace common.tests.Wrappers
+namespace Common.tests.Wrappers
 {
     public class JsonConvertWrapperTests
     {

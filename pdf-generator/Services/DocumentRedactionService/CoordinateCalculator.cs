@@ -1,9 +1,8 @@
 ﻿using System;
 using Aspose.Pdf.Facades;
-using Aspose.Slides;
+using Common.Domain.Redaction;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
-using pdf_generator.Domain.Redaction;
 
 namespace pdf_generator.Services.DocumentRedactionService
 {

@@ -2,7 +2,7 @@
 using System.Net;
 using AutoFixture;
 using Azure;
-using common.Domain.Exceptions;
+using Common.Domain.Exceptions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;

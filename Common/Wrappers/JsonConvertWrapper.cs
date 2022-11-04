@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace common.Wrappers
+namespace Common.Wrappers
 {
     public class JsonConvertWrapper : IJsonConvertWrapper
     {

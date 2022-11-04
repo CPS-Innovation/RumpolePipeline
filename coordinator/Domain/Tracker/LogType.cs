@@ -6,12 +6,18 @@
         RegisteredDocumentIds,
         RegisteredPdfBlobName,
         UnableToConvertDocumentToPdf,
-        DocumentNotFoundInCde,
+        DocumentNotFoundInCDE,
         UnexpectedDocumentFailure,
-        NoDocumentsFoundInCde,
+        NoDocumentsFoundInCDE,
         Indexed,
         OcrAndIndexFailure,
         Completed,
-        Failed
+        Failed, 
+        DocumentEvaluated,
+        UnexpectedDocumentEvaluationFailure, 
+        UnableToEvaluateDocument,
+        DocumentRemovedFromSearchIndex,
+        IndexRemovalFailure,
+        UnexpectedExistingDocumentsEvaluationFailure
     }
 }

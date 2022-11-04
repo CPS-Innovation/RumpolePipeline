@@ -15,6 +15,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
 {
     public class CreateGeneratePdfHttpRequestTests
     {
+        private readonly CreateGeneratePdfHttpRequestActivityPayload _payload;
         private readonly DurableHttpRequest _durableRequest;
 
         private readonly Mock<IDurableActivityContext> _mockDurableActivityContext;
@@ -24,17 +25,17 @@ namespace coordinator.tests.Functions.ActivityFunctions
         public CreateGeneratePdfHttpRequestTests()
         {
             var fixture = new Fixture();
-            var payload = fixture.Create<CreateGeneratePdfHttpRequestActivityPayload>();
+            _payload = fixture.Create<CreateGeneratePdfHttpRequestActivityPayload>();
             _durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.test.co.uk"));
 
             var mockGeneratePdfHttpFactory = new Mock<IGeneratePdfHttpRequestFactory>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
 
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
-                .Returns(payload);
+                .Returns(_payload);
 
-            mockGeneratePdfHttpFactory.Setup(client => client.Create(payload.CaseId, payload.DocumentId, payload.FileName, payload.CorrelationId))
-                .ReturnsAsync(_durableRequest);
+            mockGeneratePdfHttpFactory.Setup(client => client.Create(_payload.CaseId, _payload.DocumentId, _payload.FileName, 
+                _payload.LastUpdatedDate, _payload.CorrelationId)).ReturnsAsync(_durableRequest);
 
             var mockLogger = new Mock<ILogger<CreateGeneratePdfHttpRequest>>();
             _createGeneratePdfHttpRequest = new CreateGeneratePdfHttpRequest(mockGeneratePdfHttpFactory.Object, mockLogger.Object);
@@ -45,6 +46,52 @@ namespace coordinator.tests.Functions.ActivityFunctions
         {
             _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
                 .Returns(default(CreateGeneratePdfHttpRequestActivityPayload));
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _createGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object));
+        }
+        
+        [Fact]
+        public async Task Run_WhenCaseIdIsZero_ThrowsArgumentException()
+        {
+            _payload.CaseId = 0;
+            _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
+                .Returns(_payload);
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _createGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object));
+        }
+        
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task Run_WhenDocumentIdIsNullOrWhitespace_ThrowsArgumentException(string documentId)
+        {
+            _payload.DocumentId = documentId;
+            _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
+                .Returns(_payload);
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _createGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object));
+        }
+        
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task Run_WhenFileNameIsNullOrWhitespace_ThrowsArgumentException(string fileName)
+        {
+            _payload.FileName = fileName;
+            _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
+                .Returns(_payload);
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _createGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object));
+        }
+        
+        [Fact]
+        public async Task Run_WhenCorrelationIdIsEmpty_ThrowsArgumentException()
+        {
+            _payload.CorrelationId = Guid.Empty;
+            _mockDurableActivityContext.Setup(context => context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>())
+                .Returns(_payload);
 
             await Assert.ThrowsAsync<ArgumentException>(() => _createGeneratePdfHttpRequest.Run(_mockDurableActivityContext.Object));
         }
