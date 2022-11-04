@@ -46,13 +46,13 @@ variable "pdf_generator_details" {
   type = object({
     application_registration_id = string
     user_impersonation_scope_id = string
-    application_create_role_id = string
+    application_create_role_id  = string
   })
 }
 
 variable "text_extractor_details" {
   type = object({
-    application_registration_id = string
+    application_registration_id         = string
     application_text_extraction_role_id = string
   })
 }
@@ -64,14 +64,8 @@ variable "fa_rumpole_gateway_identity_principal_id" {
 
 variable "auth_details" {
   type = object({
-    coordinator_valid_audience = string
-    coordinator_valid_scopes = string
-	coordinator_valid_roles = string
-    pdf_generator_valid_audience = string
-    pdf_generator_valid_scopes = string
-	pdf_generator_valid_roles = string
+    coordinator_valid_audience    = string
+    pdf_generator_valid_audience  = string
     text_extractor_valid_audience = string
-    text_extractor_valid_scopes = string
-	text_extractor_valid_roles = string
   })
 }

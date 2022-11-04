@@ -1,33 +1,36 @@
 #################### Functions ####################
 
-resource "azurerm_function_app" "fa_coordinator" {
+resource "azurerm_linux_function_app" "fa_coordinator" {
   name                       = "fa-${local.resource_name}-coordinator"
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
-  app_service_plan_id        = azurerm_app_service_plan.asp.id 
+  service_plan_id            = azurerm_service_plan.asp.id 
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
-  os_type                    = "linux"
   version                    = "~4"
   app_settings = {
-    "AzureWebJobsStorage"                     = azurerm_storage_account.sa.primary_connection_string
     "FUNCTIONS_WORKER_RUNTIME"                = "dotnet"
-    "StorageConnectionAppSetting"             = azurerm_storage_account.sa.primary_connection_string 
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
-    "PdfGeneratorUrl"                         = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
-    "PdfGeneratorScope"                       = "api://fa-${local.resource_name}-pdf-generator/.default"
-    "TextExtractorUrl"                        = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/extract?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
-    "TextExtractorScope"                      = "api://fa-${local.resource_name}-text-extractor/.default"
+    "AzureWebJobsStorage"                     = azurerm_storage_account.sa.primary_connection_string
+    "CoordinatorOrchestratorTimeoutSecs"      = "600"
     "OnBehalfOfTokenTenantId"                 = data.azurerm_client_config.current.tenant_id
     "OnBehalfOfTokenClientId"                 = azuread_application.fa_coordinator.application_id
     "OnBehalfOfTokenClientSecret"             = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_coordinator_client_secret.id})"
-    "CoordinatorOrchestratorTimeoutSecs"      = "600"
+    "PdfGeneratorScope"                       = "api://fa-${local.resource_name}-pdf-generator/.default"
+    "PdfGeneratorUrl"                         = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
+    "DocumentEvaluatorUrl"                    = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/evaluateDocument?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
+    "ExistingDocumentsEvaluatorUrl"           = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/evaluateExistingDocuments?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
+    "TextExtractorScope"                      = "api://fa-${local.resource_name}-text-extractor/.default"
+    "TextExtractorUrl"                        = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/extract?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
+    "SearchIndexUpdateUrl"                    = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/updateSearchIndex?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = var.auth_details.coordinator_valid_audience
-    "CallingAppValidScopes"                   = var.auth_details.coordinator_valid_scopes
-    "CallingAppValidRoles"                    = var.auth_details.coordinator_valid_roles
+    "FeatureFlags_EvaluateDocuments"          = "false"
+    "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
+    "BlobServiceContainerName"                = "cms-documents-2"
+    "IsRunningLocally"                        = "false"
   }
   https_only                 = true
 
@@ -63,7 +66,7 @@ resource "azurerm_function_app" "fa_coordinator" {
 data "azurerm_function_app_host_keys" "ak_coordinator" {
   name                = "fa-${local.resource_name}-coordinator"
   resource_group_name = azurerm_resource_group.rg.name
-  depends_on = [azurerm_function_app.fa_coordinator]
+  depends_on = [azurerm_linux_function_app.fa_coordinator]
 }
 
 resource "azuread_application" "fa_coordinator" {
