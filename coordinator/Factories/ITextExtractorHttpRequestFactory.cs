@@ -6,7 +6,7 @@ namespace coordinator.Factories
 {
 	public interface ITextExtractorHttpRequestFactory
 	{
-		Task<DurableHttpRequest> Create(int caseId, string documentId, string blobName, Guid correlationId);
+		Task<DurableHttpRequest> Create(int caseId, string documentId, string lastUpdatedDate, string blobName, Guid correlationId);
 	}
 }
 

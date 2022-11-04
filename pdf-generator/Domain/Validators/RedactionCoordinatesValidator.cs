@@ -1,5 +1,5 @@
-﻿using FluentValidation;
-using pdf_generator.Domain.Redaction;
+﻿using Common.Domain.Redaction;
+using FluentValidation;
 
 namespace pdf_generator.Domain.Validators
 {

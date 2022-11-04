@@ -2,11 +2,13 @@
 {
 	public enum TrackerStatus
 	{
+		Initialised,
 		NotStarted,
 		Running,
-		NoDocumentsFoundInCde,
+		NoDocumentsFoundInCDE,
 		Completed,
-		Failed
+		Failed,
+		UnableToEvaluateExistingDocuments
 	}
 }
 

@@ -1,23 +1,23 @@
-﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
-using Microsoft.Extensions.Options;
-using text_extractor.Domain;
+﻿using Common.Constants;
+using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
+using Microsoft.Extensions.Configuration;
 
 namespace text_extractor.Factories
 {
 	public class ComputerVisionClientFactory : IComputerVisionClientFactory
 	{
-        private readonly ComputerVisionClientOptions _options;
-
-        public ComputerVisionClientFactory(IOptions<ComputerVisionClientOptions> options)
+		private readonly IConfiguration _configuration;
+		
+        public ComputerVisionClientFactory(IConfiguration configuration)
         {
-            _options = options.Value;
+            _configuration = configuration;
         }
 
 		public ComputerVisionClient Create()
         {
-			return new ComputerVisionClient(new ApiKeyServiceClientCredentials(_options.ServiceKey))
+			return new ComputerVisionClient(new ApiKeyServiceClientCredentials(_configuration[ConfigKeys.TextExtractorKeys.ComputerVisionClientServiceKey]))
 			{
-				Endpoint = _options.ServiceUrl
+				Endpoint = _configuration[ConfigKeys.TextExtractorKeys.ComputerVisionClientServiceUrl]
 			};
 		}
 	}

@@ -1,23 +1,29 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net.Http.Headers;
 using Azure.Identity;
 using Azure.Storage.Blobs;
-using common.Handlers;
-using common.Wrappers;
+using Common.Constants;
+using Common.Domain.Requests;
+using Common.Factories;
+using Common.Factories.Contracts;
+using Common.Handlers;
+using Common.Wrappers;
+using FluentValidation;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using pdf_generator.Domain.Requests;
+using pdf_generator.Domain.Validators;
 using pdf_generator.Factories;
 using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
+using pdf_generator.Services.DocumentEvaluationService;
 using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.DocumentRedactionService;
 using pdf_generator.Services.PdfService;
+using pdf_generator.Services.SearchService;
 
 [assembly: FunctionsStartup(typeof(pdf_generator.Startup))]
 namespace pdf_generator
@@ -32,12 +38,13 @@ namespace pdf_generator
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            builder.Services.AddHttpClient<IDocumentExtractionService, DocumentExtractionService>(client =>
+            /*builder.Services.AddHttpClient<IDocumentExtractionService, DocumentExtractionService>(client =>
             {
-                client.BaseAddress = new Uri(configuration["DocumentExtractionBaseUrl"]);
+                client.BaseAddress = new Uri(ConfigKeys.PdfGeneratorKeys.DocumentExtractionBaseUrl);
                 client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
-            });
+            });*/
 
+            builder.Services.AddSingleton<IConfiguration>(configuration);
             builder.Services.AddSingleton<IPdfService, WordsPdfService>();
             builder.Services.AddSingleton<IPdfService, CellsPdfService>();
             builder.Services.AddSingleton<IPdfService, SlidesPdfService>();
@@ -64,6 +71,8 @@ namespace pdf_generator
 
             builder.Services.AddTransient<ICoordinateCalculator, CoordinateCalculator>();
             builder.Services.AddTransient<IValidatorWrapper<GeneratePdfRequest>, ValidatorWrapper<GeneratePdfRequest>>();
+            builder.Services.AddTransient<IValidatorWrapper<EvaluateExistingDocumentsRequest>, ValidatorWrapper<EvaluateExistingDocumentsRequest>>();
+            builder.Services.AddTransient<IValidatorWrapper<EvaluateDocumentRequest>, ValidatorWrapper<EvaluateDocumentRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IDocumentExtractionHttpRequestFactory, DocumentExtractionHttpRequestFactory>();
             builder.Services.AddTransient<IAuthorizationValidator, AuthorizationValidator>();
@@ -72,7 +81,7 @@ namespace pdf_generator
 
             builder.Services.AddAzureClients(azureClientFactoryBuilder =>
             {
-                azureClientFactoryBuilder.AddBlobServiceClient(new Uri(configuration["BlobServiceUrl"]))
+                azureClientFactoryBuilder.AddBlobServiceClient(new Uri(configuration[ConfigKeys.SharedKeys.BlobServiceUrl]))
                     .WithCredential(new DefaultAzureCredential());
             });
             builder.Services.AddTransient<IBlobStorageService>(serviceProvider =>
@@ -80,14 +89,19 @@ namespace pdf_generator
                 var loggingService = serviceProvider.GetService<ILogger<BlobStorageService>>();
                 
                 return new BlobStorageService(serviceProvider.GetRequiredService<BlobServiceClient>(),
-                        configuration["BlobServiceContainerName"], loggingService);
+                        configuration[ConfigKeys.SharedKeys.BlobServiceContainerName], loggingService);
             });
             builder.Services.AddTransient<IDocumentExtractionService>(extractionProvider =>
             {
                 var loggingService = extractionProvider.GetService<ILogger<DocumentExtractionServiceStub>>();
-                return new DocumentExtractionServiceStub(configuration["StubBlobStorageConnectionString"], loggingService);
+                return new DocumentExtractionServiceStub(configuration[ConfigKeys.SharedKeys.StubBlobStorageConnectionString], loggingService, configuration);
             });
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
+            builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
+            builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();
+            builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
+            builder.Services.AddTransient<ISearchServiceProcessor, SearchServiceProcessor>();
+            builder.Services.AddTransient<ISearchService, SearchService>();
         }
     }
 }

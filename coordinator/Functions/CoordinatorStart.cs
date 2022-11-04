@@ -6,8 +6,9 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using common.Domain.Exceptions;
-using common.Handlers;
+using Common.Constants;
+using Common.Domain.Exceptions;
+using Common.Handlers;
 using Common.Logging;
 using coordinator.Domain;
 using Microsoft.Azure.WebJobs;
@@ -37,7 +38,7 @@ namespace coordinator.Functions
 
             try
             {
-                req.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
+                req.Headers.TryGetValues(HttpHeaderKeys.CorrelationId, out var correlationIdValues);
                 if (correlationIdValues == null)
                     throw new BadRequestException("Invalid correlationId. A valid GUID is required.", nameof(req));
 
@@ -79,13 +80,7 @@ namespace coordinator.Functions
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),
                         caseId,
-                        new CoordinatorOrchestrationPayload
-                        {
-                            CaseId = caseIdNum,
-                            ForceRefresh = forceRefresh,
-                            AccessToken = authValidation.Item2,
-                            CorrelationId = currentCorrelationId
-                        });
+                        new CoordinatorOrchestrationPayload(caseIdNum, forceRefresh, authValidation.Item2, currentCorrelationId));
 
                     _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'");
                 }

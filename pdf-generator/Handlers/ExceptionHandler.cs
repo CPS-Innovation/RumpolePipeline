@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using Azure;
-using common.Domain.Exceptions;
+using Common.Domain.Exceptions;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.Exceptions;

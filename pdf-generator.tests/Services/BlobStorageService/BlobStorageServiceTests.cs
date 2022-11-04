@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Azure;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using pdf_generator.Services.BlobStorageService;
@@ -17,6 +19,9 @@ namespace pdf_generator.tests.Services.BlobStorageService
 		private readonly Stream _stream;
 		private readonly string _blobName;
 		private readonly Guid _correlationId;
+		private readonly string _caseId;
+		private readonly string _documentId;
+		private readonly string _lastUpdatedDate;
 
 		private readonly Mock<Response<bool>> _mockBlobContainerExistsResponse;
 		private readonly Mock<BlobClient> _mockBlobClient;
@@ -30,6 +35,9 @@ namespace pdf_generator.tests.Services.BlobStorageService
 			_stream = new MemoryStream();
 			_blobName = fixture.Create<string>();
 			_correlationId = fixture.Create<Guid>();
+			_caseId = fixture.Create<string>();
+			_documentId = fixture.Create<string>();
+			_lastUpdatedDate = fixture.Create<string>();
 
 			var mockBlobServiceClient = new Mock<BlobServiceClient>();
 			var mockBlobContainerClient = new Mock<BlobContainerClient>();
@@ -49,19 +57,56 @@ namespace pdf_generator.tests.Services.BlobStorageService
 		}
 
 		[Fact]
+		public async Task GetDocumentAsync_ThrowsRequestFailedException_WhenBlobContainerDoesNotExist()
+		{
+			_mockBlobContainerExistsResponse.Setup(response => response.Value).Returns(false);
+
+			await Assert.ThrowsAsync<RequestFailedException>(() => _blobStorageService.GetDocumentAsync(_blobName, _correlationId));
+		}
+
+		[Fact]
+		public async Task GetDocumentAsync_ReturnsNull_WhenBlobClientCannotBeFound()
+		{
+			_mockBlobClient.Setup(s => s.ExistsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(Response.FromValue(false, null!));
+			
+			var result = await _blobStorageService.GetDocumentAsync(_blobName, _correlationId);
+			
+			result.Should().BeNull();
+		}
+		
+		[Fact]
 		public async Task UploadDocumentAsync_ThrowsRequestFailedExceptionWhenBlobContainerDoesNotExist()
 		{
 			_mockBlobContainerExistsResponse.Setup(response => response.Value).Returns(false);
 
-			await Assert.ThrowsAsync<RequestFailedException>(() => _blobStorageService.UploadDocumentAsync(_stream, _blobName, _correlationId));
+			await Assert.ThrowsAsync<RequestFailedException>(() => _blobStorageService.UploadDocumentAsync(_stream, _blobName, _caseId, _documentId, _lastUpdatedDate, _correlationId));
 		}
 
 		[Fact]
 		public async Task UploadDocumentAsync_UploadsDocument()
 		{
-			await _blobStorageService.UploadDocumentAsync(_stream, _blobName, _correlationId);
+			await _blobStorageService.UploadDocumentAsync(_stream, _blobName, _caseId, _documentId, _lastUpdatedDate, _correlationId);
 
 			_mockBlobClient.Verify(client => client.UploadAsync(_stream, true, It.IsAny<CancellationToken>()));
+		}
+		
+		[Fact]
+		public async Task RemoveDocumentAsync_ThrowsRequestFailedException_WhenBlobContainerDoesNotExist()
+		{
+			_mockBlobContainerExistsResponse.Setup(response => response.Value).Returns(false);
+
+			await Assert.ThrowsAsync<RequestFailedException>(() => _blobStorageService.RemoveDocumentAsync(_blobName, _correlationId));
+		}
+
+		[Fact]
+		public async Task RemoveDocumentAsync_ReturnsNull_WhenBlobClientCannotBeFound()
+		{
+			_mockBlobClient.Setup(s => s.DeleteIfExistsAsync(It.IsAny<DeleteSnapshotsOption>(), It.IsAny<BlobRequestConditions>(), 
+				It.IsAny<CancellationToken>())).ReturnsAsync(Response.FromValue(false, null!));
+			
+			var result = await _blobStorageService.RemoveDocumentAsync(_blobName, _correlationId);
+			
+			result.Should().BeTrue();
 		}
 	}
 }

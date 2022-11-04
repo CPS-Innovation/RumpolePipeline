@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Common.Constants;
 using Common.Domain.Exceptions;
@@ -9,6 +10,7 @@ using Microsoft.Identity.Client;
 
 namespace Common.Adapters
 {
+    [ExcludeFromCodeCoverage]
     public class IdentityClientAdapter : IIdentityClientAdapter
     {
         private readonly IConfidentialClientApplication _confidentialClientApplication;

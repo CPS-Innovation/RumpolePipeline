@@ -40,7 +40,7 @@ namespace coordinator.Functions.ActivityFunctions
             
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
-            var result = await _generatePdfHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.FileName, payload.CorrelationId);
+            var result = await _generatePdfHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.FileName, payload.LastUpdatedDate, payload.CorrelationId);
             
             _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
             return result;

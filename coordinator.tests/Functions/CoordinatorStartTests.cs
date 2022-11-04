@@ -5,7 +5,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AutoFixture;
-using common.Handlers;
+using Common.Constants;
+using Common.Handlers;
 using coordinator.Domain;
 using coordinator.Functions;
 using FluentAssertions;
@@ -48,7 +49,7 @@ namespace coordinator.tests.Functions
             _mockLogger = new Mock<ILogger<CoordinatorStart>>();
             var mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
 
-            _httpRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
+            _httpRequestHeaders.Add(HttpHeaderKeys.Authorization, $"Bearer {_accessToken}");
             _httpRequestHeaders.Add("Correlation-Id", _correlationId.ToString());
 
             _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_caseId, false, false, true))

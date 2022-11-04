@@ -1,6 +1,6 @@
 ﻿using System;
 using Aspose.Pdf.Facades;
-using pdf_generator.Domain.Redaction;
+using Common.Domain.Redaction;
 
 namespace pdf_generator.Services.DocumentRedactionService
 {

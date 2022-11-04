@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Common.Adapters;
+using Common.Constants;
+using Common.Domain.Requests;
 using Common.Logging;
-using common.Wrappers;
+using Common.Wrappers;
 using coordinator.Domain.Exceptions;
-using coordinator.Domain.Requests;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -31,26 +32,25 @@ namespace coordinator.Factories
             _logger = logger;
         }
 
-        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string fileName, Guid correlationId)
+        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string fileName, string lastUpdatedDate, Guid correlationId)
         {
-            _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}, FileName: {fileName}");
+            _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}, LastUpdatedDate: {lastUpdatedDate}, FileName: {fileName}");
             
             try
             {
-                var clientScopes = _configuration["PdfGeneratorScope"];
+                var clientScopes = _configuration[ConfigKeys.CoordinatorKeys.PdfGeneratorScope];
                 
                 var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes, correlationId);
                 
                 var headers = new Dictionary<string, StringValues>
                 {
-                    { "Content-Type", "application/json" },
-                    { "Authorization", $"Bearer {result}"},
-                    { "Correlation-Id", correlationId.ToString() }
+                    { HttpHeaderKeys.ContentType, HttpHeaderValues.ApplicationJson },
+                    { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
+                    { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
                 };
-                var content = _jsonConvertWrapper.SerializeObject(
-                    new GeneratePdfRequest { CaseId = caseId, DocumentId = documentId, FileName = fileName });
+                var content = _jsonConvertWrapper.SerializeObject(new GeneratePdfRequest(caseId, documentId, fileName, lastUpdatedDate));
 
-                return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration["PdfGeneratorUrl"]), headers, content);
+                return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration[ConfigKeys.CoordinatorKeys.PdfGeneratorUrl]), headers, content);
             }
             catch(Exception ex)
             {

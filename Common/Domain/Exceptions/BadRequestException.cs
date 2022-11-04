@@ -1,5 +1,5 @@
 ﻿using System;
-namespace common.Domain.Exceptions
+namespace Common.Domain.Exceptions
 {
     public class BadRequestException : ArgumentException
     {

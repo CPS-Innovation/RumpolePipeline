@@ -4,14 +4,14 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Common.Constants;
-using common.Domain.Exceptions;
-using common.Handlers;
+using Common.Domain.Exceptions;
+using Common.Domain.Requests;
+using Common.Handlers;
 using Common.Logging;
-using common.Wrappers;
+using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using text_extractor.Domain.Requests;
 using text_extractor.Handlers;
 using text_extractor.Services.OcrService;
 using text_extractor.Services.SearchIndexService;
@@ -49,13 +49,12 @@ namespace text_extractor.Functions
 
             try
             {
-                request.Headers.TryGetValues("Correlation-Id", out var correlationIdValues);
+                request.Headers.TryGetValues(HttpHeaderKeys.CorrelationId, out var correlationIdValues);
                 if (correlationIdValues == null)
                     throw new BadRequestException("Invalid correlationId. A valid GUID is required.", nameof(request));
 
                 var correlationId = correlationIdValues.First();
-                if (!Guid.TryParse(correlationId, out currentCorrelationId))
-                    if (currentCorrelationId == Guid.Empty)
+                if (!Guid.TryParse(correlationId, out currentCorrelationId) || currentCorrelationId == Guid.Empty)
                         throw new BadRequestException("Invalid correlationId. A valid GUID is required.",
                             correlationId);
 
@@ -87,7 +86,7 @@ namespace text_extractor.Functions
                 var ocrResults = await _ocrService.GetOcrResultsAsync(extractTextRequest.BlobName, currentCorrelationId);
                 
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"OCR processed finished for {extractTextRequest.BlobName}, beginning search index update");
-                await _searchIndexService.StoreResultsAsync(ocrResults, extractTextRequest.CaseId, extractTextRequest.DocumentId, currentCorrelationId);
+                await _searchIndexService.StoreResultsAsync(ocrResults, extractTextRequest.CaseId, extractTextRequest.DocumentId, extractTextRequest.LastUpdatedDate, currentCorrelationId);
                 
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"Search index update completed for blob {extractTextRequest.BlobName}");
 

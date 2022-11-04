@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace common.Wrappers
+namespace Common.Wrappers
 {
     public class ValidatorWrapper<TRequest> : IValidatorWrapper<TRequest>
     {

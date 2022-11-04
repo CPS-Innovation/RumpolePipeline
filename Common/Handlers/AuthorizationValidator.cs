@@ -9,11 +9,12 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics.CodeAnalysis;
-using System.Net;
+using Common.Constants;
 using Common.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace common.Handlers
+namespace Common.Handlers
 {
     [ExcludeFromCodeCoverage]
     public class AuthorizationValidator : IAuthorizationValidator
@@ -21,10 +22,12 @@ namespace common.Handlers
         private readonly ILogger<AuthorizationValidator> _log;
         private const string ScopeType = @"http://schemas.microsoft.com/identity/claims/scope";
         private Guid _correlationId;
+        private readonly IConfiguration _configuration;
 
-        public AuthorizationValidator(ILogger<AuthorizationValidator> log)
+        public AuthorizationValidator(ILogger<AuthorizationValidator> log, IConfiguration configuration)
         {
             _log = log;
+            _configuration = configuration;
         }
 
         public async Task<Tuple<bool, string>> ValidateTokenAsync(AuthenticationHeaderValue authenticationHeader, Guid correlationId, string requiredScopes = null, string requiredRoles = null)
@@ -35,8 +38,15 @@ namespace common.Handlers
             if (authenticationHeader == null) return new Tuple<bool, string>(false, string.Empty);
             if (string.IsNullOrEmpty(authenticationHeader.Parameter)) throw new ArgumentNullException(nameof(authenticationHeader));
 
-            var issuer = $"https://sts.windows.net/{Environment.GetEnvironmentVariable("CallingAppTenantId")}/";
-            var audience = Environment.GetEnvironmentVariable("CallingAppValidAudience");
+            var isLocal = bool.Parse(_configuration[ConfigKeys.SharedKeys.IsRunningLocally]);
+            if (isLocal)
+            {
+                _log.LogMethodFlow(correlationId, nameof(ValidateTokenAsync), "In debug mode... bypassing authentication checks...");
+                return new Tuple<bool, string>(true, authenticationHeader.Parameter);
+            }
+            
+            var issuer = $"https://sts.windows.net/{_configuration[ConfigKeys.SharedKeys.CallingAppTenantId]}/";
+            var audience = _configuration[ConfigKeys.SharedKeys.CallingAppValidAudience];
             var configurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(issuer + "/.well-known/openid-configuration", new OpenIdConnectConfigurationRetriever(),
                 new HttpDocumentRetriever());
 

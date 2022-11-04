@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AutoFixture;
+using Common.Domain.DocumentExtraction;
 using coordinator.Clients;
 using coordinator.Domain;
-using coordinator.Domain.DocumentExtraction;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -16,6 +16,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
     public class GetCaseDocumentsTests
     {
         private readonly Case _case;
+        private readonly GetCaseDocumentsActivityPayload _payload;
 
         private readonly Mock<IDurableActivityContext> _mockDurableActivityContext;
 
@@ -24,16 +25,17 @@ namespace coordinator.tests.Functions.ActivityFunctions
         public GetCaseDocumentsTests()
         {
             var fixture = new Fixture();
-            var payload = fixture.Create<GetCaseDocumentsActivityPayload>();
+            _payload = fixture.Create<GetCaseDocumentsActivityPayload>();
             _case = fixture.Create<Case>();
 
             var mockDocumentExtractionClient = new Mock<IDocumentExtractionClient>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
 
             _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
-                .Returns(payload);
+                .Returns(_payload);
 
-            mockDocumentExtractionClient.Setup(client => client.GetCaseDocumentsAsync(payload.CaseId.ToString(), payload.AccessToken, payload.CorrelationId))
+            mockDocumentExtractionClient.Setup(client => client.GetCaseDocumentsAsync(_payload.CaseId.ToString(), _payload.AccessToken, 
+                    _payload.CorrelationId))
                 .ReturnsAsync(_case);
 
             var mockLogger = new Mock<ILogger<GetCaseDocuments>>();
@@ -45,6 +47,39 @@ namespace coordinator.tests.Functions.ActivityFunctions
         {
             _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
                 .Returns(default(GetCaseDocumentsActivityPayload));
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _getCaseDocuments.Run(_mockDurableActivityContext.Object));
+        }
+        
+        [Fact]
+        public async Task Run_WhenCaseIdIsZero_ThrowsArgumentException()
+        {
+            _payload.CaseId = 0;
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
+                .Returns(_payload);
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _getCaseDocuments.Run(_mockDurableActivityContext.Object));
+        }
+        
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task Run_WhenAccessTokenIsNullOrWhitespace_ThrowsArgumentException(string accessToken)
+        {
+            _payload.AccessToken = accessToken;
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
+                .Returns(_payload);
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _getCaseDocuments.Run(_mockDurableActivityContext.Object));
+        }
+        
+        [Fact]
+        public async Task Run_WhenCorrelationIdIsEmpty_ThrowsArgumentException()
+        {
+            _payload.CorrelationId = Guid.Empty;
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
+                .Returns(_payload);
 
             await Assert.ThrowsAsync<ArgumentException>(() => _getCaseDocuments.Run(_mockDurableActivityContext.Object));
         }
