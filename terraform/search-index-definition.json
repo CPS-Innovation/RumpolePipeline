@@ -276,9 +276,7 @@
 	"scoringProfiles": [],
 	"defaultScoringProfile": "",
 	"corsOptions": {
-		"allowedOrigins": [
-			"*"
-		]
+		"allowedOrigins": ["*"]
 	},
 	"analyzers": [],
 	"charFilters": [],
