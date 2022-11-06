@@ -1,20 +1,23 @@
 {
+	"@odata.context": "https://ss-rumpole-pipeline-dev.search.windows.net/$metadata#indexes/$entity",
+	"@odata.etag": "\"0x8DABFE8BA4D760C\"",
 	"name": "lines-index",
+	"defaultScoringProfile": null,
 	"fields": [
 		{
 			"name": "id",
 			"type": "Edm.String",
-			"facetable": false,
-			"filterable": false,
-			"key": true,
-			"retrievable": true,
 			"searchable": false,
-			"sortable": true,
-			"analyzer": null,
+			"filterable": false,
+			"retrievable": true,
+			"sortable": false,
+			"facetable": false,
+			"key": true,
 			"indexAnalyzer": null,
 			"searchAnalyzer": null,
-			"synonymMaps": [],
-			"fields": []
+			"analyzer": null,
+			"normalizer": null,
+			"synonymMaps": []
 		},
 		{
 			"name": "caseId",
@@ -260,22 +263,19 @@
 			"fields": []
 		}
 	],
-	"suggesters": [],
 	"scoringProfiles": [],
-	"defaultScoringProfile": "",
-	"corsOptions": {
-		"allowedOrigins": ["*"]
-	},
+	"corsOptions": null,
+	"suggesters": [],
 	"analyzers": [],
-	"charFilters": [],
-	"tokenFilters": [],
+	"normalizers": [],
 	"tokenizers": [],
+	"tokenFilters": [],
+	"charFilters": [],
+	"encryptionKey": null,
 	"similarity": {
 		"@odata.type": "#Microsoft.Azure.Search.BM25Similarity",
 		"k1": null,
 		"b": null
 	},
-	"encryptionKey": null,
-	"semantic": null,
-	"@odata.etag": "\"0x8D9DCEE0D2EA724\""
+	"semantic": null
 }
