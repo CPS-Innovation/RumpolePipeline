@@ -74,21 +74,6 @@
       "synonymMaps": []
     },
     {
-      "name": "originalFileName",
-      "type": "Edm.String",
-      "searchable": false,
-      "filterable": true,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false,
-      "key": false,
-      "indexAnalyzer": null,
-      "searchAnalyzer": null,
-      "analyzer": null,
-      "normalizer": null,
-      "synonymMaps": []
-    },
-    {
       "name": "pageIndex",
       "type": "Edm.Int64",
       "facetable": false,
