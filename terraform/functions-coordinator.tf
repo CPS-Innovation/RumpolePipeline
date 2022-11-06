@@ -1,13 +1,14 @@
 #################### Functions ####################
 
-resource "azurerm_linux_function_app" "fa_coordinator" {
+resource "azurerm_function_app" "fa_coordinator" {
   name                       = "fa-${local.resource_name}-coordinator"
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
-  service_plan_id            = azurerm_service_plan.asp.id 
+  app_service_plan_id        = azurerm_app_service_plan.asp.id
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
-  functions_extension_version                 = "~4"
+  os_type                    = "linux"
+  version                    = "~4"
   app_settings = {
     "FUNCTIONS_WORKER_RUNTIME"                = "dotnet"
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
@@ -66,7 +67,7 @@ resource "azurerm_linux_function_app" "fa_coordinator" {
 data "azurerm_function_app_host_keys" "ak_coordinator" {
   name                = "fa-${local.resource_name}-coordinator"
   resource_group_name = azurerm_resource_group.rg.name
-  depends_on = [azurerm_linux_function_app.fa_coordinator]
+  depends_on = [azurerm_function_app.fa_coordinator]
 }
 
 resource "azuread_application" "fa_coordinator" {
@@ -74,19 +75,19 @@ resource "azuread_application" "fa_coordinator" {
   identifier_uris            = ["api://fa-${local.resource_name}-coordinator"]
 
   api {
-      oauth2_permission_scope {
-        admin_consent_description  = "Allow an application to access function app on behalf of the signed-in user."
-        admin_consent_display_name = "Access function app"
-        enabled                    = true
-        id                         = var.coordinator_details.user_impersonation_scope_id
-        type                       = "Admin"
-        value                      = "user_impersonation"
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow an application to access function app on behalf of the signed-in user."
+      admin_consent_display_name = "Access function app"
+      enabled                    = true
+      id                         = var.coordinator_details.user_impersonation_scope_id
+      type                       = "Admin"
+      value                      = "user_impersonation"
     }
   }
-  
+
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-    
+
     resource_access {
       id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
       type = "Scope"
@@ -115,7 +116,7 @@ resource "azuread_application" "fa_coordinator" {
       type = "Role"
     }
   }
-  
+
   web {
     redirect_uris = [
       "https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback",

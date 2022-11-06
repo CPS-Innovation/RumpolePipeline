@@ -36,7 +36,7 @@ resource "azurerm_storage_account_customer_managed_key" "rumpole_storage_pipelin
 resource "azurerm_role_assignment" "ra_blob_delegator_text_extractor" {
   scope                = azurerm_storage_account.sa.id
   role_definition_name = "Storage Blob Delegator"
-  principal_id         = azurerm_linux_function_app.fa_text_extractor.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_text_extractor.identity[0].principal_id
 }
 
 resource "azurerm_storage_container" "container" {
@@ -48,13 +48,13 @@ resource "azurerm_storage_container" "container" {
 resource "azurerm_role_assignment" "ra_blob_data_contributor" {
   scope                = azurerm_storage_container.container.resource_manager_id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_windows_function_app.fa_pdf_generator.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_pdf_generator.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "ra_blob_data_contributor_text_extractor" {
   scope                = azurerm_storage_container.container.resource_manager_id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_linux_function_app.fa_text_extractor.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_text_extractor.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "ra_blob_data_reader" {

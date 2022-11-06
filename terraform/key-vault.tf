@@ -5,7 +5,7 @@ resource "azurerm_key_vault" "kv" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
-  
+
   enabled_for_deployment          = true
   enabled_for_template_deployment = true
   enabled_for_disk_encryption     = true
@@ -37,7 +37,7 @@ resource "azurerm_key_vault_secret" "kvs_fa_coordinator_client_secret" {
   key_vault_id = azurerm_key_vault.kv.id
   expiration_date = timeadd(timestamp(), "8760h")
   content_type = "password"
-  
+
   depends_on = [
     azurerm_role_assignment.kv_role_terraform_sp,
     azurerm_role_assignment.kv_role_client_kvc,
@@ -66,35 +66,35 @@ resource "azurerm_role_assignment" "kv_role_sa_kvcseu" {
 resource "azurerm_role_assignment" "kv_role_fa_coordinator_crypto_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Crypto User"
-  principal_id         = azurerm_linux_function_app.fa_coordinator.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_coordinator.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "kv_role_fa_coordinator_secrets_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_linux_function_app.fa_coordinator.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_coordinator.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "kv_role_fa_pdf_generator_crypto_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Crypto User"
-  principal_id         = azurerm_windows_function_app.fa_pdf_generator.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_pdf_generator.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "kv_role_fa_pdf_generator_secrets_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_windows_function_app.fa_pdf_generator.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_pdf_generator.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "kv_role_fa_text_extractor_crypto_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Crypto User"
-  principal_id         = azurerm_linux_function_app.fa_text_extractor.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_text_extractor.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "kv_role_fa_text_extractor_secrets_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_linux_function_app.fa_text_extractor.identity[0].principal_id
+  principal_id         = azurerm_function_app.fa_text_extractor.identity[0].principal_id
 }
