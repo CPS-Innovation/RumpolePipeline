@@ -7,7 +7,7 @@ resource "azurerm_windows_function_app" "fa_pdf_generator" {
   service_plan_id            = azurerm_service_plan.aspw.id 
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
-  version                    = "~4"
+  functions_extension_version                 = "~4"
   app_settings = {
     "FUNCTIONS_WORKER_RUNTIME"                = "dotnet"
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key

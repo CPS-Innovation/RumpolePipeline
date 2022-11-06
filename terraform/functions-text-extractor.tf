@@ -7,7 +7,7 @@ resource "azurerm_linux_function_app" "fa_text_extractor" {
   service_plan_id            = azurerm_service_plan.asp.id 
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
-  version                    = "~4"
+  functions_extension_version                 = "~4"
   app_settings = {
     "FUNCTIONS_WORKER_RUNTIME"                = "dotnet"
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
