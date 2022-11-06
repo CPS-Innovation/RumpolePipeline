@@ -9,8 +9,8 @@ app_service_plan_sku = {
 default_workspace_name = "DefaultWorkspace-4ae5270e-9e32-4bdf-88f1-a677dd3280c0-SUK"
 
 coordinator_details = {
-	application_registration_id="b8f25b3d-d89c-4d2a-a010-31e426e5eb99"
-	user_impersonation_scope_id="2e10e043-8554-4bef-9302-13479a55c68d"
+	application_registration_id = "b8f25b3d-d89c-4d2a-a010-31e426e5eb99"
+	user_impersonation_scope_id = "2e10e043-8554-4bef-9302-13479a55c68d"
 }
 
 pdf_generator_details = {
@@ -31,12 +31,6 @@ gateway_details = {
 
 auth_details = {
 	coordinator_valid_audience = "api://fa-rumpole-pipeline-dev-coordinator"
-	coordinator_valid_scopes = "user_impersonation"
-	coordinator_valid_roles = ""
 	pdf_generator_valid_audience = "api://fa-rumpole-pipeline-dev-pdf-generator"
-	pdf_generator_valid_scopes = "user_impersonation"
-	pdf_generator_valid_roles = "application.create"
 	text_extractor_valid_audience = "api://fa-rumpole-pipeline-dev-text-extractor"
-	text_extractor_valid_scopes = ""
-	text_extractor_valid_roles = "application.extracttext"
 }

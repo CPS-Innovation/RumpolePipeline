@@ -1,27 +1,32 @@
 #################### Functions ####################
 
-resource "azurerm_function_app" "fa_pdf_generator" {
+resource "azurerm_windows_function_app" "fa_pdf_generator" {
   name                       = "fa-${local.resource_name}-pdf-generator"
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
-  app_service_plan_id        = azurerm_app_service_plan.aspw.id 
+  service_plan_id            = azurerm_service_plan.aspw.id 
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
   version                    = "~4"
   app_settings = {
-    "AzureWebJobsStorage"                     = azurerm_storage_account.sa.primary_connection_string
     "FUNCTIONS_WORKER_RUNTIME"                = "dotnet"
-    "StorageConnectionAppSetting"             = azurerm_storage_account.sa.primary_connection_string 
     "APPINSIGHTS_INSTRUMENTATIONKEY"          = azurerm_application_insights.ai.instrumentation_key
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
+    "AzureWebJobsStorage"                     = azurerm_storage_account.sa.primary_connection_string
     "BlobServiceUrl"                          = "https://sacps${var.env != "prod" ? var.env : ""}rumpolepipeline.blob.core.windows.net/"
     "BlobServiceContainerName"                = "documents"
-    "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = var.auth_details.pdf_generator_valid_audience
-    "CallingAppValidScopes"                   = var.auth_details.pdf_generator_valid_scopes
-    "CallingAppValidRoles"                    = var.auth_details.pdf_generator_valid_roles
+    "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
+    "FeatureFlags_EvaluateDocuments"          = "false"
+    "DocumentExtractionBaseUrl"               = ""
+    "SearchClientAuthorizationKey"            = azurerm_search_service.ss.primary_key
+    "SearchClientEndpointUrl"                 = "https://${azurerm_search_service.ss.name}.search.windows.net"
+    "SearchClientIndexName"                   = jsondecode(file("search-index-definition.json")).name
+    "FakeCmsDocumentsRepository"              = "cms-documents"
+    "FakeCmsDocumentsRepository2"             = "cms-documents-2"
+    "IsRunningLocally"                        = "false"
   }
   https_only                 = true
 
@@ -94,7 +99,7 @@ resource "azuread_service_principal" "fa_pdf_generator" {
 data "azurerm_function_app_host_keys" "ak_pdf_generator" {
   name                = "fa-${local.resource_name}-pdf-generator"
   resource_group_name = azurerm_resource_group.rg.name
-  depends_on = [azurerm_function_app.fa_pdf_generator]
+  depends_on = [azurerm_windows_function_app.fa_pdf_generator]
 }
 
 resource "azuread_application_pre_authorized" "fapre_fa_pdf-generator" {
