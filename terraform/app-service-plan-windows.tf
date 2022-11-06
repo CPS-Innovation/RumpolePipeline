@@ -5,7 +5,6 @@ resource "azurerm_service_plan" "aspw" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Windows"
-  reserved            = false
   sku_name            = var.app_service_plan_sku.size
 }
 
