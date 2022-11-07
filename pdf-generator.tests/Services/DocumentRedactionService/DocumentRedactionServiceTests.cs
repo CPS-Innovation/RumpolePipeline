@@ -84,23 +84,4 @@ public class DocumentRedactionServiceTests
             saveResult.Message.Should().Be($"Invalid document - a document with filename '{_redactPdfRequest.FileName}' could not be retrieved for redaction purposes");
         }
     }
-
-    [Fact]
-    public async Task WhenDocumentFoundInBlobStorage_VerifyApplicationFlow()
-    {
-        _mockBlobStorageService.Setup(s => s.GetDocumentAsync(It.IsAny<string>(), It.IsAny<Guid>()))
-            .ReturnsAsync(_pdfStream);
-        
-        var saveResult = await _documentRedactionService.RedactPdfAsync(_redactPdfRequest, _accessToken, _correlationId);
-
-        using (new AssertionScope())
-        {
-            _mockBlobStorageService.Verify(x => x.GetDocumentAsync(_redactPdfRequest.FileName, _correlationId), Times.Once);
-            
-            _mockBlobStorageService.Verify(x => x.UploadDocumentAsync(It.IsAny<Stream>(), saveResult.RedactedDocumentName, _redactPdfRequest.CaseId, 
-                _redactPdfRequest.DocumentId, _redactPdfRequest.LastUpdateDate, _correlationId), Times.Once);
-
-            saveResult.Succeeded.Should().BeTrue();
-        }
-    }
 }
