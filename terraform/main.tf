@@ -1,21 +1,21 @@
 terraform {
 
-  required_version = ">=0.13"
+  required_version = ">=1.0.0"
   
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">=3.2.7"
+      version = "~> 3.1.0"
     }
 
     azuread = {
       source  = "hashicorp/azuread"
-      version = ">= 2.15.0"
+      version = "~> 2.15.0"
     }
 
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.1.0"
+      version = "~> 3.1.0"
     }
 
     /*restapi = {
@@ -24,11 +24,20 @@ terraform {
     }*/
   }
 
+  /*
   backend "azurerm" {
     storage_account_name = "__terraform_storage_account__"
     container_name       = "__terraform_container_name__"
     key                  = "__terraform_key__"
     access_key           = "__storage_key__"
+  }
+  */
+
+  backend "azurerm" {
+    resource_group_name  = "rg-terraform"
+    storage_account_name = "cpsdevstorageterraform"
+    container_name       = "terraform-rumpole-pipeline"
+    key                  = "terraform.tfstate"
   }
 }
 

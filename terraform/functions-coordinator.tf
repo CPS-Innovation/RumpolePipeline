@@ -83,8 +83,7 @@ data "azurerm_function_app_host_keys" "ak_coordinator" {
 }
 
 module "azurerm_app_reg_fa_coordinator" {
-  source  = "registry.terraform.io/Pujago/azuread-app-registration/azurerm"
-  version = "1.0.4"
+  source  = "./modules/terraform-azurerm-azuread-app-registration"
   display_name = "fa-${local.resource_name}-coordinator"
   identifier_uris = ["api://fa-${local.resource_name}-coordinator"]
   prevent_duplicate_names = true
@@ -130,6 +129,10 @@ module "azurerm_app_reg_fa_coordinator" {
   web = {
     redirect_uris = ["https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback",
       "https://getpostman.com/oauth2/callback"]
+    implicit_grant = {
+      access_token_issuance_enabled = true
+      id_token_issuance_enabled     = true
+    }
   }
   tags = ["fa-${local.resource_name}-coordinator", "terraform"]
 }
