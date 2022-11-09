@@ -36,8 +36,4 @@ data "azuread_service_principal" "terraform_service_principal" {
   application_id = "__terraform_service_principal_app_id__"
 }
 
-data "azuread_application" "fa_gateway" {
-  display_name = "fa-${var.env != "prod" ? "${var.resource_name_prefix}-${var.env}" : var.resource_name_prefix}-gateway"
-}
-
 data "azurerm_subscription" "current" {}

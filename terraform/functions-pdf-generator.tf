@@ -114,23 +114,16 @@ data "azurerm_function_app_host_keys" "ak_pdf_generator" {
   depends_on = [azurerm_function_app.fa_pdf_generator]
 }
 
-resource "azuread_application_pre_authorized" "fapre_fa_pdf-generator" {
-  application_object_id = azuread_application.fa_pdf_generator.id
-  authorized_app_id     = data.azuread_application.fa_gateway.application_id
-  permission_ids        = [azuread_application_oauth2_permission_scope.fa_pdf_generator_scope.id]
-}
-
 resource "azuread_application_pre_authorized" "fapre_fa_pdf-generator2" {
   application_object_id = azuread_application.fa_pdf_generator.id
   authorized_app_id     = azuread_application.fa_coordinator.application_id
   permission_ids        = [azuread_application_oauth2_permission_scope.fa_pdf_generator_scope.id]
+  depends_on = [azurerm_function_app.fa_coordinator, azurerm_function_app.fa_pdf_generator]
 }
 
 resource "azuread_application_password" "faap_fa_pdf_generator_app_service" {
   application_object_id = azuread_application.fa_pdf_generator.id
   end_date_relative     = "17520h"
 
-  depends_on = [
-    azuread_application.fa_pdf_generator
-  ]
+  depends_on = [azuread_application.fa_pdf_generator]
 }

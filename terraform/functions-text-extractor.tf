@@ -107,7 +107,5 @@ resource "azuread_application_password" "faap_fa_text_extractor_app_service" {
   application_object_id = azuread_application.fa_text_extractor.id
   end_date_relative     = "17520h"
 
-  depends_on = [
-    azuread_application.fa_text_extractor
-  ]
+  depends_on = [azuread_application.fa_text_extractor]
 }

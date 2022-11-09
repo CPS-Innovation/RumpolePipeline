@@ -142,17 +142,8 @@ resource "azuread_application" "fa_coordinator" {
   }
 }
 
-resource "azuread_application_pre_authorized" "fapre_fa_coordinator" {
-  application_object_id = azuread_application.fa_coordinator.id
-  authorized_app_id     = data.azuread_application.fa_gateway.application_id
-  permission_ids        = [azuread_application_oauth2_permission_scope.fa_coordinator_scope.id]
-}
-
 resource "azuread_application_password" "faap_fa_coordinator_app_service" {
   application_object_id = azuread_application.fa_coordinator.id
   end_date_relative     = "17520h"
-
-  depends_on = [
-    azuread_application.fa_coordinator
-  ]
+  depends_on = [azuread_application.fa_coordinator]
 }
