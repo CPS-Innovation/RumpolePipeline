@@ -82,10 +82,6 @@ data "azurerm_function_app_host_keys" "ak_coordinator" {
   depends_on = [azurerm_function_app.fa_coordinator]
 }
 
-resource "random_uuid" "random_id" {
-  count = 1
-}
-
 module "azurerm_app_reg_fa_coordinator" {
   source  = "registry.terraform.io/Pujago/azuread-app-registration/azurerm"
   version = "1.0.4"

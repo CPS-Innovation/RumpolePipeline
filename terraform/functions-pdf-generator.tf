@@ -61,10 +61,6 @@ resource "azurerm_function_app" "fa_pdf_generator" {
   }
 }
 
-resource "random_uuid" "random_id" {
-  count = 2
-}
-
 module "azurerm_app_reg_fa_pdf_generator" {
   source  = "registry.terraform.io/Pujago/azuread-app-registration/azurerm"
   version = "1.0.4"
@@ -79,7 +75,7 @@ module "azurerm_app_reg_fa_pdf_generator" {
     oauth2_permission_scope = [{
       admin_consent_description  = "Allow the calling application to make requests of the ${local.resource_name} PDF Generator"
       admin_consent_display_name = "Call the ${local.resource_name} PDF Generator"
-      id                         = element(random_uuid.random_id[*].result, 0)
+      id                         = element(random_uuid.random_id[*].result, 1)
       type                       = "Admin"
       user_consent_description   = "Interact with the ${local.resource_name} Polaris PDF Generator on-behalf of the calling user"
       user_consent_display_name  = "Interact with the ${local.resource_name} Polaris PDF Generator"
@@ -92,7 +88,7 @@ module "azurerm_app_reg_fa_pdf_generator" {
       allowed_member_types  = ["Application"]
       description          = "Can create PDF resources using the ${local.resource_name} PDF Generator"
       display_name         = "Create PDF resources"
-      id                   = element(random_uuid.random_id[*].result, 1)
+      id                   = element(random_uuid.random_id[*].result, 2)
       value                = "application.create"
     }
   ]

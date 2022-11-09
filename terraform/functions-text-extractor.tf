@@ -61,8 +61,6 @@ resource "azurerm_function_app" "fa_text_extractor" {
   }
 }
 
-resource "random_uuid" "fa_text_extractor_app_role_id" {}
-
 resource "azuread_application" "fa_text_extractor" {
   display_name               = "fa-${local.resource_name}-text-extractor"
   identifier_uris            = ["api://fa-${local.resource_name}-text-extractor"]
@@ -90,7 +88,7 @@ resource "azuread_application" "fa_text_extractor" {
     description          = "Can parse document texts using the ${local.resource_name} Polaris Text Extractor"
     display_name         = "Parse document texts in ${local.resource_name}"
     enabled              = true
-    id                   = random_uuid.fa_text_extractor_app_role_id.result
+    id                   = element(random_uuid.random_id[*].result, 3)
     value                = "application.extracttext"
   }
 }

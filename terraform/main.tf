@@ -48,3 +48,7 @@ data "azuread_service_principal" "terraform_service_principal" {
 }
 
 data "azurerm_subscription" "current" {}
+
+resource "random_uuid" "random_id" {
+  count = 4
+}
