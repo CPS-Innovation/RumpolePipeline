@@ -47,7 +47,7 @@ resource "azurerm_function_app" "fa_text_extractor" {
     unauthenticated_client_action = "RedirectToLoginPage"
     default_provider              = "AzureActiveDirectory"
     active_directory {
-      client_id         = azuread_application.fa_text_extractor.application_id
+      client_id         = module.azurerm_app_reg_fa_text_extractor.client_id
       client_secret     = azuread_application_password.faap_fa_text_extractor_app_service.value
       allowed_audiences = ["api://fa-${local.resource_name}-text-extractor"]
     }
@@ -61,40 +61,44 @@ resource "azurerm_function_app" "fa_text_extractor" {
   }
 }
 
-resource "azuread_application" "fa_text_extractor" {
-  display_name               = "fa-${local.resource_name}-text-extractor"
-  identifier_uris            = ["api://fa-${local.resource_name}-text-extractor"]
-
-  required_resource_access {
-    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-
-    resource_access {
-      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
-      type = "Scope"
+module "azurerm_app_reg_fa_text_extractor" {
+  source  = "./modules/terraform-azurerm-azuread-app-registration"
+  display_name = "fa-${local.resource_name}-text-extractor"
+  identifier_uris = ["api://fa-${local.resource_name}-text-extractor"]
+  prevent_duplicate_names = true
+  #use this code for adding app_roles
+  app_role = [
+    {
+      allowed_member_types  = ["Application"]
+      description          = "Can parse document texts using the ${local.resource_name} Polaris Text Extractor"
+      display_name         = "Parse document texts in ${local.resource_name}"
+      id                   = element(random_uuid.random_id[*].result, 3)
+      value                = "application.extracttext"
     }
-  }
-
-  web {
+  ]
+  #use this code for adding api permissions
+  required_resource_access = [{
+    # Microsoft Graph
+    resource_app_id = "00000003-0000-0000-c000-000000000000"
+    resource_access = [{
+      # User.Read
+      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+      type = "Scope"
+    }]
+  }]
+  web = {
     redirect_uris = ["https://fa-${local.resource_name}-text-extractor.azurewebsites.net/.auth/login/aad/callback"]
-
-    implicit_grant {
+    implicit_grant = {
       access_token_issuance_enabled = true
       id_token_issuance_enabled     = true
     }
   }
-
-  app_role {
-    allowed_member_types  = ["Application"]
-    description          = "Can parse document texts using the ${local.resource_name} Polaris Text Extractor"
-    display_name         = "Parse document texts in ${local.resource_name}"
-    enabled              = true
-    id                   = element(random_uuid.random_id[*].result, 3)
-    value                = "application.extracttext"
-  }
+  tags = ["fa-${local.resource_name}-text-extractor", "terraform"]
 }
 
-resource "azuread_service_principal" "fa_text_extractor" {
-  application_id = azuread_application.fa_text_extractor.application_id
+module "azurerm_service_principal_fa_text_extractor" {
+  source         = "./modules/terraform-azurerm-azuread_service_principal"
+  application_id = module.azurerm_app_reg_fa_text_extractor.client_id
 }
 
 data "azurerm_function_app_host_keys" "ak_text_extractor" {
@@ -104,8 +108,6 @@ data "azurerm_function_app_host_keys" "ak_text_extractor" {
 }
 
 resource "azuread_application_password" "faap_fa_text_extractor_app_service" {
-  application_object_id = azuread_application.fa_text_extractor.id
+  application_object_id = module.azurerm_app_reg_fa_text_extractor.object_id
   end_date_relative     = "17520h"
-
-  depends_on = [azuread_application.fa_text_extractor]
 }
