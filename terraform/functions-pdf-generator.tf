@@ -47,7 +47,7 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     unauthenticated_client_action = "RedirectToLoginPage"
     default_provider              = "AzureActiveDirectory"
     active_directory {
-      client_id         = azuread_application.fa_pdf_generator.application_id
+      client_id         = module.azurerm_app_reg_fa_pdf_generator.client_id
       client_secret     = azuread_application_password.faap_fa_pdf_generator_app_service.value
       allowed_audiences = ["api://fa-${local.resource_name}-pdf-generator"]
     }
@@ -61,56 +61,61 @@ resource "azurerm_function_app" "fa_pdf_generator" {
   }
 }
 
-resource "random_uuid" "fa_pdf_generator_user_impersonation_scope_id" {}
-resource "random_uuid" "fa_pdf_generator_app_role_id" {}
+resource "random_uuid" "random_id" {
+  count = 2
+}
 
-resource "azuread_application" "fa_pdf_generator" {
-  display_name               = "fa-${local.resource_name}-pdf-generator"
-  identifier_uris            = ["api://fa-${local.resource_name}-pdf-generator"]
-
-  api {
-    oauth2_permission_scope {
+module "azurerm_app_reg_fa_pdf_generator" {
+  source  = "registry.terraform.io/Pujago/azuread-app-registration/azurerm"
+  version = "1.0.4"
+  display_name = "fa-${local.resource_name}-pdf-generator"
+  identifier_uris = ["api://fa-${local.resource_name}-pdf-generator"]
+  prevent_duplicate_names = true
+  #use this code for adding scopes
+  api = {
+    mapped_claims_enabled          = false
+    requested_access_token_version = 2
+    known_client_applications      = []
+    oauth2_permission_scope = [{
       admin_consent_description  = "Allow the calling application to make requests of the ${local.resource_name} PDF Generator"
       admin_consent_display_name = "Call the ${local.resource_name} PDF Generator"
-      enabled                    = true
-      id                         = random_uuid.fa_pdf_generator_user_impersonation_scope_id.result
+      id                         = element(random_uuid.random_id[*].result, 0)
       type                       = "Admin"
       user_consent_description   = "Interact with the ${local.resource_name} Polaris PDF Generator on-behalf of the calling user"
       user_consent_display_name  = "Interact with the ${local.resource_name} Polaris PDF Generator"
       value                      = "user_impersonation"
-    }
+    }]
   }
-
-  required_resource_access {
-    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-
-    resource_access {
-      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
+  #use this code for adding app_roles
+  app_role = [
+    {
+      allowed_member_types  = ["Application"]
+      description          = "Can create PDF resources using the ${local.resource_name} PDF Generator"
+      display_name         = "Create PDF resources"
+      id                   = element(random_uuid.random_id[*].result, 1)
+      value                = "application.create"
+    }
+  ]
+  #use this code for adding api permissions
+  required_resource_access = [{
+    # Microsoft Graph
+    resource_app_id = "00000003-0000-0000-c000-000000000000"
+    resource_access = [{
+      # User.Read
+      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
       type = "Scope"
-    }
-  }
-
-  web {
+    }]
+  }]
+  web = {
     redirect_uris = ["https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/.auth/login/aad/callback"]
-
-    implicit_grant {
-      access_token_issuance_enabled = true
-      id_token_issuance_enabled     = true
-    }
   }
-
-  app_role {
-    allowed_member_types  = ["Application"]
-    description          = "Can create PDF resources using the ${local.resource_name} PDF Generator"
-    display_name         = "Create PDF resources"
-    enabled              = true
-    id                   = random_uuid.fa_pdf_generator_app_role_id.result
-    value                = "application.create"
-  }
+  tags = ["fa-${local.resource_name}-pdf-generator", "terraform"]
 }
 
-resource "azuread_service_principal" "fa_pdf_generator" {
-  application_id = azuread_application.fa_pdf_generator.application_id
+module "azurerm_service_principal_fa_pdf_generator" {
+  source         = "registry.terraform.io/Pujago/azuread_service_principal/azurerm"
+  version        = "1.0.1"
+  application_id = module.azurerm_app_reg_fa_pdf_generator.client_id
 }
 
 data "azurerm_function_app_host_keys" "ak_pdf_generator" {
@@ -119,22 +124,21 @@ data "azurerm_function_app_host_keys" "ak_pdf_generator" {
   depends_on = [azurerm_function_app.fa_pdf_generator]
 }
 
-data "azuread_application" "fa_pdf_generator_configured" {
-  application_id = azuread_application.fa_pdf_generator.id
-  depends_on = [azuread_application.fa_pdf_generator]
-}
+module "azurerm_app_pre_authorized" {
+  source                = "registry.terraform.io/Pujago/azure_ad_application_preauthorized/azurerm"
+  version               = "1.0.0"
 
+  # application object id of authorized application
+  application_object_id = module.azurerm_app_reg_fa_pdf_generator.object_id
 
-resource "azuread_application_pre_authorized" "fapre_fa_pdf-generator2" {
-  application_object_id = azuread_application.fa_pdf_generator.id
-  authorized_app_id     = azuread_application.fa_coordinator.application_id
-  permission_ids        = data.azuread_application.fa_pdf_generator_configured.app_role_ids["application.create"]
-  depends_on = [azurerm_function_app.fa_pdf_generator]
+  # application id of Client application
+  authorized_app_id     = module.azurerm_app_reg_fa_coordinator.client_id
+
+  # permissions to assign
+  permission_ids        = [module.azurerm_app_reg_fa_pdf_generator.oauth2_permission_scope_ids["user_impersonation"]]
 }
 
 resource "azuread_application_password" "faap_fa_pdf_generator_app_service" {
-  application_object_id = azuread_application.fa_pdf_generator.id
+  application_object_id = module.azurerm_app_reg_fa_pdf_generator.object_id
   end_date_relative     = "17520h"
-
-  depends_on = [azuread_application.fa_pdf_generator]
 }

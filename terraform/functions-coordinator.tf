@@ -17,7 +17,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     "AzureWebJobsStorage"                     = azurerm_storage_account.sa.primary_connection_string
     "CoordinatorOrchestratorTimeoutSecs"      = "600"
     "OnBehalfOfTokenTenantId"                 = data.azurerm_client_config.current.tenant_id
-    "OnBehalfOfTokenClientId"                 = azuread_application.fa_coordinator.application_id
+    "OnBehalfOfTokenClientId"                 = module.azurerm_app_reg_fa_coordinator.client_id
     "OnBehalfOfTokenClientSecret"             = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_coordinator_client_secret.id})"
     "PdfGeneratorScope"                       = "api://fa-${local.resource_name}-pdf-generator/.default"
     "PdfGeneratorUrl"                         = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
@@ -56,7 +56,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     unauthenticated_client_action = "RedirectToLoginPage"
     default_provider              = "AzureActiveDirectory"
     active_directory {
-      client_id         = azuread_application.fa_coordinator.application_id
+      client_id         = module.azurerm_app_reg_fa_coordinator.client_id
       client_secret     = azuread_application_password.faap_fa_coordinator_app_service.value
       allowed_audiences = ["api://fa-${local.resource_name}-coordinator"]
     }
@@ -82,72 +82,63 @@ data "azurerm_function_app_host_keys" "ak_coordinator" {
   depends_on = [azurerm_function_app.fa_coordinator]
 }
 
-resource "random_uuid" "fa_coordinator_user_impersonation_scope_id" {}
+resource "random_uuid" "random_id" {
+  count = 1
+}
 
-resource "azuread_application" "fa_coordinator" {
-  display_name               = "fa-${local.resource_name}-coordinator"
-  identifier_uris            = ["api://fa-${local.resource_name}-coordinator"]
-
-  api {
-    oauth2_permission_scope {
+module "azurerm_app_reg_fa_coordinator" {
+  source  = "registry.terraform.io/Pujago/azuread-app-registration/azurerm"
+  version = "1.0.4"
+  display_name = "fa-${local.resource_name}-coordinator"
+  identifier_uris = ["api://fa-${local.resource_name}-coordinator"]
+  prevent_duplicate_names = true
+  #use this code for adding scopes
+  api = {
+    mapped_claims_enabled          = false
+    requested_access_token_version = 2
+    known_client_applications      = []
+    oauth2_permission_scope = [{
       admin_consent_description  = "Allow the calling application to instigate the ${local.resource_name} ${local.resource_name} coordinator"
       admin_consent_display_name = "Start the ${local.resource_name} Pipeline coordinator"
-      enabled                    = true
-      id                         = random_uuid.fa_coordinator_user_impersonation_scope_id.result
+      id                         = element(random_uuid.random_id[*].result, 0)
       type                       = "Admin"
       user_consent_description   = "Interact with the ${local.resource_name} Polaris Pipeline on-behalf of the calling user"
       user_consent_display_name  = "Interact with the ${local.resource_name} Polaris Pipeline"
       value                      = "user_impersonation"
-    }
+    }]
   }
-
-  required_resource_access {
-    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-
-    resource_access {
-      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # read user
-      type = "Scope"
-    }
+  #use this code for adding api permissions
+  required_resource_access = [{
+      # Microsoft Graph
+      resource_app_id = "00000003-0000-0000-c000-000000000000"
+      resource_access = [{
+        # User.Read
+        id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+        type = "Scope"
+      }]
+    },
+    {
+      # Pdf Generator
+      resource_app_id = module.azurerm_app_reg_fa_pdf_generator.client_id
+      resource_access = [{
+          # User Impersonation Scope
+          id   = module.azurerm_app_reg_fa_pdf_generator.oauth2_permission_scope_ids["user_impersonation"]
+          type = "Scope"
+        },
+        {
+          # Application.Create Role
+          id   = module.azurerm_app_reg_fa_pdf_generator.app_role_ids["application.create"]
+          type = "Scope"
+        }]
+    }]
+  web = {
+    redirect_uris = ["https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback",
+      "https://getpostman.com/oauth2/callback"]
   }
-
-  required_resource_access {
-    resource_app_id = azuread_application.fa_pdf_generator.application_id # Pdf Generator
-
-    resource_access {
-      id   = random_uuid.fa_pdf_generator_user_impersonation_scope_id.result # user impersonation
-      type = "Scope"
-    }
-
-    resource_access {
-      id   = random_uuid.fa_pdf_generator_app_role_id.result # pdf generator role
-      type = "Role"
-    }
-  }
-
-  required_resource_access {
-    resource_app_id = azuread_application.fa_text_extractor.application_id # Text Extractor
-
-    resource_access {
-      id   = random_uuid.fa_text_extractor_app_role_id.result # text extraction role
-      type = "Role"
-    }
-  }
-
-  web {
-    redirect_uris = [
-      "https://fa-${local.resource_name}-coordinator.azurewebsites.net/.auth/login/aad/callback",
-      "https://getpostman.com/oauth2/callback"
-    ]
-
-    implicit_grant {
-      access_token_issuance_enabled = true
-      id_token_issuance_enabled     = true
-    }
-  }
+  tags = ["fa-${local.resource_name}-coordinator", "terraform"]
 }
 
 resource "azuread_application_password" "faap_fa_coordinator_app_service" {
-  application_object_id = azuread_application.fa_coordinator.id
+  application_object_id = module.azurerm_app_reg_fa_coordinator.object_id
   end_date_relative     = "17520h"
-  depends_on = [azuread_application.fa_coordinator]
 }
