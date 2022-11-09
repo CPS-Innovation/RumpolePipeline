@@ -82,20 +82,24 @@ data "azurerm_function_app_host_keys" "ak_coordinator" {
   depends_on = [azurerm_function_app.fa_coordinator]
 }
 
-resource "azuread_application_oauth2_permission_scope" "fa_coordinator_scope" {
-  application_object_id      = azuread_application.fa_coordinator.id
-  admin_consent_description  = "Allow the calling application to instigate the ${local.resource_name} ${local.resource_name} coordinator"
-  admin_consent_display_name = "Start the ${local.resource_name} Pipeline coordinator"
-  is_enabled                 = true
-  type                       = "Admin"
-  value                      = "user_impersonation"
-  user_consent_description   = "Interact with the ${local.resource_name} Polaris Pipeline on-behalf of the calling user"
-  user_consent_display_name  = "Interact with the ${local.resource_name} Polaris Pipeline"
-}
+resource "random_uuid" "fa_coordinator_user_impersonation_scope_id" {}
 
 resource "azuread_application" "fa_coordinator" {
   display_name               = "fa-${local.resource_name}-coordinator"
   identifier_uris            = ["api://fa-${local.resource_name}-coordinator"]
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the calling application to instigate the ${local.resource_name} ${local.resource_name} coordinator"
+      admin_consent_display_name = "Start the ${local.resource_name} Pipeline coordinator"
+      enabled                    = true
+      id                         = random_uuid.fa_coordinator_user_impersonation_scope_id.result
+      type                       = "Admin"
+      user_consent_description   = "Interact with the ${local.resource_name} Polaris Pipeline on-behalf of the calling user"
+      user_consent_display_name  = "Interact with the ${local.resource_name} Polaris Pipeline"
+      value                      = "user_impersonation"
+    }
+  }
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
@@ -110,21 +114,21 @@ resource "azuread_application" "fa_coordinator" {
     resource_app_id = azuread_application.fa_pdf_generator.application_id # Pdf Generator
 
     resource_access {
-      id   = azuread_application_oauth2_permission_scope.fa_pdf_generator_scope.id # user impersonation
+      id   = random_uuid.fa_pdf_generator_user_impersonation_scope_id.result # user impersonation
       type = "Scope"
     }
 
     resource_access {
-      id   = azuread_application_app_role.fa_pdf_generator_app_role.id # pdf generator role
+      id   = random_uuid.fa_pdf_generator_app_role_id.result # pdf generator role
       type = "Role"
     }
   }
 
   required_resource_access {
-    resource_app_id = azuread_application_app_role.fa_text_extractor_app_role.application_object_id # Text Extractor
+    resource_app_id = azuread_application.fa_text_extractor.application_id # Text Extractor
 
     resource_access {
-      id   = azuread_application_app_role.fa_text_extractor_app_role.id # text extraction role
+      id   = random_uuid.fa_text_extractor_app_role_id.result # text extraction role
       type = "Role"
     }
   }
@@ -137,6 +141,7 @@ resource "azuread_application" "fa_coordinator" {
 
     implicit_grant {
       access_token_issuance_enabled = true
+      id_token_issuance_enabled     = true
     }
   }
 }

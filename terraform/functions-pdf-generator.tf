@@ -61,9 +61,25 @@ resource "azurerm_function_app" "fa_pdf_generator" {
   }
 }
 
+resource "random_uuid" "fa_pdf_generator_user_impersonation_scope_id" {}
+resource "random_uuid" "fa_pdf_generator_app_role_id" {}
+
 resource "azuread_application" "fa_pdf_generator" {
   display_name               = "fa-${local.resource_name}-pdf-generator"
   identifier_uris            = ["api://fa-${local.resource_name}-pdf-generator"]
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the calling application to make requests of the ${local.resource_name} PDF Generator"
+      admin_consent_display_name = "Call the ${local.resource_name} PDF Generator"
+      enabled                    = true
+      id                         = random_uuid.fa_pdf_generator_user_impersonation_scope_id.result
+      type                       = "Admin"
+      user_consent_description   = "Interact with the ${local.resource_name} Polaris PDF Generator on-behalf of the calling user"
+      user_consent_display_name  = "Interact with the ${local.resource_name} Polaris PDF Generator"
+      value                      = "user_impersonation"
+    }
+  }
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
@@ -79,28 +95,18 @@ resource "azuread_application" "fa_pdf_generator" {
 
     implicit_grant {
       access_token_issuance_enabled = true
+      id_token_issuance_enabled     = true
     }
   }
-}
 
-resource "azuread_application_oauth2_permission_scope" "fa_pdf_generator_scope" {
-  application_object_id      = azuread_application.fa_pdf_generator.id
-  admin_consent_description  = "Allow the calling application to make requests of the ${local.resource_name} PDF Generator"
-  admin_consent_display_name = "Call the ${local.resource_name} PDF Generator"
-  is_enabled                 = true
-  type                       = "Admin"
-  value                      = "user_impersonation"
-  user_consent_description   = "Interact with the ${local.resource_name} Polaris PDF Generator on-behalf of the calling user"
-  user_consent_display_name  = "Interact with the ${local.resource_name} Polaris PDF Generator"
-}
-
-resource "azuread_application_app_role" "fa_pdf_generator_app_role" {
-  application_object_id = azuread_application.fa_pdf_generator.id
-  allowed_member_types  = ["Application"]
-  description           = "Can create PDF resources using the ${local.resource_name} PDF Generator"
-  display_name          = "Create PDF resources"
-  is_enabled            = true
-  value                 = "application.create"
+  app_role {
+    allowed_member_types  = ["Application"]
+    description          = "Can create PDF resources using the ${local.resource_name} PDF Generator"
+    display_name         = "Create PDF resources"
+    enabled              = true
+    id                   = random_uuid.fa_pdf_generator_app_role_id.result
+    value                = "application.create"
+  }
 }
 
 resource "azuread_service_principal" "fa_pdf_generator" {
@@ -116,8 +122,8 @@ data "azurerm_function_app_host_keys" "ak_pdf_generator" {
 resource "azuread_application_pre_authorized" "fapre_fa_pdf-generator2" {
   application_object_id = azuread_application.fa_pdf_generator.id
   authorized_app_id     = azuread_application.fa_coordinator.application_id
-  permission_ids        = [azuread_application_oauth2_permission_scope.fa_pdf_generator_scope.id]
-  depends_on = [azurerm_function_app.fa_coordinator, azurerm_function_app.fa_pdf_generator]
+  permission_ids        = azuread_application.fa_pdf_generator.oauth2_permission_scope_ids
+  depends_on = [azurerm_function_app.fa_pdf_generator]
 }
 
 resource "azuread_application_password" "faap_fa_pdf_generator_app_service" {

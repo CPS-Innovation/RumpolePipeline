@@ -61,6 +61,8 @@ resource "azurerm_function_app" "fa_text_extractor" {
   }
 }
 
+resource "random_uuid" "fa_text_extractor_app_role_id" {}
+
 resource "azuread_application" "fa_text_extractor" {
   display_name               = "fa-${local.resource_name}-text-extractor"
   identifier_uris            = ["api://fa-${local.resource_name}-text-extractor"]
@@ -79,17 +81,18 @@ resource "azuread_application" "fa_text_extractor" {
 
     implicit_grant {
       access_token_issuance_enabled = true
+      id_token_issuance_enabled     = true
     }
   }
-}
 
-resource "azuread_application_app_role" "fa_text_extractor_app_role" {
-  application_object_id = azuread_application.fa_text_extractor.id
-  allowed_member_types  = ["Application"]
-  description           = "Can parse document texts using the ${local.resource_name} Polaris Text Extractor"
-  display_name          = "Parse document texts in ${local.resource_name}"
-  is_enabled            = true
-  value                 = "application.extracttext"
+  app_role {
+    allowed_member_types  = ["Application"]
+    description          = "Can parse document texts using the ${local.resource_name} Polaris Text Extractor"
+    display_name         = "Parse document texts in ${local.resource_name}"
+    enabled              = true
+    id                   = random_uuid.fa_text_extractor_app_role_id.result
+    value                = "application.extracttext"
+  }
 }
 
 resource "azuread_service_principal" "fa_text_extractor" {
