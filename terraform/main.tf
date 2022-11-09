@@ -8,6 +8,11 @@ terraform {
       version = "~>3.0"
     }
 
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 1.5.0"
+    }
+
     /*restapi = {
       source = "Mastercard/restapi"
       version = "1.16.1"
