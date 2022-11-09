@@ -20,7 +20,7 @@ resource "azurerm_storage_account" "sa" {
 }
 
 data "azuread_service_principal" "sp_gateway" {
-  display_name = "fa-${local.resource_name}-gateway"
+  display_name = "fa-${local.gateway_resource_name}-gateway"
 }
 
 resource "azurerm_storage_account_customer_managed_key" "rumpole_storage_pipeline_cmk" {

@@ -1,5 +1,10 @@
 #################### Variables ####################
 
+variable "resource_name_gateway" {
+  type = string
+  default = "rumpole"
+}
+
 variable "resource_name_prefix" {
   type = string
   default = "rumpole-pipeline"
