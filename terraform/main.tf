@@ -27,8 +27,8 @@ provider "azurerm" {
 }
 
 locals {
-  resource_name = "${var.env != "prod" ? "${var.resource_name_prefix}-${var.env}" : var.resource_name_prefix}"
-  gateway_resource_name = "${var.env != "prod" ? "${var.resource_name_gateway}-${var.env}" : var.resource_name_gateway}" 
+  resource_name = "${var.env != "prod" ? "${var.resource_name_prefix}-${var.pipeline_name_prefix}-${var.env}" : "${var.resource_name_prefix}-${var.pipeline_name_prefix}"}"
+  gateway_resource_name = "${var.env != "prod" ? "${var.resource_name_prefix}-${var.env}" : var.resource_name_prefix}"
 }
 
 data "azurerm_client_config" "current" {}

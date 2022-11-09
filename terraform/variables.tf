@@ -1,13 +1,13 @@
 #################### Variables ####################
 
-variable "resource_name_gateway" {
+variable "resource_name_prefix" {
   type = string
   default = "rumpole"
 }
 
-variable "resource_name_prefix" {
+variable "pipeline_name_prefix" {
   type = string
-  default = "rumpole-pipeline"
+  default = "-pipeline"
 }
 
 variable "env" {
