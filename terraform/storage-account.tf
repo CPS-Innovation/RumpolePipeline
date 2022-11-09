@@ -19,6 +19,10 @@ resource "azurerm_storage_account" "sa" {
   }
 }
 
+data "azuread_service_principal" "sp_gateway" {
+  display_name = "fa-${local.resource_name}-gateway"
+}
+
 resource "azurerm_storage_account_customer_managed_key" "rumpole_storage_pipeline_cmk" {
   storage_account_id = azurerm_storage_account.sa.id
   key_vault_id       = azurerm_key_vault.kv.id
@@ -60,5 +64,5 @@ resource "azurerm_role_assignment" "ra_blob_data_contributor_text_extractor" {
 resource "azurerm_role_assignment" "ra_blob_data_reader" {
   scope                = azurerm_storage_container.container.resource_manager_id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = var.fa_rumpole_gateway_identity_principal_id
+  principal_id         = data.azuread_service_principal.sp_gateway.object_id
 }

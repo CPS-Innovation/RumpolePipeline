@@ -27,7 +27,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     "TextExtractorUrl"                        = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/extract?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "SearchIndexUpdateUrl"                    = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/updateSearchIndex?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
-    "CallingAppValidAudience"                 = var.auth_details.coordinator_valid_audience
+    "CallingAppValidAudience"                 = "api://fa-${local.resource_name}-coordinator"
     "FeatureFlags_EvaluateDocuments"          = "false"
     "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
     "BlobServiceContainerName"                = "cms-documents-2"
@@ -82,20 +82,20 @@ data "azurerm_function_app_host_keys" "ak_coordinator" {
   depends_on = [azurerm_function_app.fa_coordinator]
 }
 
+resource "azuread_application_oauth2_permission_scope" "fa_coordinator_scope" {
+  application_object_id      = azuread_application.fa_coordinator.id
+  admin_consent_description  = "Allow the calling application to instigate the ${local.resource_name} ${local.resource_name} coordinator"
+  admin_consent_display_name = "Start the ${local.resource_name} Pipeline coordinator"
+  is_enabled                 = true
+  type                       = "Admin"
+  value                      = "user_impersonation"
+  user_consent_description   = "Interact with the ${local.resource_name} Polaris Pipeline on-behalf of the calling user"
+  user_consent_display_name  = "Interact with the ${local.resource_name} Polaris Pipeline"
+}
+
 resource "azuread_application" "fa_coordinator" {
   display_name               = "fa-${local.resource_name}-coordinator"
   identifier_uris            = ["api://fa-${local.resource_name}-coordinator"]
-
-  api {
-    oauth2_permission_scope {
-      admin_consent_description  = "Allow an application to access function app on behalf of the signed-in user."
-      admin_consent_display_name = "Access function app"
-      enabled                    = true
-      id                         = var.coordinator_details.user_impersonation_scope_id
-      type                       = "Admin"
-      value                      = "user_impersonation"
-    }
-  }
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
@@ -107,24 +107,24 @@ resource "azuread_application" "fa_coordinator" {
   }
 
   required_resource_access {
-    resource_app_id = var.pdf_generator_details.application_registration_id # Pdf Generator
+    resource_app_id = azuread_application.fa_pdf_generator.application_id # Pdf Generator
 
     resource_access {
-      id   = var.pdf_generator_details.user_impersonation_scope_id # user impersonation
+      id   = azuread_application_oauth2_permission_scope.fa_pdf_generator_scope.id # user impersonation
       type = "Scope"
     }
 
     resource_access {
-      id   = var.pdf_generator_details.application_create_role_id # pdf generator role
+      id   = azuread_application_app_role.fa_pdf_generator_app_role.id # pdf generator role
       type = "Role"
     }
   }
 
   required_resource_access {
-    resource_app_id = var.text_extractor_details.application_registration_id # Text Extractor
+    resource_app_id = azuread_application_app_role.fa_text_extractor_app_role.application_object_id # Text Extractor
 
     resource_access {
-      id   = var.text_extractor_details.application_text_extraction_role_id # text extraction role
+      id   = azuread_application_app_role.fa_text_extractor_app_role.id # text extraction role
       type = "Role"
     }
   }
@@ -142,17 +142,8 @@ resource "azuread_application" "fa_coordinator" {
   }
 }
 
-resource "azuread_application_pre_authorized" "fapre_fa_coordinator" {
-  application_object_id = azuread_application.fa_coordinator.id
-  authorized_app_id     = var.gateway_details.application_registration_id
-  permission_ids        = [var.coordinator_details.user_impersonation_scope_id]
-}
-
 resource "azuread_application_password" "faap_fa_coordinator_app_service" {
   application_object_id = azuread_application.fa_coordinator.id
   end_date_relative     = "17520h"
-
-  depends_on = [
-    azuread_application.fa_coordinator
-  ]
+  depends_on = [azuread_application.fa_coordinator]
 }

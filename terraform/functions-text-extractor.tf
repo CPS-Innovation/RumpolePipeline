@@ -20,7 +20,7 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "BlobUserDelegationKeyExpirySecs"         = 3600
     "BlobServiceUrl"                          = azurerm_storage_account.sa.primary_blob_endpoint
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
-    "CallingAppValidAudience"                 = var.auth_details.text_extractor_valid_audience
+    "CallingAppValidAudience"                 = "api://fa-${local.resource_name}-text-extractor"
     "ComputerVisionClientServiceKey"          = azurerm_cognitive_account.computer_vision_service.primary_access_key
     "ComputerVisionClientServiceUrl"          = azurerm_cognitive_account.computer_vision_service.endpoint
     "SearchClientAuthorizationKey"            = azurerm_search_service.ss.primary_key
@@ -82,15 +82,15 @@ resource "azuread_application" "fa_text_extractor" {
       id_token_issuance_enabled     = true
     }
   }
+}
 
-  app_role {
-    allowed_member_types  = ["Application"]
-    description          = "Readers have the ability to read resources"
-    display_name         = "Read"
-    enabled              = true
-    id                   = var.text_extractor_details.application_text_extraction_role_id
-    value                = "application.extracttext"
-  }
+resource "azuread_application_app_role" "fa_text_extractor_app_role" {
+  application_object_id = azuread_application.fa_text_extractor.id
+  allowed_member_types  = ["Application"]
+  description           = "Can parse document texts using the ${local.resource_name} Polaris Text Extractor"
+  display_name          = "Parse document texts in ${local.resource_name}"
+  is_enabled            = true
+  value                 = "application.extracttext"
 }
 
 resource "azuread_service_principal" "fa_text_extractor" {
@@ -107,7 +107,5 @@ resource "azuread_application_password" "faap_fa_text_extractor_app_service" {
   application_object_id = azuread_application.fa_text_extractor.id
   end_date_relative     = "17520h"
 
-  depends_on = [
-    azuread_application.fa_text_extractor
-  ]
+  depends_on = [azuread_application.fa_text_extractor]
 }
