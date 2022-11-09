@@ -79,7 +79,6 @@ resource "azuread_application" "fa_text_extractor" {
 
     implicit_grant {
       access_token_issuance_enabled = true
-      id_token_issuance_enabled     = true
     }
   }
 }

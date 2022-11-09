@@ -79,7 +79,6 @@ resource "azuread_application" "fa_pdf_generator" {
 
     implicit_grant {
       access_token_issuance_enabled = true
-      id_token_issuance_enabled     = true
     }
   }
 }
