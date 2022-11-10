@@ -18,27 +18,27 @@ terraform {
       version = "~> 3.1.0"
     }
 
-    /*restapi = {
+    restapi = {
       source = "Mastercard/restapi"
       version = "1.16.1"
-    }*/
+    }
   }
 
-  /*
   backend "azurerm" {
     storage_account_name = "__terraform_storage_account__"
     container_name       = "__terraform_container_name__"
     key                  = "__terraform_key__"
     access_key           = "__storage_key__"
   }
-  */
-
+  
+  /*
   backend "azurerm" {
     resource_group_name  = "rg-terraform"
     storage_account_name = "cpsdevstorageterraform"
     container_name       = "terraform-rumpole-pipeline"
     key                  = "terraform.tfstate"
   }
+  */
 }
 
 provider "azurerm" {
