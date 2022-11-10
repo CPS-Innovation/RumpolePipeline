@@ -55,3 +55,21 @@ resource "azurerm_role_assignment" "ra_blob_data_contributor_text_extractor" {
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_function_app.fa_text_extractor.identity[0].principal_id
 }
+
+resource "azurerm_storage_management_policy" "pipeline-documents-lifecycle" {
+  storage_account_id   = azurerm_storage_account.sa.id
+  
+  rule {
+    name               = "polaris-documents-lifecycle"
+    enabled            = true
+    filters {
+      prefix_match     = ["documents"]
+      blob_types       = ["blockBlob"]
+    }
+    actions {
+      base_blob {
+        delete_after_days_since_modification_greater_than = 7
+      }
+    }
+  }
+}
