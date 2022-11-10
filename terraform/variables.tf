@@ -7,15 +7,11 @@ variable "resource_name_prefix" {
 
 variable "pipeline_name_prefix" {
   type = string
-  default = "-pipeline"
+  default = "pipeline"
 }
 
 variable "env" {
   type = string 
-}
-
-variable "env_suffix" {
-  type = string
 }
 
 variable "app_service_plan_sku" {
