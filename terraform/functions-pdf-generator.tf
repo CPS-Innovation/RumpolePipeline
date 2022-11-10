@@ -69,7 +69,7 @@ module "azurerm_app_reg_fa_pdf_generator" {
   #use this code for adding scopes
   api = {
     mapped_claims_enabled          = false
-    requested_access_token_version = 2
+    requested_access_token_version = 1
     known_client_applications      = []
     oauth2_permission_scope = [{
       admin_consent_description  = "Allow the calling application to make requests of the ${local.resource_name} PDF Generator"

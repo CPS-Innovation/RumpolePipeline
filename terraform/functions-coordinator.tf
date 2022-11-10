@@ -90,7 +90,7 @@ module "azurerm_app_reg_fa_coordinator" {
   #use this code for adding scopes
   api = {
     mapped_claims_enabled          = false
-    requested_access_token_version = 2
+    requested_access_token_version = 1
     known_client_applications      = []
     oauth2_permission_scope = [{
       admin_consent_description  = "Allow the calling application to instigate the ${local.resource_name} ${local.resource_name} coordinator"
