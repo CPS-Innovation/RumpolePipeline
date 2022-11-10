@@ -140,6 +140,7 @@ module "azurerm_app_reg_fa_coordinator" {
 module "azurerm_service_principal_fa_coordinator" {
   source         = "./modules/terraform-azurerm-azuread_service_principal"
   application_id = module.azurerm_app_reg_fa_coordinator.client_id
+  app_role_assignment_required = false
   owners         = [data.azurerm_client_config.current.object_id]
 }
 
