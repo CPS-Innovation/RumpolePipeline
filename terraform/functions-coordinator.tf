@@ -137,6 +137,11 @@ module "azurerm_app_reg_fa_coordinator" {
   tags = ["fa-${local.resource_name}-coordinator", "terraform"]
 }
 
+module "azurerm_service_principal_fa_pdf_generator" {
+  source         = "./modules/terraform-azurerm-azuread_service_principal"
+  application_id = module.azurerm_app_reg_fa_coordinator.client_id
+}
+
 resource "azuread_application_password" "faap_fa_coordinator_app_service" {
   application_object_id = module.azurerm_app_reg_fa_coordinator.object_id
   end_date_relative     = "17520h"
