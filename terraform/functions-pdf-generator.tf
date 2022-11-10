@@ -111,13 +111,14 @@ module "azurerm_app_reg_fa_pdf_generator" {
   tags = ["fa-${local.resource_name}-pdf-generator", "terraform"]
 }
 
-resource "azuread_service_principal" "sp_fa_pdf_generator" {
-  application_id               = module.azurerm_app_reg_fa_pdf_generator.client_id
-  app_role_assignment_required = false
+module "azurerm_service_principal_fa_pdf_generator" {
+  source         = "./modules/terraform-azurerm-azuread_service_principal"
+  application_id = module.azurerm_app_reg_fa_pdf_generator.client_id
+  owners         = [data.azurerm_client_config.current.object_id]
 }
 
 resource "azuread_service_principal_password" "sp_fa_pdf_generator_pw" {
-  service_principal_id = azuread_service_principal.sp_fa_pdf_generator.object_id
+  service_principal_id = module.azurerm_service_principal_fa_pdf_generator.object_id
 }
 
 data "azurerm_function_app_host_keys" "ak_pdf_generator" {

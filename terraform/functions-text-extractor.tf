@@ -96,13 +96,14 @@ module "azurerm_app_reg_fa_text_extractor" {
   tags = ["fa-${local.resource_name}-text-extractor", "terraform"]
 }
 
-resource "azuread_service_principal" "sp_fa_text_extractor" {
-  application_id               = module.azurerm_app_reg_fa_text_extractor.client_id
-  app_role_assignment_required = false
+module "azurerm_service_principal_fa_text_extractor" {
+  source         = "./modules/terraform-azurerm-azuread_service_principal"
+  application_id = module.azurerm_app_reg_fa_text_extractor.client_id
+  owners         = [data.azurerm_client_config.current.object_id]
 }
 
 resource "azuread_service_principal_password" "sp_fa_text_extractor_pw" {
-  service_principal_id = azuread_service_principal.sp_fa_text_extractor.object_id
+  service_principal_id = module.azurerm_service_principal_fa_text_extractor.object_id
 }
 
 data "azurerm_function_app_host_keys" "ak_text_extractor" {
