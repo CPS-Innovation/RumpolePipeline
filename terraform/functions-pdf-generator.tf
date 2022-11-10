@@ -75,7 +75,7 @@ module "azurerm_app_reg_fa_pdf_generator" {
       admin_consent_description  = "Allow the calling application to make requests of the ${local.resource_name} PDF Generator"
       admin_consent_display_name = "Call the ${local.resource_name} PDF Generator"
       id                         = element(random_uuid.random_id[*].result, 1)
-      type                       = "User"
+      type                       = "Admin"
       user_consent_description   = "Interact with the ${local.resource_name} Polaris PDF Generator on-behalf of the calling user"
       user_consent_display_name  = "Interact with the ${local.resource_name} Polaris PDF Generator"
       value                      = "user_impersonation"
@@ -111,9 +111,13 @@ module "azurerm_app_reg_fa_pdf_generator" {
   tags = ["fa-${local.resource_name}-pdf-generator", "terraform"]
 }
 
-module "azurerm_service_principal_fa_pdf_generator" {
-  source         = "./modules/terraform-azurerm-azuread_service_principal"
-  application_id = module.azurerm_app_reg_fa_pdf_generator.client_id
+resource "azuread_service_principal" "sp_fa_pdf_generator" {
+  application_id               = module.azurerm_app_reg_fa_pdf_generator.client_id
+  app_role_assignment_required = false
+}
+
+resource "azuread_service_principal_password" "sp_fa_pdf_generator_pw" {
+  service_principal_id = azuread_service_principal.sp_fa_pdf_generator.object_id
 }
 
 data "azurerm_function_app_host_keys" "ak_pdf_generator" {

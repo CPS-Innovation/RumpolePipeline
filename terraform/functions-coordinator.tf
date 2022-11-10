@@ -96,7 +96,7 @@ module "azurerm_app_reg_fa_coordinator" {
       admin_consent_description  = "Allow the calling application to instigate the ${local.resource_name} ${local.resource_name} coordinator"
       admin_consent_display_name = "Start the ${local.resource_name} Pipeline coordinator"
       id                         = element(random_uuid.random_id[*].result, 0)
-      type                       = "User"
+      type                       = "Admin"
       user_consent_description   = "Interact with the ${local.resource_name} Polaris Pipeline on-behalf of the calling user"
       user_consent_display_name  = "Interact with the ${local.resource_name} Polaris Pipeline"
       value                      = "user_impersonation"
@@ -137,9 +137,13 @@ module "azurerm_app_reg_fa_coordinator" {
   tags = ["fa-${local.resource_name}-coordinator", "terraform"]
 }
 
-module "azurerm_service_principal_fa_coordinator" {
-  source         = "./modules/terraform-azurerm-azuread_service_principal"
-  application_id = module.azurerm_app_reg_fa_coordinator.client_id
+resource "azuread_service_principal" "sp_fa_coordinator" {
+  application_id               = module.azurerm_app_reg_fa_coordinator.client_id
+  app_role_assignment_required = false
+}
+
+resource "azuread_service_principal_password" "sp_fa_coordinator_pw" {
+  service_principal_id = azuread_service_principal.sp_fa_coordinator.object_id
 }
 
 resource "azuread_application_password" "faap_fa_coordinator_app_service" {
