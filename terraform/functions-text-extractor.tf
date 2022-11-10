@@ -96,22 +96,6 @@ module "azurerm_app_reg_fa_text_extractor" {
   tags = ["fa-${local.resource_name}-text-extractor", "terraform"]
 }
 
-module "azurerm_service_principal_fa_text_extractor" {
-  source         = "./modules/terraform-azurerm-azuread_service_principal"
-  application_id = module.azurerm_app_reg_fa_text_extractor.client_id
-  app_role_assignment_required = false
-  owners         = [data.azurerm_client_config.current.object_id]
-}
-
-resource "azuread_app_role_assignment" "azurerm_sp_fa_text_extractor_role" {
-  app_role_id         = module.azurerm_service_principal_fa_text_extractor.oauth2_permission_scope_ids["user_impersonation"]
-  principal_object_id = module.azurerm_service_principal_fa_text_extractor.object_id
-  resource_object_id  = module.azurerm_service_principal_fa_text_extractor.object_id
-}
-
-resource "azuread_service_principal_password" "sp_fa_text_extractor_pw" {
-  service_principal_id = module.azurerm_service_principal_fa_text_extractor.object_id
-}
 
 data "azurerm_function_app_host_keys" "ak_text_extractor" {
   name                = "fa-${local.resource_name}-text-extractor"
