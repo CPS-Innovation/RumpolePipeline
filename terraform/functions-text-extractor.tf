@@ -89,7 +89,6 @@ module "azurerm_app_reg_fa_text_extractor" {
   web = {
     redirect_uris = ["https://fa-${local.resource_name}-text-extractor.azurewebsites.net/.auth/login/aad/callback"]
     implicit_grant = {
-      access_token_issuance_enabled = true
       id_token_issuance_enabled     = true
     }
   }
