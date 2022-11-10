@@ -137,7 +137,7 @@ module "azurerm_app_reg_fa_coordinator" {
   tags = ["fa-${local.resource_name}-coordinator", "terraform"]
 }
 
-module "azurerm_service_principal_fa_pdf_generator" {
+module "azurerm_service_principal_fa_coordinator" {
   source         = "./modules/terraform-azurerm-azuread_service_principal"
   application_id = module.azurerm_app_reg_fa_coordinator.client_id
 }
