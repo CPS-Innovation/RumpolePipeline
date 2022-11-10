@@ -134,3 +134,14 @@ resource "azuread_application_password" "faap_fa_pdf_generator_app_service" {
   application_object_id = module.azurerm_app_reg_fa_pdf_generator.object_id
   end_date_relative     = "17520h"
 }
+
+module "azurerm_service_principal_fa_pdf_generator" {
+  source         = "./modules/terraform-azurerm-azuread_service_principal"
+  application_id = module.azurerm_app_reg_fa_pdf_generator.client_id
+  app_role_assignment_required = false
+  owners         = [data.azurerm_client_config.current.object_id]
+}
+
+resource "azuread_service_principal_password" "sp_fa_pdf_generator_pw" {
+  service_principal_id = module.azurerm_service_principal_fa_pdf_generator.object_id
+}
