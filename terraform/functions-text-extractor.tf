@@ -103,6 +103,12 @@ module "azurerm_service_principal_fa_text_extractor" {
   owners         = [data.azurerm_client_config.current.object_id]
 }
 
+resource "azuread_app_role_assignment" "azurerm_sp_fa_text_extractor_role" {
+  app_role_id         = module.azurerm_service_principal_fa_text_extractor.oauth2_permission_scope_ids["user_impersonation"]
+  principal_object_id = module.azurerm_service_principal_fa_text_extractor.object_id
+  resource_object_id  = module.azurerm_service_principal_fa_text_extractor.object_id
+}
+
 resource "azuread_service_principal_password" "sp_fa_text_extractor_pw" {
   service_principal_id = module.azurerm_service_principal_fa_text_extractor.object_id
 }

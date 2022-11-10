@@ -122,6 +122,12 @@ resource "azuread_service_principal_password" "sp_fa_pdf_generator_pw" {
   service_principal_id = module.azurerm_service_principal_fa_pdf_generator.object_id
 }
 
+resource "azuread_app_role_assignment" "azurerm_sp_fa_pdf_generator_role" {
+  app_role_id         = module.azurerm_service_principal_fa_pdf_generator.oauth2_permission_scope_ids["user_impersonation"]
+  principal_object_id = module.azurerm_service_principal_fa_pdf_generator.object_id
+  resource_object_id  = module.azurerm_service_principal_fa_pdf_generator.object_id
+}
+
 data "azurerm_function_app_host_keys" "ak_pdf_generator" {
   name                = "fa-${local.resource_name}-pdf-generator"
   resource_group_name = azurerm_resource_group.rg.name
