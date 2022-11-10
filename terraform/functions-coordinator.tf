@@ -96,7 +96,7 @@ module "azurerm_app_reg_fa_coordinator" {
       admin_consent_description  = "Allow the calling application to instigate the ${local.resource_name} ${local.resource_name} coordinator"
       admin_consent_display_name = "Start the ${local.resource_name} Pipeline coordinator"
       id                         = element(random_uuid.random_id[*].result, 0)
-      type                       = "Admin"
+      type                       = "User"
       user_consent_description   = "Interact with the ${local.resource_name} Polaris Pipeline on-behalf of the calling user"
       user_consent_display_name  = "Interact with the ${local.resource_name} Polaris Pipeline"
       value                      = "user_impersonation"
