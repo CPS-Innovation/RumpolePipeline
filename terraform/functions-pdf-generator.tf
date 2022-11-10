@@ -147,7 +147,7 @@ resource "azuread_service_principal_password" "sp_fa_pdf_generator_pw" {
 }
 
 resource "azuread_service_principal_delegated_permission_grant" "rumpole_pdf_generator_grant_access_to_msgraph" {
-  service_principal_object_id          = module.azurerm_service_principal_fa_coordinator.object_id
+  service_principal_object_id          = module.azurerm_service_principal_fa_pdf_generator.object_id
   resource_service_principal_object_id = azuread_service_principal.msgraph.object_id
   claim_values                         = ["User.Read"]
 }
