@@ -36,7 +36,6 @@ terraform {
     storage_account_name = "cpsqastorageterraform" //QA
     container_name       = "terraform-rumpole-pipeline"
     key                  = "terraform.tfstate"
-    access_key           = "XU+qbfLnRlf/gUW1OANanfvv4eBBMsmNooQj3RbwK/+VvUP/xPbxPNVp03i7VghcUvHWIlZy2y8ssuFBg6/IFQ==" //QA
   }*/
 }
 
