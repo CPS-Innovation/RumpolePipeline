@@ -31,14 +31,13 @@ terraform {
     access_key           = "__storage_key__"
   }
   
-  /*
-  backend "azurerm" {
+  /*backend "azurerm" {
     resource_group_name  = "rg-terraform"
-    storage_account_name = "cpsdevstorageterraform"
+    storage_account_name = "cpsqastorageterraform" //QA
     container_name       = "terraform-rumpole-pipeline"
     key                  = "terraform.tfstate"
-  }
-  */
+    access_key           = "XU+qbfLnRlf/gUW1OANanfvv4eBBMsmNooQj3RbwK/+VvUP/xPbxPNVp03i7VghcUvHWIlZy2y8ssuFBg6/IFQ==" //QA
+  }*/
 }
 
 provider "azurerm" {
@@ -61,6 +60,8 @@ data "azurerm_client_config" "current" {}
 
 data "azuread_service_principal" "terraform_service_principal" {
   application_id = "__terraform_service_principal_app_id__"
+  //application_id = "ab6f55a4-543f-4f76-bf0a-13bdbd6c324b" // Dev 
+  //application_id = "b92f19b6-be30-4292-9763-d4b3340a8a64" // QA
 }
 
 data "azurerm_subscription" "current" {}

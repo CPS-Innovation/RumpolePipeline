@@ -63,7 +63,7 @@ resource "azurerm_function_app" "fa_text_extractor" {
 
 module "azurerm_app_reg_fa_text_extractor" {
   source  = "./modules/terraform-azurerm-azuread-app-registration"
-  display_name = "fa-${local.resource_name}-text-extractor"
+  display_name = "fa-${local.resource_name}-text-extractor-appreg"
   identifier_uris = ["api://fa-${local.resource_name}-text-extractor"]
   prevent_duplicate_names = true
   #use this code for adding app_roles

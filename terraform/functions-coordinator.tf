@@ -84,7 +84,7 @@ data "azurerm_function_app_host_keys" "ak_coordinator" {
 
 module "azurerm_app_reg_fa_coordinator" {
   source  = "./modules/terraform-azurerm-azuread-app-registration"
-  display_name = "fa-${local.resource_name}-coordinator"
+  display_name = "fa-${local.resource_name}-coordinator-appreg"
   identifier_uris = ["api://fa-${local.resource_name}-coordinator"]
   prevent_duplicate_names = true
   #use this code for adding scopes

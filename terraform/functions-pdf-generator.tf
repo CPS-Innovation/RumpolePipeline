@@ -63,7 +63,7 @@ resource "azurerm_function_app" "fa_pdf_generator" {
 
 module "azurerm_app_reg_fa_pdf_generator" {
   source  = "./modules/terraform-azurerm-azuread-app-registration"
-  display_name = "fa-${local.resource_name}-pdf-generator"
+  display_name = "fa-${local.resource_name}-pdf-generator-appreg"
   identifier_uris = ["api://fa-${local.resource_name}-pdf-generator"]
   prevent_duplicate_names = true
   #use this code for adding scopes
