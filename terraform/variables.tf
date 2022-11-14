@@ -2,12 +2,7 @@
 
 variable "resource_name_prefix" {
   type = string
-  default = "rumpole"
-}
-
-variable "pipeline_name_prefix" {
-  type = string
-  default = "pipeline"
+  default = "rumpole-pipeline"
 }
 
 variable "env" {
