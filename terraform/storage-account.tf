@@ -73,3 +73,47 @@ resource "azurerm_storage_management_policy" "pipeline-documents-lifecycle" {
     }
   }
 }
+
+data "azurerm_function_app_host_keys" "fa_text_extractor_generator_host_keys" {
+  name                = "fa-${local.resource_name}-text-extractor"
+  resource_group_name = azurerm_resource_group.rg.name
+  
+  depends_on = [azurerm_function_app.fa_text_extractor]
+}
+
+resource "azurerm_eventgrid_system_topic" "pipeline_document_deleted_topic" {
+  name                   = "pipeline-document-deleted-${var.env != "prod" ? var.env : ""}-topic"
+  location               = azurerm_resource_group.rg.location
+  resource_group_name    = azurerm_resource_group.rg.name
+  source_arm_resource_id = azurerm_storage_account.sa.id
+  topic_type             = "Microsoft.Storage.StorageAccounts"
+  
+  tags = {
+    environment = "${var.env}"
+  }
+}
+
+resource "azurerm_eventgrid_system_topic_event_subscription" "pipeline_document_deleted_event_subscription" {
+  name                 = "pipeline-document-deleted-event-${var.env != "prod" ? var.env : ""}-subscription"
+  resource_group_name  = azurerm_resource_group.rg.name
+  system_topic         = azurerm_eventgrid_system_topic.pipeline_document_deleted_topic.name
+  included_event_types = ["Microsoft.Storage.BlobDeleted"]
+  dead_letter_identity {
+    type = "SystemAssigned"
+  }
+  storage_blob_dead_letter_destination {
+    storage_account_id          = azurerm_resource_group.rg.id
+    storage_blob_container_name = "document-deleted-event-dead-letter"
+  }
+  retry_policy {
+    event_time_to_live    = 120
+    max_delivery_attempts = 10
+  }
+  
+  webhook_endpoint {
+    url = "https://${azurerm_function_app.fa_text_extractor.default_hostname}/api/fa-${local.resource_name}-text-extractor/runtime/webhooks/EventGrid?functionName=HandlePolarisDocumentDeleted&code=${data.azurerm_function_app_host_keys.fa_text_extractor_generator_host_keys.default_function_key}"
+  }
+  
+  depends_on = [azurerm_function_app.fa_text_extractor, azurerm_resource_group.rg, azurerm_eventgrid_system_topic.pipeline_document_deleted_topic]
+}
+
