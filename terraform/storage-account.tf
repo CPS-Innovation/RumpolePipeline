@@ -93,6 +93,7 @@ resource "azurerm_eventgrid_system_topic" "pipeline_document_deleted_topic" {
   }
 }
 
+/*
 resource "azurerm_eventgrid_system_topic_event_subscription" "pipeline_document_deleted_event_subscription" {
   name                 = "pipeline-document-deleted-event-${var.env != "prod" ? var.env : ""}-subscription"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -116,4 +117,4 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "pipeline_document_
   
   depends_on = [azurerm_function_app.fa_text_extractor, azurerm_resource_group.rg, azurerm_eventgrid_system_topic.pipeline_document_deleted_topic]
 }
-
+/*
