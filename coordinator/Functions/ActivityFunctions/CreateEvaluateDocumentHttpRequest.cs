@@ -33,13 +33,11 @@ public class CreateEvaluateDocumentHttpRequest
             throw new ArgumentException("CaseId cannot be zero");
         if (string.IsNullOrWhiteSpace(payload.DocumentId))
             throw new ArgumentException("DocumentId is empty");
-        if (string.IsNullOrWhiteSpace(payload.LastUpdatedDate))
-            throw new ArgumentException("LastUpdatedDate is empty");
         if (payload.CorrelationId == Guid.Empty)
             throw new ArgumentException("CorrelationId must be valid GUID");
             
         _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
-        var result = await _evaluateDocumentHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.LastUpdatedDate, payload.CorrelationId);
+        var result = await _evaluateDocumentHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.VersionId, payload.CorrelationId);
             
         _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
         return result;

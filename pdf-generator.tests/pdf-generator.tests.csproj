@@ -36,7 +36,6 @@
     <Folder Include="Factories\" />
     <Folder Include="Handlers\" />
     <Folder Include="Services\BlobStorageService\" />
-    <Folder Include="Services\DocumentExtractionService\" />
     <Folder Include="Wrappers\" />
   </ItemGroup>
   <ItemGroup>

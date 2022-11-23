@@ -32,7 +32,7 @@ namespace text_extractor.Services.SearchIndexService
             _logger = logger;
         }
 
-        public async Task StoreResultsAsync(AnalyzeResults analyzeResults, int caseId, string documentId, string lastUpdatedDate, Guid correlationId)
+        public async Task StoreResultsAsync(AnalyzeResults analyzeResults, long caseId, string documentId, long versionId, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(StoreResultsAsync), $"CaseId: {caseId}, DocumentId: {documentId}");
             
@@ -41,7 +41,7 @@ namespace text_extractor.Services.SearchIndexService
             foreach (var readResult in analyzeResults.ReadResults)
             {
                 lines.AddRange(readResult.Lines.Select((line, index) =>
-                                    _searchLineFactory.Create(caseId, documentId, lastUpdatedDate, readResult, line, index)));
+                                    _searchLineFactory.Create(caseId, documentId, versionId, readResult, line, index)));
             }
 
             _logger.LogMethodFlow(correlationId, nameof(StoreResultsAsync), "Beginning search index update");
@@ -83,7 +83,7 @@ namespace text_extractor.Services.SearchIndexService
             }
         }
 
-        public async Task RemoveResultsForDocumentAsync(int caseId, string documentId, Guid correlationId)
+        public async Task RemoveResultsForDocumentAsync(long caseId, string documentId, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(RemoveResultsForDocumentAsync), $"CaseId: {caseId}, DocumentId: {documentId}");
 

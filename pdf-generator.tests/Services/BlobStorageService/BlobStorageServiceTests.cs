@@ -19,9 +19,9 @@ namespace pdf_generator.tests.Services.BlobStorageService
 		private readonly Stream _stream;
 		private readonly string _blobName;
 		private readonly Guid _correlationId;
-		private readonly string _caseId;
+		private readonly long _caseId;
 		private readonly string _documentId;
-		private readonly string _lastUpdatedDate;
+		private readonly long _versionId;
 
 		private readonly Mock<Response<bool>> _mockBlobContainerExistsResponse;
 		private readonly Mock<BlobClient> _mockBlobClient;
@@ -35,9 +35,9 @@ namespace pdf_generator.tests.Services.BlobStorageService
 			_stream = new MemoryStream();
 			_blobName = fixture.Create<string>();
 			_correlationId = fixture.Create<Guid>();
-			_caseId = fixture.Create<string>();
+			_caseId = fixture.Create<long>();
 			_documentId = fixture.Create<string>();
-			_lastUpdatedDate = fixture.Create<string>();
+			_versionId = fixture.Create<long>();
 
 			var mockBlobServiceClient = new Mock<BlobServiceClient>();
 			var mockBlobContainerClient = new Mock<BlobContainerClient>();
@@ -79,13 +79,13 @@ namespace pdf_generator.tests.Services.BlobStorageService
 		{
 			_mockBlobContainerExistsResponse.Setup(response => response.Value).Returns(false);
 
-			await Assert.ThrowsAsync<RequestFailedException>(() => _blobStorageService.UploadDocumentAsync(_stream, _blobName, _caseId, _documentId, _lastUpdatedDate, _correlationId));
+			await Assert.ThrowsAsync<RequestFailedException>(() => _blobStorageService.UploadDocumentAsync(_stream, _blobName, _caseId.ToString(), _documentId, _versionId.ToString(), _correlationId));
 		}
 
 		[Fact]
 		public async Task UploadDocumentAsync_UploadsDocument()
 		{
-			await _blobStorageService.UploadDocumentAsync(_stream, _blobName, _caseId, _documentId, _lastUpdatedDate, _correlationId);
+			await _blobStorageService.UploadDocumentAsync(_stream, _blobName, _caseId.ToString(), _documentId, _versionId.ToString(), _correlationId);
 
 			_mockBlobClient.Verify(client => client.UploadAsync(_stream, true, It.IsAny<CancellationToken>()));
 		}

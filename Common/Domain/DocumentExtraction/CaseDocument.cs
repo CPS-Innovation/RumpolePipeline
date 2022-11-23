@@ -4,7 +4,7 @@
 	{
 		public string DocumentId { get; set; }
 
-		public string LastUpdatedDate { get; set; }
+		public long VersionId { get; set; }
 
 		public string FileName { get; set; }
 

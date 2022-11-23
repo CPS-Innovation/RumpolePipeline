@@ -2,16 +2,18 @@
 using System.Diagnostics.CodeAnalysis;
 using Common.Adapters;
 using Common.Constants;
+using Common.Domain.Responses;
 using Common.Handlers;
+using Common.Mappers;
+using Common.Mappers.Contracts;
+using Common.Services;
+using Common.Services.Contracts;
 using Common.Wrappers;
 using coordinator;
-using coordinator.Clients;
 using coordinator.Factories;
-using coordinator.TempService;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 
 [assembly: FunctionsStartup(typeof(Startup))]
@@ -55,15 +57,9 @@ namespace coordinator
             builder.Services.AddSingleton<IEvaluateExistingDocumentsHttpRequestFactory, EvaluateExistingDocumentsHttpRequestFactory>();
             builder.Services.AddSingleton<IEvaluateDocumentHttpRequestFactory, EvaluateDocumentHttpRequestFactory>();
             builder.Services.AddSingleton<IUpdateSearchIndexHttpRequestFactory, UpdateSearchIndexHttpRequestFactory>();
-            
-            builder.Services.AddTransient<IBlobStorageService>(serviceProvider =>
-            {
-                var loggingService = serviceProvider.GetService<ILogger<BlobStorageService>>();
-                
-                return new BlobStorageService(configuration[ConfigKeys.SharedKeys.StubBlobStorageConnectionString],
-                    loggingService, configuration[ConfigKeys.SharedKeys.BlobServiceContainerName]);
-            });
-            builder.Services.AddTransient<IDocumentExtractionClient, DocumentExtractionClientStub>();
+
+            builder.Services.AddTransient<ICaseDocumentMapper<DdeiCaseDocumentResponse>, DdeiCaseDocumentMapper>();
+            builder.Services.AddTransient<IDocumentExtractionService, DdeiDocumentExtractionService>();
         }
         
         private static string GetValueFromConfig(IConfiguration configuration, string key)

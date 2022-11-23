@@ -4,16 +4,21 @@ namespace Common.Domain.Requests
 {
     public class GeneratePdfRequest
     {
-        public GeneratePdfRequest(int caseId, string documentId, string fileName, string lastUpdatedDate)
+        public GeneratePdfRequest(string caseUrn, long caseId, string documentId, string fileName, long versionId)
         {
+            CaseUrn = caseUrn;
             CaseId = caseId;
             DocumentId = documentId;
             FileName = fileName;
-            LastUpdatedDate = lastUpdatedDate;
+            VersionId = versionId;
         }
         
+        [Required] 
+        public string CaseUrn { get; set; }
+        
         [Required]
-        public int? CaseId { get; set; }
+        [Range(1, long.MaxValue)]
+        public long CaseId { get; set; }
 
         [Required]
         public string DocumentId { get; set; }
@@ -23,6 +28,7 @@ namespace Common.Domain.Requests
         public string FileName { get; set; }
         
         [Required]
-        public string LastUpdatedDate { get; set; }
+        [Range(1, long.MaxValue)]
+        public long VersionId { get; set; }
     }
 }

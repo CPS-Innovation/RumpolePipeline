@@ -4,8 +4,8 @@ namespace coordinator.Domain
 {
     public class CoordinatorOrchestrationPayload : BasePipelinePayload
     {
-        public CoordinatorOrchestrationPayload(int caseId, bool forceRefresh, string accessToken, Guid correlationId)
-            : base(caseId, correlationId)
+        public CoordinatorOrchestrationPayload(string caseUrn, long caseId, bool forceRefresh, string accessToken, Guid correlationId)
+            : base(caseUrn, caseId, correlationId)
         {
             ForceRefresh = forceRefresh;
             AccessToken = accessToken;

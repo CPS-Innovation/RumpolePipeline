@@ -30,8 +30,8 @@ namespace coordinator.Functions
         }
 
         [FunctionName("CoordinatorStart")]
-        public async Task<HttpResponseMessage> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "cases/{caseId}")] HttpRequestMessage req, string caseId, [DurableClient] IDurableOrchestrationClient orchestrationClient)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "cases/{caseUrn}/{caseId}")] HttpRequestMessage req, 
+                string caseUrn, string caseId, [DurableClient] IDurableOrchestrationClient orchestrationClient)
         { 
             Guid currentCorrelationId = default;
             const string loggingName = $"{nameof(CoordinatorStart)} - {nameof(Run)}";
@@ -52,6 +52,9 @@ namespace coordinator.Functions
                 var authValidation = await _authorizationValidator.ValidateTokenAsync(req.Headers.Authorization, currentCorrelationId);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
+
+                if (string.IsNullOrWhiteSpace(caseUrn))
+                    throw new BadRequestException("A case URN must be supplied.", caseUrn);
 
                 if (!int.TryParse(caseId, out var caseIdNum))
                     throw new BadRequestException("Invalid case id. A 32-bit integer is required.", caseId);
@@ -80,7 +83,7 @@ namespace coordinator.Functions
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),
                         caseId,
-                        new CoordinatorOrchestrationPayload(caseIdNum, forceRefresh, authValidation.Item2, currentCorrelationId));
+                        new CoordinatorOrchestrationPayload(caseUrn, caseIdNum, forceRefresh, authValidation.Item2, currentCorrelationId));
 
                     _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'");
                 }

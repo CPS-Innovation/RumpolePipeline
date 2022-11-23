@@ -4,15 +4,15 @@ namespace coordinator.Domain;
 
 public class CreateEvaluateDocumentHttpRequestActivityPayload : BasePipelinePayload
 {
-    public CreateEvaluateDocumentHttpRequestActivityPayload(int caseId, string documentId, string lastUpdatedDate, Guid correlationId)
-        : base(caseId, correlationId)
+    public CreateEvaluateDocumentHttpRequestActivityPayload(string caseUrn, long caseId, string documentId, long versionId, Guid correlationId)
+        : base(caseUrn, caseId, correlationId)
     {
         CaseId = caseId;
         DocumentId = documentId;
-        LastUpdatedDate = lastUpdatedDate;
+        VersionId = versionId;
     }
     
     public string DocumentId { get; set; }
 
-    public string LastUpdatedDate { get; set; }
+    public long VersionId { get; set; }
 }

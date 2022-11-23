@@ -6,5 +6,5 @@ namespace coordinator.Factories;
 
 public interface IUpdateSearchIndexHttpRequestFactory
 {
-    Task<DurableHttpRequest> Create(int caseId, string documentId, Guid correlationId);
+    Task<DurableHttpRequest> Create(long caseId, string documentId, Guid correlationId);
 }

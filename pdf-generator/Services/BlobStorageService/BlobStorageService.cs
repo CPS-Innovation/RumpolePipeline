@@ -46,7 +46,7 @@ namespace pdf_generator.Services.BlobStorageService
             return blob.Value.Content.ToStream();
         }
 
-        public async Task UploadDocumentAsync(Stream stream, string blobName, string caseId, string documentId, string lastUpdatedDate, Guid correlationId)
+        public async Task UploadDocumentAsync(Stream stream, string blobName, string caseId, string documentId, string versionId, Guid correlationId)
         {
             var decodedBlobName = blobName.UrlDecodeString();
             _logger.LogMethodEntry(correlationId, nameof(UploadDocumentAsync), decodedBlobName);
@@ -64,7 +64,7 @@ namespace pdf_generator.Services.BlobStorageService
             {
                 {DocumentTags.CaseId, caseId},
                 {DocumentTags.DocumentId, documentId},
-                {DocumentTags.LastUpdatedDate, lastUpdatedDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd")}
+                {DocumentTags.VersionId, string.IsNullOrWhiteSpace(versionId) ? "1" : versionId}
             };
 
             await blobClient.SetMetadataAsync(metadata);

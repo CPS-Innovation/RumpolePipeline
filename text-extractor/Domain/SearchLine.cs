@@ -9,13 +9,13 @@ namespace text_extractor.Domain
         public string Id { get; set; }
 
         [JsonProperty("caseId")]
-        public int CaseId { get; set; }
+        public long CaseId { get; set; }
 
         [JsonProperty("documentId")]
         public string DocumentId { get; set; }
         
-        [JsonProperty("lastUpdatedDate")]
-        public string LastUpdatedDate { get; set; }
+        [JsonProperty("versionId")]
+        public long VersionId { get; set; }
         
         [JsonProperty("pageIndex")]
         public int PageIndex { get; set; }

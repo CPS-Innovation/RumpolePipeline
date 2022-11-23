@@ -4,19 +4,19 @@ namespace Common.Domain.Requests;
 
 public class EvaluateDocumentRequest
 {
-    public EvaluateDocumentRequest(int caseId, string documentId, string lastUpdatedDate)
+    public EvaluateDocumentRequest(long caseId, string documentId, long versionId)
     {
         CaseId = caseId;
         DocumentId = documentId;
-        LastUpdatedDate = lastUpdatedDate;
+        VersionId = versionId;
     }
     
     [Required]
-    public int CaseId { get; set; }
+    public long CaseId { get; set; }
 
     [Required]
     public string DocumentId { get; set; }
         
     [Required] 
-    public string LastUpdatedDate { get; set; }
+    public long VersionId { get; set; }
 }

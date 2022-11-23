@@ -19,9 +19,9 @@ namespace coordinator.tests.Factories
 {
 	public class TextExtractorHttpRequestFactoryTests
 	{
-        private readonly int _caseId;
+        private readonly long _caseId;
 		private readonly string _documentId;
-		private readonly string _lastUpdatedDate;
+		private readonly long _versionId;
 		private readonly string _blobName;
 		private readonly AccessToken _clientAccessToken;
 		private readonly string _content;
@@ -36,7 +36,7 @@ namespace coordinator.tests.Factories
 			var fixture = new Fixture();
 			_caseId = fixture.Create<int>();
 			_documentId = fixture.Create<string>();
-			_lastUpdatedDate = fixture.Create<string>();
+			_versionId = fixture.Create<long>();
 			_blobName = fixture.Create<string>();
 			_clientAccessToken = fixture.Create<AccessToken>();
 			_content = fixture.Create<string>();
@@ -65,7 +65,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _blobName, _correlationId);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _versionId, _blobName, _correlationId);
 
 			durableRequest.Method.Should().Be(HttpMethod.Post);
 		}
@@ -73,7 +73,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedUriOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _blobName, _correlationId);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _versionId, _blobName, _correlationId);
 
 			durableRequest.Uri.AbsoluteUri.Should().Be(_textExtractorUrl);
 		}
@@ -81,16 +81,17 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHeadersOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _blobName, _correlationId);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _versionId, _blobName, _correlationId);
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
 			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_clientAccessToken.Token}");
+			durableRequest.Headers.Should().Contain("Correlation-Id", _correlationId.ToString());
 		}
 
 		[Fact]
 		public async Task Create_SetsExpectedContentOnDurableRequest()
 		{
-			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _blobName, _correlationId);
+			var durableRequest = await _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _versionId, _blobName, _correlationId);
 
 			durableRequest.Content.Should().Be(_content);
 		}
@@ -101,7 +102,7 @@ namespace coordinator.tests.Factories
 			_mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>(), It.IsAny<Guid>()))
 				.Throws(new Exception());
 
-            await Assert.ThrowsAsync<TextExtractorHttpRequestFactoryException>(() => _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _lastUpdatedDate, _blobName, _correlationId));
+            await Assert.ThrowsAsync<TextExtractorHttpRequestFactoryException>(() => _textExtractorHttpRequestFactory.Create(_caseId, _documentId, _versionId, _blobName, _correlationId));
 		}
 	}
 }

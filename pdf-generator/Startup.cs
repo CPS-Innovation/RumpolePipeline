@@ -5,9 +5,14 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using Common.Constants;
 using Common.Domain.Requests;
+using Common.Domain.Responses;
 using Common.Factories;
 using Common.Factories.Contracts;
 using Common.Handlers;
+using Common.Mappers;
+using Common.Mappers.Contracts;
+using Common.Services;
+using Common.Services.Contracts;
 using Common.Wrappers;
 using FluentValidation;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -20,7 +25,6 @@ using pdf_generator.Factories;
 using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
 using pdf_generator.Services.DocumentEvaluationService;
-using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.DocumentRedactionService;
 using pdf_generator.Services.PdfService;
 using pdf_generator.Services.SearchService;
@@ -74,7 +78,6 @@ namespace pdf_generator
             builder.Services.AddTransient<IValidatorWrapper<EvaluateExistingDocumentsRequest>, ValidatorWrapper<EvaluateExistingDocumentsRequest>>();
             builder.Services.AddTransient<IValidatorWrapper<EvaluateDocumentRequest>, ValidatorWrapper<EvaluateDocumentRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
-            builder.Services.AddTransient<IDocumentExtractionHttpRequestFactory, DocumentExtractionHttpRequestFactory>();
             builder.Services.AddTransient<IAuthorizationValidator, AuthorizationValidator>();
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
             builder.Services.AddTransient<IAsposeItemFactory, AsposeItemFactory>();
@@ -91,11 +94,9 @@ namespace pdf_generator
                 return new BlobStorageService(serviceProvider.GetRequiredService<BlobServiceClient>(),
                         configuration[ConfigKeys.SharedKeys.BlobServiceContainerName], loggingService);
             });
-            builder.Services.AddTransient<IDocumentExtractionService>(extractionProvider =>
-            {
-                var loggingService = extractionProvider.GetService<ILogger<DocumentExtractionServiceStub>>();
-                return new DocumentExtractionServiceStub(configuration[ConfigKeys.SharedKeys.StubBlobStorageConnectionString], loggingService, configuration);
-            });
+
+            builder.Services.AddTransient<ICaseDocumentMapper<DdeiCaseDocumentResponse>, DdeiCaseDocumentMapper>();
+            builder.Services.AddTransient<IDocumentExtractionService, DdeiDocumentExtractionService>();
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
             builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
             builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();

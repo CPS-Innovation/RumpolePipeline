@@ -6,5 +6,5 @@ namespace coordinator.Factories;
 
 public interface IEvaluateDocumentHttpRequestFactory
 {
-    Task<DurableHttpRequest> Create(int caseId, string documentId, string lastUpdatedDate, Guid correlationId);
+    Task<DurableHttpRequest> Create(long caseId, string documentId, long versionId, Guid correlationId);
 }

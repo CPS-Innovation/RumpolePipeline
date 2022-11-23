@@ -12,6 +12,7 @@ using Common.Domain.Requests;
 using Common.Domain.Responses;
 using Common.Handlers;
 using Common.Logging;
+using Common.Services.Contracts;
 using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -19,7 +20,6 @@ using Microsoft.Extensions.Logging;
 using pdf_generator.Domain;
 using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
-using pdf_generator.Services.DocumentExtractionService;
 using pdf_generator.Services.PdfService;
 
 namespace pdf_generator.Functions
@@ -93,8 +93,7 @@ namespace pdf_generator.Functions
 
                 //Will need to prepare a custom oAuth request to send to Cde
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"Retrieving Document from Cde for documentId: '{pdfRequest.DocumentId}'");
-                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.DocumentId,
-                    pdfRequest.FileName, "onBehalfOfAccessToken", currentCorrelationId);
+                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.CaseUrn, pdfRequest.CaseId.ToString(), pdfRequest.DocumentId, string.Empty, currentCorrelationId);
 
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
                 var fileType = pdfRequest.FileName.Split('.').Last().ToFileType();
@@ -104,7 +103,7 @@ namespace pdf_generator.Functions
                         $"Retrieved document is already a PDF and so no conversion necessary; uploading and storing original file: '{pdfRequest.FileName}' to blob storage as file: '{blobName}'");
                     
                     await _blobStorageService.UploadDocumentAsync(documentStream, blobName, pdfRequest.CaseId.ToString(), pdfRequest.DocumentId, 
-                        pdfRequest.LastUpdatedDate, currentCorrelationId);
+                        pdfRequest.VersionId.ToString(), currentCorrelationId);
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"{blobName} uploaded successfully");
                 }
@@ -116,7 +115,7 @@ namespace pdf_generator.Functions
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"Document converted to PDF successfully, beginning upload of '{blobName}'...");
                     await _blobStorageService.UploadDocumentAsync(pdfStream, blobName, pdfRequest.CaseId.ToString(), pdfRequest.DocumentId, 
-                        pdfRequest.LastUpdatedDate, currentCorrelationId);
+                        pdfRequest.VersionId.ToString(), currentCorrelationId);
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"'{blobName}' uploaded successfully");
                 }

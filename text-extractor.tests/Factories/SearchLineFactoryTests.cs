@@ -11,9 +11,9 @@ namespace text_extractor.tests.Factories
 {
 	public class SearchLineFactoryTests
 	{
-        private readonly int _caseId;
+        private readonly long _caseId;
 		private readonly string _documentId;
-		private readonly string _lastUpdatedDate;
+		private readonly long _versionId;
 		private readonly ReadResult _readResult;
 		private readonly Line _line;
 		private readonly int _index;
@@ -27,7 +27,7 @@ namespace text_extractor.tests.Factories
             var fixture = new Fixture();
 			_caseId = fixture.Create<int>();
 			_documentId = fixture.Create<string>();
-			_lastUpdatedDate = fixture.Create<string>();
+			_versionId = fixture.Create<long>();
 			fixture.Create<string>();
             _pageHeight = fixture.Create<double>();
 			_pageWidth = fixture.Create<double>();
@@ -46,7 +46,7 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedId()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			var id = $"{_caseId}-{_documentId}-{_readResult.Page}-{_index}";
 			var bytes = Encoding.UTF8.GetBytes(id);
@@ -58,7 +58,7 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedCaseId()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.CaseId.Should().Be(_caseId);
 		}
@@ -66,23 +66,23 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedDocumentId()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.DocumentId.Should().Be(_documentId);
 		}
 		
 		[Fact]
-		public void Create_ReturnsExpectedLastUpdatedDate()
+		public void Create_ReturnsExpectedVersionId()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
-			factory.LastUpdatedDate.Should().Be(_lastUpdatedDate);
+			factory.VersionId.Should().Be(_versionId);
 		}
 		
 		[Fact]
 		public void Create_ReturnsExpectedPageIndex()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.PageIndex.Should().Be(_readResult.Page);
 		}
@@ -90,7 +90,7 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedLineIndex()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.LineIndex.Should().Be(_index);
 		}
@@ -98,7 +98,7 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedLanguage()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.Language.Should().Be(_line.Language);
 		}
@@ -106,7 +106,7 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedBoundingBox()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.BoundingBox.Should().BeEquivalentTo(_line.BoundingBox);
 		}
@@ -114,7 +114,7 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedAppearance()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.Appearance.Should().Be(_line.Appearance);
 		}
@@ -122,7 +122,7 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedText()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.Text.Should().Be(_line.Text);
 		}
@@ -130,7 +130,7 @@ namespace text_extractor.tests.Factories
 		[Fact]
 		public void Create_ReturnsExpectedWords()
 		{
-			var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
 			factory.Words.Should().BeEquivalentTo(_line.Words);
 		}
@@ -138,7 +138,7 @@ namespace text_extractor.tests.Factories
         [Fact]
         public void Create_ReturnsExpectedHeightAndWidth()
         {
-            var factory = _searchLineFactory.Create(_caseId, _documentId, _lastUpdatedDate, _readResult, _line, _index);
+            var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _readResult, _line, _index);
 
             using (new AssertionScope())
             {

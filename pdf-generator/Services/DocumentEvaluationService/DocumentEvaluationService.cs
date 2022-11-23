@@ -46,10 +46,10 @@ public class DocumentEvaluationService : IDocumentEvaluationService
         foreach (var storedDocument in currentlyStoredDocuments)
         {
             var storedDocumentId = storedDocument.DocumentMetadata[DocumentTags.DocumentId];
-            var storedLastUpdatedDate = storedDocument.DocumentMetadata[DocumentTags.LastUpdatedDate];
+            var storedVersionId = long.Parse(storedDocument.DocumentMetadata[DocumentTags.VersionId]);
 
             var storedDocumentInCms = incomingDocuments.Any(incomingDocument => incomingDocument.DocumentId == storedDocumentId
-                                                                                && incomingDocument.LastUpdatedDate == storedLastUpdatedDate);
+                                                                                && incomingDocument.VersionId == storedVersionId);
 
             if (storedDocumentInCms) continue;
             
@@ -90,9 +90,9 @@ public class DocumentEvaluationService : IDocumentEvaluationService
             return response;
         }
 
-        var storedLastUpdatedDate = currentlyStoredDocument.DocumentMetadata[DocumentTags.LastUpdatedDate];
+        var storedVersionId = long.Parse(currentlyStoredDocument.DocumentMetadata[DocumentTags.VersionId]);
 
-        if (request.LastUpdatedDate == storedLastUpdatedDate)
+        if (request.VersionId == storedVersionId)
         {
             response.EvaluationResult = DocumentEvaluationResult.DocumentUnchanged;
             response.UpdateSearchIndex = false;

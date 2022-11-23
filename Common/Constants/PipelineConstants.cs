@@ -49,14 +49,13 @@
     {
         public const string CaseId = "caseId";
         public const string DocumentId = "documentId";
-        public const string LastUpdatedDate = "lastUpdatedDate";
-        public const string OriginalFileName = "originalFileName";
+        public const string VersionId = "versionId";
     }
 
-    public static class FeatureFlags
+    /*public static class FeatureFlags
     {
         public const string EvaluateDocuments = "FeatureFlags_EvaluateDocuments";
-    }
+    }*/
 
     public static class ConfigKeys
     {
@@ -78,8 +77,6 @@
         public static class PdfGeneratorKeys
         {
             public const string FakeCmsDocumentsRepository = "FakeCmsDocumentsRepository";
-            public const string FakeCmsDocumentsRepository2 = "FakeCmsDocumentsRepository2";
-            public const string DocumentExtractionBaseUrl = "DocumentExtractionBaseUrl";
         }
 
         public static class TextExtractorKeys
@@ -101,6 +98,8 @@
             public const string BlobServiceUrl = "BlobServiceUrl";
             public const string StubBlobStorageConnectionString = "StubBlobStorageConnectionString";
             public const string IsRunningLocally = "IsRunningLocally";
+            public const string GetDocumentUrl = "GetDocumentUrl";
+            public const string ListDocumentsUrl = "ListDocumentsUrl";
         }
     }
 }

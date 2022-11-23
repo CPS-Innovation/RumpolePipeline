@@ -64,7 +64,7 @@ namespace pdf_generator.Services.SearchService
 
                 newWrapper.DocumentMetadata.Add(DocumentTags.CaseId, line.CaseId.ToString());
                 newWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, line.DocumentId);
-                newWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, line.LastUpdatedDate);
+                newWrapper.DocumentMetadata.Add(DocumentTags.VersionId, line.VersionId.ToString());
 
                 documentsFound.Add(newWrapper);
             }

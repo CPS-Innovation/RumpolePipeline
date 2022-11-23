@@ -32,29 +32,33 @@ public class EvaluateDocumentHttpRequestFactory : IEvaluateDocumentHttpRequestFa
         _logger = logger;
     }
     
-    public async Task<DurableHttpRequest> Create(int caseId, string documentId, string lastUpdatedDate, Guid correlationId)
+    public async Task<DurableHttpRequest> Create(long caseId, string documentId, long versionId, Guid correlationId)
     {
-        _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}, LastUpdatedDate: {lastUpdatedDate}");
-            
+        _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}, VersionId: {versionId}");
+
         try
         {
             var clientScopes = _configuration[ConfigKeys.CoordinatorKeys.PdfGeneratorScope];
-                
+
             var result = await _identityClientAdapter.GetClientAccessTokenAsync(clientScopes, correlationId);
-                
+
             var headers = new Dictionary<string, StringValues>
             {
-                { HttpHeaderKeys.ContentType, HttpHeaderValues.ApplicationJson },
-                { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
-                { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
+                {HttpHeaderKeys.ContentType, HttpHeaderValues.ApplicationJson},
+                {HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
+                {HttpHeaderKeys.CorrelationId, correlationId.ToString()}
             };
-            var content = _jsonConvertWrapper.SerializeObject(new EvaluateDocumentRequest(caseId, documentId, lastUpdatedDate));
+            var content = _jsonConvertWrapper.SerializeObject(new EvaluateDocumentRequest(caseId, documentId, versionId));
 
             return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration[ConfigKeys.CoordinatorKeys.DocumentEvaluatorUrl]), headers, content);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             throw new GeneratePdfHttpRequestFactoryException(ex.Message);
+        }
+        finally
+        {
+            _logger.LogMethodExit(correlationId, nameof(Create), string.Empty);
         }
     }
 }

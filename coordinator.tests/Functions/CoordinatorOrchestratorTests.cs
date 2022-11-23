@@ -17,7 +17,6 @@ using coordinator.Functions;
 using coordinator.Functions.ActivityFunctions;
 using coordinator.Functions.SubOrchestrators;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -39,7 +38,6 @@ namespace coordinator.tests.Functions
         
         private readonly Mock<IDurableOrchestrationContext> _mockDurableOrchestrationContext;
         private readonly Mock<ITracker> _mockTracker;
-        private readonly Mock<IConfiguration> _mockConfiguration;
 
         private readonly CoordinatorOrchestrator _coordinatorOrchestrator;
 
@@ -48,24 +46,24 @@ namespace coordinator.tests.Functions
             var fixture = new Fixture();
             _accessToken = fixture.Create<string>();
             fixture.Create<Guid>();
-            _durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("http://www.google.co.uk"));
+            _durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk"));
             _payload = fixture.Build<CoordinatorOrchestrationPayload>()
                         .With(p => p.ForceRefresh, false)
                         .With(p => p.AccessToken, _accessToken)
                         .Create();
             _caseDocuments = fixture.Create<CaseDocument[]>();
+
             _transactionId = fixture.Create<string>();
             _trackerDocuments = fixture.Create<List<TrackerDocument>>();
             _evaluateDocumentsResponse = fixture.CreateMany<EvaluateDocumentResponse>().ToList();
 
-            _mockConfiguration = new Mock<IConfiguration>();
+            var mockConfiguration = new Mock<IConfiguration>();
             var mockLogger = new Mock<ILogger<CoordinatorOrchestrator>>();
             _mockDurableOrchestrationContext = new Mock<IDurableOrchestrationContext>();
             _mockTracker = new Mock<ITracker>();
             
-            _mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.CoordinatorOrchestratorTimeoutSecs]).Returns("300");
-            _mockConfiguration.Setup(config => config[FeatureFlags.EvaluateDocuments]).Returns("true");
-
+            mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.CoordinatorOrchestratorTimeoutSecs]).Returns("300");
+            
             _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CoordinatorOrchestrationPayload>())
@@ -85,7 +83,7 @@ namespace coordinator.tests.Functions
                 It.IsAny<CreateEvaluateExistingDocumentsHttpRequestActivityPayload>())).ReturnsAsync(_durableRequest);
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest)).ReturnsAsync(_durableResponse);
             
-            _coordinatorOrchestrator = new CoordinatorOrchestrator(_mockConfiguration.Object, mockLogger.Object, new JsonConvertWrapper());
+            _coordinatorOrchestrator = new CoordinatorOrchestrator(mockConfiguration.Object, mockLogger.Object, new JsonConvertWrapper());
         }
 
         [Fact]
@@ -234,20 +232,6 @@ namespace coordinator.tests.Functions
             documents.Should().BeEquivalentTo(_trackerDocuments);
         }
         
-        [Fact]
-        public async Task Run_ReturnsDocuments_WhenEvaluateDocuments_FeatureKey_TurnedOff()
-        {
-            _mockConfiguration.Setup(config => config[FeatureFlags.EvaluateDocuments]).Returns("false");
-            var documents = await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-
-            using (new AssertionScope())
-            {
-                documents.Should().BeEquivalentTo(_trackerDocuments);
-                _mockDurableOrchestrationContext.Verify(context => context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
-                    It.IsAny<CreateEvaluateExistingDocumentsHttpRequestActivityPayload>()), Times.Never);
-            }
-        }
-
         [Fact]
         public async Task Run_ThrowsExceptionWhenExceptionOccurs()
         {

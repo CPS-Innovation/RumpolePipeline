@@ -34,7 +34,7 @@ public class EvaluateExistingDocumentsHttpRequestFactory : IEvaluateExistingDocu
         _logger = logger;
     }
     
-    public async Task<DurableHttpRequest> Create(int caseId, List<CaseDocument> incomingDocuments, Guid correlationId)
+    public async Task<DurableHttpRequest> Create(long caseId, List<CaseDocument> incomingDocuments, Guid correlationId)
     {
         _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, IncomingDocuments: {incomingDocuments.ToJson()}");
             
@@ -57,6 +57,10 @@ public class EvaluateExistingDocumentsHttpRequestFactory : IEvaluateExistingDocu
         catch(Exception ex)
         {
             throw new GeneratePdfHttpRequestFactoryException(ex.Message);
+        }
+        finally
+        {
+            _logger.LogMethodExit(correlationId, nameof(Create), string.Empty);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace coordinator.tests.Factories
 {
 	public class UpdateSearchIndexHttpRequestFactoryTests
 	{
-        private readonly int _caseId;
+        private readonly long _caseId;
 		private readonly string _documentId;
 		private readonly AccessToken _clientAccessToken;
 		private readonly string _content;
@@ -82,6 +82,7 @@ namespace coordinator.tests.Factories
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
 			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_clientAccessToken.Token}");
+			durableRequest.Headers.Should().Contain("Correlation-Id", _correlationId.ToString());
 		}
 
 		[Fact]

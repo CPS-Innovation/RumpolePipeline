@@ -4,13 +4,16 @@ namespace coordinator.Domain;
 
 public abstract class BasePipelinePayload
 {
-    protected BasePipelinePayload(int caseId, Guid correlationId)
+    protected BasePipelinePayload(string caseUrn, long caseId, Guid correlationId)
     {
+        CaseUrn = caseUrn;
         CaseId = caseId;
         CorrelationId = correlationId;
     }
+
+    public string CaseUrn { get; set; }
     
-    public int CaseId { get; set; }
+    public long CaseId { get; set; }
     
     public Guid CorrelationId { get; set; }
 

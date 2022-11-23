@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using AutoFixture;
 using Common.Domain.DocumentExtraction;
-using coordinator.Clients;
+using Common.Services.Contracts;
 using coordinator.Domain;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;
@@ -28,18 +28,18 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _payload = fixture.Create<GetCaseDocumentsActivityPayload>();
             _case = fixture.Create<Case>();
 
-            var mockDocumentExtractionClient = new Mock<IDocumentExtractionClient>();
+            var mockDocumentExtractionService = new Mock<IDocumentExtractionService>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
 
             _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
                 .Returns(_payload);
 
-            mockDocumentExtractionClient.Setup(client => client.GetCaseDocumentsAsync(_payload.CaseId.ToString(), _payload.AccessToken, 
+            mockDocumentExtractionService.Setup(client => client.ListDocumentsAsync(_payload.CaseUrn, _payload.CaseId.ToString(), _payload.AccessToken, 
                     _payload.CorrelationId))
-                .ReturnsAsync(_case);
+                .ReturnsAsync(_case.CaseDocuments);
 
             var mockLogger = new Mock<ILogger<GetCaseDocuments>>();
-            _getCaseDocuments = new GetCaseDocuments(mockDocumentExtractionClient.Object, mockLogger.Object);
+            _getCaseDocuments = new GetCaseDocuments(mockDocumentExtractionService.Object, mockLogger.Object);
         }
 
         [Fact]

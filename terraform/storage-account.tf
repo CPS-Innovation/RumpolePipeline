@@ -91,4 +91,18 @@ resource "azurerm_eventgrid_system_topic" "pipeline_document_deleted_topic" {
   tags = {
     environment = "${var.env}"
   }
+  depends_on = [azurerm_storage_account.sa]
+}
+
+resource "azurerm_eventgrid_event_subscription" "eventgrid_subscription" {
+  name   = "pipeline-document-deleted-${var.env != "prod" ? var.env : ""}-event"
+  scope  = azurerm_storage_account.sa.id
+  event_delivery_schema = "EventGridSchema"
+  azure_function_endpoint {
+    function_id = "${module.functions.function_id}/functions/${var.eventGridFunctionName}"
+
+    # defaults, specified to avoid "no-op" changes when 'apply' is re-ran
+    max_events_per_batch              = 1
+    preferred_batch_size_in_kilobytes = 64
+  }
 }

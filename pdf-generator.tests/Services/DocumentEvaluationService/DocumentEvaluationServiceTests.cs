@@ -77,7 +77,7 @@ public class DocumentEvaluationServiceTests
                 BlobContainerName = _fixture.Create<string>()
             };
             blobItemWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, incomingDoc.DocumentId);
-            blobItemWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, incomingDoc.LastUpdatedDate);
+            blobItemWrapper.DocumentMetadata.Add(DocumentTags.VersionId, incomingDoc.VersionId.ToString());
             
             _documentsForCase.Add(blobItemWrapper);
         }
@@ -106,7 +106,7 @@ public class DocumentEvaluationServiceTests
                 BlobContainerName = _fixture.Create<string>()
             };
             blobItemWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, pos % 2 == 0 ? incomingDoc.DocumentId : _fixture.Create<string>());
-            blobItemWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, incomingDoc.LastUpdatedDate);
+            blobItemWrapper.DocumentMetadata.Add(DocumentTags.VersionId, incomingDoc.VersionId.ToString());
             
             _documentsForCase.Add(blobItemWrapper);
             pos++;
@@ -153,7 +153,7 @@ public class DocumentEvaluationServiceTests
             BlobName = _fixture.Create<string>(),
             BlobContainerName = _fixture.Create<string>()
         };
-        storedDocument.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, request.LastUpdatedDate);
+        storedDocument.DocumentMetadata.Add(DocumentTags.VersionId, request.VersionId.ToString());
         
         _mockSearchService.Setup(s => s.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, _correlationId))
             .ReturnsAsync(storedDocument);
@@ -172,7 +172,7 @@ public class DocumentEvaluationServiceTests
     }
     
     [Fact]
-    public async Task EvaluateDocumentAsync_WhenDocumentIsNotMatchedExactlyToBlobStorage_ByLastUpdatedDate_ShouldAcquireTheNewDocument_AndUpdateTheSearchIndexToRemoveTheOld()
+    public async Task EvaluateDocumentAsync_WhenDocumentIsNotMatchedExactlyToBlobStorage_ByVersionId_ShouldAcquireTheNewDocument_AndUpdateTheSearchIndexToRemoveTheOld()
     {
         var request = _fixture.Create<EvaluateDocumentRequest>();
         var storedDocument = new DocumentInformation
@@ -181,7 +181,7 @@ public class DocumentEvaluationServiceTests
             BlobName = _fixture.Create<string>(),
             BlobContainerName = _fixture.Create<string>()
         };
-        storedDocument.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, _fixture.Create<string>());
+        storedDocument.DocumentMetadata.Add(DocumentTags.VersionId, _fixture.Create<long>().ToString());
         
         _mockSearchService.Setup(s => s.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, _correlationId))
             .ReturnsAsync(storedDocument);

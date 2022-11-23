@@ -12,7 +12,6 @@ using coordinator.Domain.Tracker;
 using coordinator.Functions.ActivityFunctions;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace coordinator.Functions.SubOrchestrators
@@ -21,13 +20,11 @@ namespace coordinator.Functions.SubOrchestrators
     {
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
         private readonly ILogger<CaseDocumentOrchestrator> _log;
-        private readonly IConfiguration _configuration;
         
-        public CaseDocumentOrchestrator(IJsonConvertWrapper jsonConvertWrapper, ILogger<CaseDocumentOrchestrator> log, IConfiguration configuration)
+        public CaseDocumentOrchestrator(IJsonConvertWrapper jsonConvertWrapper, ILogger<CaseDocumentOrchestrator> log)
         {
             _jsonConvertWrapper = jsonConvertWrapper;
             _log = log;
-            _configuration = configuration;
         }
 
         [FunctionName("CaseDocumentOrchestrator")]
@@ -45,39 +42,25 @@ namespace coordinator.Functions.SubOrchestrators
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Get the pipeline tracker for DocumentId: '{payload.DocumentId}'");
             var tracker = GetTracker(context, payload.CaseId, payload.CorrelationId, log);
 
-            var includeDocumentEvaluation = bool.Parse(_configuration[FeatureFlags.EvaluateDocuments]);
-            if (includeDocumentEvaluation)
+            log.LogMethodFlow(payload.CorrelationId, loggingName, $"Evaluating DocumentId: '{payload.DocumentId}', VersionId: '{payload.VersionId}'");
+            var documentEvaluation = await CallEvaluateDocumentAsync(context, payload, tracker, log);
+
+            if (documentEvaluation.EvaluationResult == DocumentEvaluationResult.AcquireDocument)
             {
-                log.LogMethodFlow(payload.CorrelationId, loggingName, $"Evaluating DocumentId: '{payload.DocumentId}', LastUpdatedDate: '{payload.LastUpdatedDate}'");
-                var documentEvaluation = await CallEvaluateDocumentAsync(context, payload, tracker, log);
-
-                if (documentEvaluation.EvaluationResult == DocumentEvaluationResult.AcquireDocument)
+                if (documentEvaluation.UpdateSearchIndex)
                 {
-                    if (documentEvaluation.UpdateSearchIndex)
-                    {
-                        log.LogMethodFlow(payload.CorrelationId, loggingName, $"Updating the search index for DocumentId: '{payload.DocumentId}'");
-                        await CallUpdateSearchIndexAsync(context, payload, tracker, log);
-                    }
-
-                    log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the PDF Generator for DocumentId: '{payload.DocumentId}'");
-                    var pdfGeneratorResponse = await CallPdfGeneratorAsync(context, payload, tracker, log);
-
-                    log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the Text Extractor for DocumentId: '{payload.DocumentId}'");
-                    await CallTextExtractorAsync(context, payload, pdfGeneratorResponse.BlobName, tracker, log);
+                    log.LogMethodFlow(payload.CorrelationId, loggingName, $"Updating the search index for DocumentId: '{payload.DocumentId}'");
+                    await CallUpdateSearchIndexAsync(context, payload, tracker, log);
                 }
-                else
-                {
-                    await tracker.RegisterIndexed(payload.DocumentId);
-                }
-            }
-            else
-            {
+
                 log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the PDF Generator for DocumentId: '{payload.DocumentId}'");
                 var pdfGeneratorResponse = await CallPdfGeneratorAsync(context, payload, tracker, log);
 
                 log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the Text Extractor for DocumentId: '{payload.DocumentId}'");
                 await CallTextExtractorAsync(context, payload, pdfGeneratorResponse.BlobName, tracker, log);
-                
+            }
+            else
+            {
                 await tracker.RegisterIndexed(payload.DocumentId);
             }
 
@@ -117,7 +100,7 @@ namespace coordinator.Functions.SubOrchestrators
             
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateUpdateSearchIndexHttpRequest),
-                new CreateUpdateSearchIndexHttpRequestActivityPayload(payload.CaseId, payload.DocumentId, payload.CorrelationId));
+                new CreateUpdateSearchIndexHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentId, payload.CorrelationId));
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -152,7 +135,7 @@ namespace coordinator.Functions.SubOrchestrators
                 
                 response = await CallEvaluateDocumentHttpAsync(context, payload, tracker, log);
 
-                log.LogMethodFlow(payload.CorrelationId, nameof(CallEvaluateDocumentAsync), $"Register document successfully evaluated - {payload.FileName} ({payload.LastUpdatedDate}) for DocumentId - {payload.DocumentId}");
+                log.LogMethodFlow(payload.CorrelationId, nameof(CallEvaluateDocumentAsync), $"Register document successfully evaluated - {payload.FileName} ({payload.VersionId}) for DocumentId - {payload.DocumentId}");
                 await tracker.RegisterDocumentEvaluated(payload.DocumentId);
                 
                 return response;
@@ -180,7 +163,7 @@ namespace coordinator.Functions.SubOrchestrators
             
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateEvaluateDocumentHttpRequest),
-                new CreateEvaluateDocumentHttpRequestActivityPayload(payload.CaseId, payload.DocumentId, payload.LastUpdatedDate, payload.CorrelationId));
+                new CreateEvaluateDocumentHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentId, payload.VersionId, payload.CorrelationId));
             var response = await context.CallHttpAsync(request);
             
             if (response.StatusCode != HttpStatusCode.OK)
@@ -198,7 +181,7 @@ namespace coordinator.Functions.SubOrchestrators
                 }
 
                 request.Headers.TryGetValue(HttpHeaderKeys.Authorization, out var tokenUsed);
-                throw new HttpRequestException($"Failed to evaluate a document id '{payload.DocumentId}', lastUpdated '{payload.LastUpdatedDate}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
+                throw new HttpRequestException($"Failed to evaluate a document id '{payload.DocumentId}', versionId '{payload.VersionId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
             }
 
             var result = _jsonConvertWrapper.DeserializeObject<EvaluateDocumentResponse>(response.Content);
@@ -242,7 +225,7 @@ namespace coordinator.Functions.SubOrchestrators
             
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
-                new CreateGeneratePdfHttpRequestActivityPayload(payload.CaseId, payload.DocumentId, payload.FileName, payload.LastUpdatedDate, payload.CorrelationId));
+                new CreateGeneratePdfHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentId, payload.FileName, payload.VersionId, payload.CorrelationId));
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -302,7 +285,7 @@ namespace coordinator.Functions.SubOrchestrators
             
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateTextExtractorHttpRequest),
-                new CreateTextExtractorHttpRequestActivityPayload(payload.CaseId, payload.DocumentId, payload.LastUpdatedDate, blobName, payload.CorrelationId));
+                new CreateTextExtractorHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentId, payload.VersionId, blobName, payload.CorrelationId));
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -314,7 +297,7 @@ namespace coordinator.Functions.SubOrchestrators
             log.LogMethodExit(payload.CorrelationId, nameof(CallTextExtractorHttpAsync), string.Empty);
         }
 
-        private ITracker GetTracker(IDurableOrchestrationContext context, int caseId, Guid correlationId, ILogger log)
+        private ITracker GetTracker(IDurableOrchestrationContext context, long caseId, Guid correlationId, ILogger log)
         {
             log.LogMethodEntry(correlationId, nameof(GetTracker), $"CaseId: {caseId.ToString()}");
             
