@@ -12,11 +12,7 @@ public class DdeiCaseDocumentMapper : ICaseDocumentMapper<DdeiCaseDocumentRespon
         if (ddeiResponse == null)
             return null;
 
-        var result = new CaseDocument
-        {
-            DocumentId = ddeiResponse.Id.ToString(),
-            VersionId = ddeiResponse.VersionId
-        };
+        var result = new CaseDocument(ddeiResponse.Id.ToString(), ddeiResponse.VersionId, ddeiResponse.DocumentType, ddeiResponse.CmsDocCategory);
 
         if (string.IsNullOrWhiteSpace(ddeiResponse.OriginalFileName))
         {
@@ -27,18 +23,12 @@ public class DdeiCaseDocumentMapper : ICaseDocumentMapper<DdeiCaseDocumentRespon
             if (string.IsNullOrWhiteSpace(fileExt))
                 return null;
 
-            result.FileName = string.Concat(ddeiResponse.Id.ToString(), ".", fileExt);
+            result.FileName = string.Concat(ddeiResponse.Id.ToString(), fileExt);
         }
         else
         {
             result.FileName = ddeiResponse.OriginalFileName;
         }
-
-        result.CmsDocType = new CmsDocType
-        {
-            Code = ddeiResponse.DocumentType,
-            Name = ddeiResponse.CmsDocCategory
-        };
 
         return result;
     }

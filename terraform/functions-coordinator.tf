@@ -28,10 +28,8 @@ resource "azurerm_function_app" "fa_coordinator" {
     "SearchIndexUpdateUrl"                    = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/updateSearchIndex?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = "api://fa-${local.resource_name}-coordinator"
-    "FeatureFlags_EvaluateDocuments"          = "false"
-    "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
-    "BlobServiceContainerName"                = "cms-documents-2"
-    "IsRunningLocally"                        = "false"
+    "DocumentsRepositoryBaseUrl"              = var.ddei_base_url
+    "ListDocumentsUrl"                        = "urns/{0}/cases/{1}/documents?code=smz7KW0-fIcR6oT-EaX63P3hduRAXoQvtn9YqGIKOzlXAzFuRdA73g=="
   }
   https_only                 = true
 

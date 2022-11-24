@@ -29,7 +29,7 @@ public abstract class BaseDocumentExtractionService : IDocumentExtractionService
         return null;
     }
 
-    public virtual Task<Stream> GetDocumentAsync(string caseUrn, string caseId, string documentId, string accessToken, Guid correlationId)
+    public virtual Task<Stream> GetDocumentAsync(string caseUrn, string caseId, string documentCategory, string documentId, string accessToken, Guid correlationId)
     {
         return null;
     }

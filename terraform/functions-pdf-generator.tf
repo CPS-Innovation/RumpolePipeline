@@ -18,15 +18,11 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "BlobServiceContainerName"                = "documents"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = "api://fa-${local.resource_name}-pdf-generator"
-    "StubBlobStorageConnectionString"         = var.stub_blob_storage_connection_string
-    "FeatureFlags_EvaluateDocuments"          = "false"
-    "DocumentExtractionBaseUrl"               = ""
     "SearchClientAuthorizationKey"            = azurerm_search_service.ss.primary_key
     "SearchClientEndpointUrl"                 = "https://${azurerm_search_service.ss.name}.search.windows.net"
     "SearchClientIndexName"                   = jsondecode(file("search-index-definition.json")).name
-    "FakeCmsDocumentsRepository"              = "cms-documents"
-    "FakeCmsDocumentsRepository2"             = "cms-documents-2"
-    "IsRunningLocally"                        = "false"
+    "DocumentsRepositoryBaseUrl"              = var.ddei_base_url
+    "GetDocumentUrl"                          = "urns/{0}/cases/{1}/documents/{2}/{3}?code=Kdk8RI0pQlJ8nm1AANKohWRA69llzAIkHIpbjqlMj9FhAzFucFAWQA=="
   }
   https_only                 = true
 

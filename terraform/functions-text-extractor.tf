@@ -26,7 +26,6 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "SearchClientAuthorizationKey"            = azurerm_search_service.ss.primary_key
     "SearchClientEndpointUrl"                 = "https://${azurerm_search_service.ss.name}.search.windows.net"
     "SearchClientIndexName"                   = jsondecode(file("search-index-definition.json")).name
-    "IsRunningLocally"                        = "false"
   }
   https_only                 = true
 

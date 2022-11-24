@@ -52,10 +52,9 @@
         public const string VersionId = "versionId";
     }
 
-    /*public static class FeatureFlags
+    public static class FeatureFlags
     {
-        public const string EvaluateDocuments = "FeatureFlags_EvaluateDocuments";
-    }*/
+    }
 
     public static class ConfigKeys
     {
@@ -72,11 +71,6 @@
             public const string TextExtractorScope = "TextExtractorScope";
             public const string TextExtractorUrl = "TextExtractorUrl";
             public const string SearchIndexUpdateUrl = "SearchIndexUpdateUrl";
-        }
-
-        public static class PdfGeneratorKeys
-        {
-            public const string FakeCmsDocumentsRepository = "FakeCmsDocumentsRepository";
         }
 
         public static class TextExtractorKeys
@@ -96,10 +90,10 @@
             public const string BlobExpirySecs = "BlobExpirySecs";
             public const string BlobUserDelegationKeyExpirySecs = "BlobUserDelegationKeyExpirySecs";
             public const string BlobServiceUrl = "BlobServiceUrl";
-            public const string StubBlobStorageConnectionString = "StubBlobStorageConnectionString";
-            public const string IsRunningLocally = "IsRunningLocally";
+            public const string DocumentsRepositoryBaseUrl = "DocumentsRepositoryBaseUrl";
             public const string GetDocumentUrl = "GetDocumentUrl";
             public const string ListDocumentsUrl = "ListDocumentsUrl";
+            public const string WebsiteInstanceId = "WEBSITE_INSTANCE_ID";
         }
     }
 }

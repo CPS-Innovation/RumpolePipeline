@@ -50,7 +50,7 @@ namespace coordinator.Functions
             log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Retrieve tracker for case {currentCaseId}");
-            var tracker = GetTracker(context, payload.CaseId, payload.CorrelationId, log);
+            var tracker = GetTracker(context, payload.CaseUrn, payload.CaseId, payload.CorrelationId, log);
             
             try
             {
@@ -112,7 +112,7 @@ namespace coordinator.Functions
             
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
-                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.DocumentId, t.VersionId, t.FileName, payload.CorrelationId)))
+                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Name, t.DocumentId, t.VersionId, t.FileName, payload.CorrelationId)))
                 .ToList();
 
             await Task.WhenAll(caseDocumentTasks.Select(BufferCall));
@@ -140,18 +140,19 @@ namespace coordinator.Functions
             }
         }
 
-        private ITracker GetTracker(IDurableOrchestrationContext context, long caseId, Guid correlationId, ILogger safeLoggerInstance)
+        private ITracker GetTracker(IDurableOrchestrationContext context, string caseUrn, long caseId, Guid correlationId, ILogger safeLoggerInstance)
         {
-            safeLoggerInstance.LogMethodEntry(correlationId, nameof(GetTracker), $"CaseId: {caseId.ToString()}");
-            
-            var entityId = new EntityId(nameof(Tracker), caseId.ToString());
+            safeLoggerInstance.LogMethodEntry(correlationId, nameof(GetTracker), $"CaseUrn: {caseUrn}, CaseId: {caseId.ToString()}");
+
+            var entityKey = string.Concat(caseUrn, "-", caseId.ToString());
+            var entityId = new EntityId(nameof(Tracker), entityKey);
             var result = context.CreateEntityProxy<ITracker>(entityId);
             
             safeLoggerInstance.LogMethodExit(correlationId, nameof(GetTracker), "n/a");
             return result;
         }
 
-        private async Task<CaseDocument[]> RetrieveDocuments(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, CoordinatorOrchestrationPayload payload)
+        private static async Task<CaseDocument[]> RetrieveDocuments(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, CoordinatorOrchestrationPayload payload)
         {
             safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Getting list of documents for case {payload.CaseId}");
             

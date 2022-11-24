@@ -23,6 +23,7 @@ namespace coordinator.tests.Functions
         private readonly string _caseUrn;
         private readonly int _caseIdNum;
         private readonly string _caseId;
+        private readonly string _instanceId;
         private readonly string _accessToken;
         private readonly Guid _correlationId;
         private readonly HttpRequestMessage _httpRequestMessage;
@@ -42,6 +43,7 @@ namespace coordinator.tests.Functions
             _caseId = _caseIdNum.ToString();
             _accessToken = _fixture.Create<string>();
             _correlationId = _fixture.Create<Guid>();
+            _instanceId = string.Concat(_caseUrn, "-", _caseId);
             _httpRequestMessage = new HttpRequestMessage();
             _httpRequestMessage.RequestUri = new Uri("https://www.test.co.uk");
             _httpRequestHeaders = _httpRequestMessage.Headers;
@@ -54,10 +56,10 @@ namespace coordinator.tests.Functions
             _httpRequestHeaders.Add(HttpHeaderKeys.Authorization, $"Bearer {_accessToken}");
             _httpRequestHeaders.Add("Correlation-Id", _correlationId.ToString());
 
-            _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_caseId, false, false, true))
+            _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_instanceId, false, false, true))
                .ReturnsAsync(default(DurableOrchestrationStatus));
 
-            _mockDurableOrchestrationClient.Setup(client => client.CreateCheckStatusResponse(_httpRequestMessage, _caseId, false))
+            _mockDurableOrchestrationClient.Setup(client => client.CreateCheckStatusResponse(_httpRequestMessage, _instanceId, false))
                 .Returns(_httpResponseMessage);
 
             mockAuthorizationValidator.Setup(x => x.ValidateTokenAsync(It.IsNotNull<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
@@ -130,7 +132,7 @@ namespace coordinator.tests.Functions
         [Fact]
         public async Task Run_ReturnsInternalServerErrorWhenUnhandledErrorOccurs()
         {
-            _mockDurableOrchestrationClient.Setup(client => client.StartNewAsync(nameof(CoordinatorOrchestrator), _caseId, It.IsAny<CoordinatorOrchestrationPayload>()))
+            _mockDurableOrchestrationClient.Setup(client => client.StartNewAsync(nameof(CoordinatorOrchestrator), _instanceId, It.IsAny<CoordinatorOrchestrationPayload>()))
                 .Throws(new Exception());
 
             var httpResponseMessage = await _coordinatorStart.Run(_httpRequestMessage, _caseUrn, _caseId, _mockDurableOrchestrationClient.Object);
@@ -141,14 +143,14 @@ namespace coordinator.tests.Functions
         [Fact]
         public async Task Run_StartsOrchestratorWhenOrchestrationStatusIsNull()
         {
-            _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_caseId, false, false, true))
+            _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_instanceId, false, false, true))
                .ReturnsAsync(default(DurableOrchestrationStatus));
             await _coordinatorStart.Run(_httpRequestMessage, _caseUrn, _caseId, _mockDurableOrchestrationClient.Object);
 
             _mockDurableOrchestrationClient.Verify(
                 client => client.StartNewAsync(
                     nameof(CoordinatorOrchestrator),
-                    _caseId,
+                    _instanceId,
                     It.Is<CoordinatorOrchestrationPayload>(p => p.CaseId == _caseIdNum && p.ForceRefresh == false && p.AccessToken == _accessToken)));
         }
 
@@ -159,14 +161,14 @@ namespace coordinator.tests.Functions
         [InlineData(OrchestrationRuntimeStatus.Canceled)]
         public async Task Run_StartsOrchestratorWhenOrchestrationHasConcluded(OrchestrationRuntimeStatus runtimeStatus)
         {
-            _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_caseId, false, false, true))
+            _mockDurableOrchestrationClient.Setup(client => client.GetStatusAsync(_instanceId, false, false, true))
                .ReturnsAsync(new DurableOrchestrationStatus { RuntimeStatus = runtimeStatus });
             await _coordinatorStart.Run(_httpRequestMessage, _caseUrn, _caseId, _mockDurableOrchestrationClient.Object);
 
             _mockDurableOrchestrationClient.Verify(
                 client => client.StartNewAsync(
                     nameof(CoordinatorOrchestrator),
-                    _caseId,
+                    _instanceId,
                     It.Is<CoordinatorOrchestrationPayload>(p => p.CaseId == _caseIdNum && p.ForceRefresh == false && p.AccessToken == _accessToken)));
         }
 
@@ -180,7 +182,7 @@ namespace coordinator.tests.Functions
             _mockDurableOrchestrationClient.Verify(
                 client => client.StartNewAsync(
                     nameof(CoordinatorOrchestrator),
-                    _caseId,
+                    _instanceId,
                     It.Is<CoordinatorOrchestrationPayload>(p => p.ForceRefresh == forceRefresh)));
         }
 

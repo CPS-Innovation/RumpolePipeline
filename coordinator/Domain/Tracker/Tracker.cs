@@ -249,7 +249,8 @@ namespace coordinator.Domain.Tracker
 
         [FunctionName("TrackerStatus")]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "cases/{caseId}/tracker")] HttpRequestMessage req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "cases/{caseUrn}/{caseId}/tracker")] HttpRequestMessage req,
+            string caseUrn,
             string caseId,
             [DurableClient] IDurableEntityClient client,
             ILogger log)
@@ -273,12 +274,13 @@ namespace coordinator.Domain.Tracker
                 }
 
             log.LogMethodEntry(currentCorrelationId, loggingName, caseId);
-            
-            var entityId = new EntityId(nameof(Tracker), caseId);
+
+            var entityKey = string.Concat(caseUrn, "-", caseId);
+            var entityId = new EntityId(nameof(Tracker), entityKey);
             var stateResponse = await client.ReadEntityStateAsync<Tracker>(entityId);
             if (!stateResponse.EntityExists)
             {
-                var baseMessage = $"No pipeline tracker found with id '{caseId}'";
+                var baseMessage = $"No pipeline tracker found with id '{entityKey}'";
                 log.LogMethodFlow(currentCorrelationId, loggingName, baseMessage);
                 return new NotFoundObjectResult(baseMessage);
             }

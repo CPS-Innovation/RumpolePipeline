@@ -81,7 +81,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _pdfResponse.ToJson()));
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(textExtractorDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _content));
 
-            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
+            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == string.Concat(_payload.CaseUrn, "-", _payload.CaseId.ToString()))))
                 .Returns(_mockTracker.Object);
             
             _caseDocumentOrchestrator = new CaseDocumentOrchestrator(new JsonConvertWrapper(), mockLogger.Object);

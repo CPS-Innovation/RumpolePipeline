@@ -16,6 +16,6 @@ variable "app_service_plan_sku" {
   })
 }
 
-variable "stub_blob_storage_connection_string" {
+variable "ddei_base_url" {
   type = string
 }

@@ -70,7 +70,7 @@ namespace coordinator.tests.Functions
                 .Returns(_payload);
             _mockDurableOrchestrationContext.Setup(context => context.InstanceId)
                 .Returns(_transactionId);
-            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
+            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == string.Concat(_payload.CaseUrn, "-", _payload.CaseId.ToString()))))
                 .Returns(_mockTracker.Object);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), _payload.AccessToken))
                 .ReturnsAsync(_accessToken);

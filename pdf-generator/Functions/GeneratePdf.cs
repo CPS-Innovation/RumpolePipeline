@@ -93,7 +93,7 @@ namespace pdf_generator.Functions
 
                 //Will need to prepare a custom oAuth request to send to Cde
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"Retrieving Document from Cde for documentId: '{pdfRequest.DocumentId}'");
-                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.CaseUrn, pdfRequest.CaseId.ToString(), pdfRequest.DocumentId, string.Empty, currentCorrelationId);
+                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.CaseUrn, pdfRequest.CaseId.ToString(), pdfRequest.DocumentCategory, pdfRequest.DocumentId, string.Empty, currentCorrelationId);
 
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
                 var fileType = pdfRequest.FileName.Split('.').Last().ToFileType();

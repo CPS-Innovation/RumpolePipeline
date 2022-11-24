@@ -9,7 +9,6 @@ using Common.Domain.DocumentExtraction;
 using Common.Domain.Responses;
 using Common.Factories.Contracts;
 using Common.Logging;
-using Common.Mappers;
 using Common.Mappers.Contracts;
 using Common.Wrappers;
 using Microsoft.Extensions.Configuration;
@@ -34,11 +33,11 @@ public class DdeiDocumentExtractionService : BaseDocumentExtractionService
         _caseDocumentMapper = caseDocumentMapper;
     }
 
-    public override async Task<Stream> GetDocumentAsync(string caseUrn, string caseId, string documentId, string accessToken, Guid correlationId)
+    public override async Task<Stream> GetDocumentAsync(string caseUrn, string caseId, string documentCategory, string documentId, string accessToken, Guid correlationId)
     {
         _logger.LogMethodEntry(correlationId, nameof(GetDocumentAsync), $"CaseUrn: {caseUrn}, CaseId: {caseId}, DocumentId: {documentId}");
         
-        var content = await GetHttpContentAsync(string.Format(_configuration[ConfigKeys.SharedKeys.GetDocumentUrl], caseUrn, caseId, documentId), accessToken, correlationId);
+        var content = await GetHttpContentAsync(string.Format(_configuration[ConfigKeys.SharedKeys.GetDocumentUrl], caseUrn, caseId, documentCategory, documentId), accessToken, correlationId);
         var result = await content.ReadAsStreamAsync();
         
         _logger.LogMethodExit(correlationId, nameof(GetDocumentAsync), string.Empty);

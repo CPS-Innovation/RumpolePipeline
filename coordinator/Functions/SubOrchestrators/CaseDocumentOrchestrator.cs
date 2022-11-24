@@ -40,7 +40,7 @@ namespace coordinator.Functions.SubOrchestrators
             log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Get the pipeline tracker for DocumentId: '{payload.DocumentId}'");
-            var tracker = GetTracker(context, payload.CaseId, payload.CorrelationId, log);
+            var tracker = GetTracker(context, payload.CaseUrn, payload.CaseId, payload.CorrelationId, log);
 
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Evaluating DocumentId: '{payload.DocumentId}', VersionId: '{payload.VersionId}'");
             var documentEvaluation = await CallEvaluateDocumentAsync(context, payload, tracker, log);
@@ -225,7 +225,7 @@ namespace coordinator.Functions.SubOrchestrators
             
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
-                new CreateGeneratePdfHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentId, payload.FileName, payload.VersionId, payload.CorrelationId));
+                new CreateGeneratePdfHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentCategory, payload.DocumentId, payload.FileName, payload.VersionId, payload.CorrelationId));
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -297,11 +297,11 @@ namespace coordinator.Functions.SubOrchestrators
             log.LogMethodExit(payload.CorrelationId, nameof(CallTextExtractorHttpAsync), string.Empty);
         }
 
-        private ITracker GetTracker(IDurableOrchestrationContext context, long caseId, Guid correlationId, ILogger log)
+        private ITracker GetTracker(IDurableOrchestrationContext context, string caseUrn, long caseId, Guid correlationId, ILogger log)
         {
             log.LogMethodEntry(correlationId, nameof(GetTracker), $"CaseId: {caseId.ToString()}");
             
-            var entityId = new EntityId(nameof(Tracker), caseId.ToString());
+            var entityId = new EntityId(nameof(Tracker), string.Concat(caseUrn, "-", caseId.ToString()));
             
             log.LogMethodExit(correlationId, nameof(GetTracker), string.Empty);
             return context.CreateEntityProxy<ITracker>(entityId);

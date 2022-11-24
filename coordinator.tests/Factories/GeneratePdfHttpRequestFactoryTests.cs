@@ -21,6 +21,7 @@ namespace coordinator.tests.Factories
 	{
 		private readonly string _caseUrn;
         private readonly long _caseId;
+        private readonly string _documentCategory;
 		private readonly string _documentId;
 		private readonly string _fileName;
 		private readonly long _versionId;
@@ -38,6 +39,7 @@ namespace coordinator.tests.Factories
 			var fixture = new Fixture();
 			_caseUrn = fixture.Create<string>();
 			_caseId = fixture.Create<int>();
+			_documentCategory = fixture.Create<string>();
 			_documentId = fixture.Create<string>();
 			_fileName = fixture.Create<string>();
 			_versionId = fixture.Create<long>();
@@ -69,7 +71,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentId, _fileName, _versionId, _correlationId);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _correlationId);
 
 			durableRequest.Method.Should().Be(HttpMethod.Post);
 		}
@@ -77,7 +79,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedUriOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentId, _fileName, _versionId, _correlationId);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _correlationId);
 
 			durableRequest.Uri.AbsoluteUri.Should().Be(_pdfGeneratorUrl);
 		}
@@ -85,7 +87,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHeadersOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentId, _fileName, _versionId, _correlationId);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _correlationId);
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
 			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_clientAccessToken.Token}");
@@ -95,7 +97,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedContentOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentId, _fileName, _versionId, _correlationId);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _correlationId);
 
 			durableRequest.Content.Should().Be(_content);
 		}
@@ -106,7 +108,7 @@ namespace coordinator.tests.Factories
 			_mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>(), It.IsAny<Guid>()))
 				.Throws(new Exception());
 
-			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentId, _fileName, _versionId, _correlationId));
+			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _correlationId));
 		}
 	}
 }

@@ -4,3 +4,4 @@ app_service_plan_sku = {
     size = "B3"
     tier = "Basic"
 }
+ddei_base_url = "https://fa-rumpole-tde-temp.azurewebsites.net/api/"

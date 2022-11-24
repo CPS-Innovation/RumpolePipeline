@@ -84,7 +84,7 @@ namespace pdf_generator.tests.Functions
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfResponse>(r => r.BlobName == _blobName)))
 				.Returns(_serializedGeneratePdfResponse);
 			_mockValidatorWrapper.Setup(wrapper => wrapper.Validate(_generatePdfRequest)).Returns(new List<ValidationResult>());
-			_mockDocumentExtractionService.Setup(service => service.GetDocumentAsync(_generatePdfRequest.CaseUrn, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentId, It.IsAny<string>(), It.IsAny<Guid>()))
+			_mockDocumentExtractionService.Setup(service => service.GetDocumentAsync(_generatePdfRequest.CaseUrn, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentCategory, _generatePdfRequest.DocumentId, It.IsAny<string>(), It.IsAny<Guid>()))
 				.ReturnsAsync(_documentStream);
 			mockPdfOrchestratorService.Setup(service => service.ReadToPdfStream(_documentStream, FileType.DOC, _generatePdfRequest.DocumentId, _correlationId))
 				.Returns(_pdfStream);
@@ -205,8 +205,8 @@ namespace pdf_generator.tests.Functions
 		public async Task Run_UploadsDocumentStreamWhenFileTypeIsPdf()
 		{
 			_generatePdfRequest.FileName = "Test.pdf";
-			_mockDocumentExtractionService.Setup(service => service.GetDocumentAsync(_generatePdfRequest.CaseUrn, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentId, 
-					It.IsAny<string>(), It.IsAny<Guid>()))
+			_mockDocumentExtractionService.Setup(service => service.GetDocumentAsync(_generatePdfRequest.CaseUrn, _generatePdfRequest.CaseId.ToString(), 
+					_generatePdfRequest.DocumentCategory, _generatePdfRequest.DocumentId, It.IsAny<string>(), It.IsAny<Guid>()))
 				.ReturnsAsync(_documentStream);
 
 			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());

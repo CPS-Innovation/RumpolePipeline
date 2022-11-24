@@ -32,6 +32,14 @@ namespace Common.Adapters
                 var userAssertion = new UserAssertion(currentAccessToken,
                     AuthenticationKeys.AzureAuthenticationAssertionType);
                 var requestedScopes = new Collection<string> {scopes};
+                
+                var isLocal = string.IsNullOrEmpty(Environment.GetEnvironmentVariable(ConfigKeys.SharedKeys.WebsiteInstanceId));
+                if (isLocal)
+                {
+                    _logger.LogMethodFlow(correlationId, nameof(GetClientAccessTokenAsync), "In debug mode... bypassing authentication checks...");
+                    return "[Token Placeholder]";
+                }
+                
                 var result = await _confidentialClientApplication.AcquireTokenOnBehalfOf(requestedScopes, userAssertion)
                     .WithCorrelationId(correlationId).ExecuteAsync();
                 return result.AccessToken;
@@ -54,6 +62,14 @@ namespace Common.Adapters
             try
             {
                 var requestedScopes = new Collection<string> {scopes};
+                
+                var isLocal = string.IsNullOrEmpty(Environment.GetEnvironmentVariable(ConfigKeys.SharedKeys.WebsiteInstanceId));
+                if (isLocal)
+                {
+                    _logger.LogMethodFlow(correlationId, nameof(GetClientAccessTokenAsync), "In debug mode... bypassing authentication checks...");
+                    return "[Token Placeholder]";
+                }
+                
                 var result = await _confidentialClientApplication.AcquireTokenForClient(requestedScopes)
                     .WithCorrelationId(correlationId).ExecuteAsync();
                 return result.AccessToken;

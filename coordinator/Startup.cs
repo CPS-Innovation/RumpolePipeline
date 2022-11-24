@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Http.Headers;
 using Common.Adapters;
 using Common.Constants;
 using Common.Domain.Responses;
+using Common.Factories;
+using Common.Factories.Contracts;
 using Common.Handlers;
 using Common.Mappers;
 using Common.Mappers.Contracts;
@@ -58,8 +61,14 @@ namespace coordinator
             builder.Services.AddSingleton<IEvaluateDocumentHttpRequestFactory, EvaluateDocumentHttpRequestFactory>();
             builder.Services.AddSingleton<IUpdateSearchIndexHttpRequestFactory, UpdateSearchIndexHttpRequestFactory>();
 
+            builder.Services.AddTransient<IHttpRequestFactory, HttpRequestFactory>();
             builder.Services.AddTransient<ICaseDocumentMapper<DdeiCaseDocumentResponse>, DdeiCaseDocumentMapper>();
-            builder.Services.AddTransient<IDocumentExtractionService, DdeiDocumentExtractionService>();
+            
+            builder.Services.AddHttpClient<IDocumentExtractionService, DdeiDocumentExtractionService>(client =>
+            {
+                client.BaseAddress = new Uri(GetValueFromConfig(configuration, ConfigKeys.SharedKeys.DocumentsRepositoryBaseUrl));
+                client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
+            });
         }
         
         private static string GetValueFromConfig(IConfiguration configuration, string key)

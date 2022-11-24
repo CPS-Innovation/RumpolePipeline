@@ -21,6 +21,7 @@ namespace coordinator.tests.Domain.Tracker
         private readonly IEnumerable<string> _documentIds;
         private readonly RegisterPdfBlobNameArg _pdfBlobNameArg;
         private readonly List<TrackerDocument> _trackerDocuments;
+        private readonly string _caseUrn;
         private readonly string _caseId;
         private readonly Guid _correlationId;
         private readonly EntityStateResponse<coordinator.Domain.Tracker.Tracker> _entityStateResponse;
@@ -41,6 +42,7 @@ namespace coordinator.tests.Domain.Tracker
                                 .With(a => a.DocumentId, _documentIds.First())
                                 .Create();
             _trackerDocuments = fixture.Create<List<TrackerDocument>>();
+            _caseUrn = fixture.Create<string>();
             _caseId = fixture.Create<string>();
             _entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = true };
 
@@ -50,7 +52,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == string.Concat(_caseUrn, "-", _caseId)),
                     null, null))
                 .ReturnsAsync(_entityStateResponse);
 
@@ -387,7 +389,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<OkObjectResult>();
         }
@@ -397,7 +399,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response  = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response  = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             var okObjectResult = response as OkObjectResult;
 
@@ -410,13 +412,13 @@ namespace coordinator.tests.Domain.Tracker
             var entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = false };
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == string.Concat(_caseUrn, "-", _caseId)),
                     null, null))
                 .ReturnsAsync(entityStateResponse);
 
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<NotFoundObjectResult>();
         }
@@ -432,7 +434,7 @@ namespace coordinator.tests.Domain.Tracker
                 .ReturnsAsync(entityStateResponse);
 
             var message = new HttpRequestMessage();
-            var response = await _tracker.HttpStart(message, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<BadRequestObjectResult>();
         }

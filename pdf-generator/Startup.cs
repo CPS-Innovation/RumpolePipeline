@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net.Http.Headers;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Common.Constants;
@@ -41,12 +42,6 @@ namespace pdf_generator
                 .AddEnvironmentVariables()
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .Build();
-
-            /*builder.Services.AddHttpClient<IDocumentExtractionService, DocumentExtractionService>(client =>
-            {
-                client.BaseAddress = new Uri(ConfigKeys.PdfGeneratorKeys.DocumentExtractionBaseUrl);
-                client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
-            });*/
 
             builder.Services.AddSingleton<IConfiguration>(configuration);
             builder.Services.AddSingleton<IPdfService, WordsPdfService>();
@@ -95,8 +90,15 @@ namespace pdf_generator
                         configuration[ConfigKeys.SharedKeys.BlobServiceContainerName], loggingService);
             });
 
+            builder.Services.AddTransient<IHttpRequestFactory, HttpRequestFactory>();
             builder.Services.AddTransient<ICaseDocumentMapper<DdeiCaseDocumentResponse>, DdeiCaseDocumentMapper>();
-            builder.Services.AddTransient<IDocumentExtractionService, DdeiDocumentExtractionService>();
+            
+            builder.Services.AddHttpClient<IDocumentExtractionService, DdeiDocumentExtractionService>(client =>
+            {
+                client.BaseAddress = new Uri(configuration[ConfigKeys.SharedKeys.DocumentsRepositoryBaseUrl]);
+                client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
+            });
+            
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
             builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
             builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();
