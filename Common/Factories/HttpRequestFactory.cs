@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using Common.Constants;
 using Common.Factories.Contracts;
 using Common.Logging;
@@ -17,15 +16,13 @@ public class HttpRequestFactory : IHttpRequestFactory
         _logger = logger;
     }
 
-    public HttpRequestMessage CreateGet(string requestUri, string accessToken, Guid correlationId)
+    public HttpRequestMessage CreateGet(string requestUri, string upstreamToken, Guid correlationId)
     {
         _logger.LogMethodEntry(correlationId, nameof(CreateGet), $"RequestUri: {requestUri}");
             
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         
-        if (!string.IsNullOrWhiteSpace(accessToken))
-            request.Headers.Authorization = new AuthenticationHeaderValue(HttpHeaderValues.AuthTokenType, accessToken);
-        
+        request.Headers.Add(HttpHeaderKeys.UpstreamTokenName, upstreamToken);
         request.Headers.Add(HttpHeaderKeys.CorrelationId, correlationId.ToString());
             
         _logger.LogMethodExit(correlationId, nameof(CreateGet), string.Empty);

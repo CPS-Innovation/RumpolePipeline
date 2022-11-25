@@ -34,13 +34,13 @@ namespace coordinator.Functions.ActivityFunctions
                 throw new ArgumentException("CaseUrn cannot be empty");
             if (payload.CaseId == 0)
                 throw new ArgumentException("CaseId cannot be zero");
-            if (string.IsNullOrWhiteSpace(payload.AccessToken))
-                throw new ArgumentException("Access Token cannot be null");
+            if (string.IsNullOrWhiteSpace(payload.UpstreamToken))
+                throw new ArgumentException("Upstream Token cannot be null");
             if (payload.CorrelationId == Guid.Empty)
                 throw new ArgumentException("CorrelationId must be valid GUID");
             
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
-            var caseDetails = await _documentExtractionService.ListDocumentsAsync( payload.CaseUrn, payload.CaseId.ToString(), payload.AccessToken, payload.CorrelationId);
+            var caseDetails = await _documentExtractionService.ListDocumentsAsync(payload.CaseUrn, payload.CaseId.ToString(), payload.UpstreamToken, payload.CorrelationId);
             
             _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
             return caseDetails;

@@ -112,7 +112,7 @@ namespace coordinator.Functions
             
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
-                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Name, t.DocumentId, t.VersionId, t.FileName, payload.CorrelationId)))
+                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Name, t.DocumentId, t.VersionId, t.FileName, payload.UpstreamToken, payload.CorrelationId)))
                 .ToList();
 
             await Task.WhenAll(caseDocumentTasks.Select(BufferCall));
@@ -163,7 +163,7 @@ namespace coordinator.Functions
             safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Getting list of documents for case {payload.CaseId}");
             var documents = await context.CallActivityAsync<CaseDocument[]>(
                 nameof(GetCaseDocuments),
-                new GetCaseDocumentsActivityPayload(payload.CaseUrn, payload.CaseId, payload.AccessToken, payload.CorrelationId));
+                new GetCaseDocumentsActivityPayload(payload.CaseUrn, payload.CaseId, payload.UpstreamToken, payload.CorrelationId));
 
             if (documents.Length != 0) return documents;
             

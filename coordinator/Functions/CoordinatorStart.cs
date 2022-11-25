@@ -46,6 +46,13 @@ namespace coordinator.Functions
                 if (!Guid.TryParse(correlationId, out currentCorrelationId))
                     if (currentCorrelationId == Guid.Empty)
                         throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
+                
+                req.Headers.TryGetValues(HttpHeaderKeys.UpstreamTokenName, out var upstreamTokenValues);
+                if (upstreamTokenValues == null)
+                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(req));
+                var upstreamToken = upstreamTokenValues.First();
+                if (string.IsNullOrWhiteSpace(upstreamToken))
+                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(req));
 
                 _logger.LogMethodEntry(currentCorrelationId, loggingName, req.RequestUri?.Query);
                 
@@ -84,7 +91,7 @@ namespace coordinator.Functions
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),
                         instanceId,
-                        new CoordinatorOrchestrationPayload(caseUrn, caseIdNum, forceRefresh, authValidation.Item2, currentCorrelationId));
+                        new CoordinatorOrchestrationPayload(caseUrn, caseIdNum, forceRefresh, authValidation.Item2, upstreamToken, currentCorrelationId));
 
                     _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}'");
                 }

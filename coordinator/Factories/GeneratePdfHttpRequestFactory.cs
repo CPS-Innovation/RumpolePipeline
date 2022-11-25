@@ -32,7 +32,7 @@ namespace coordinator.Factories
             _logger = logger;
         }
 
-        public async Task<DurableHttpRequest> Create(string caseUrn, long caseId, string documentCategory, string documentId, string fileName, long versionId, Guid correlationId)
+        public async Task<DurableHttpRequest> Create(string caseUrn, long caseId, string documentCategory, string documentId, string fileName, long versionId, string upstreamToken, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseUrn: {caseUrn}, CaseId: {caseId}, DocumentId: {documentId}, VersionId: {versionId}, " +
                                                                   $"FileName: {fileName}");
@@ -47,7 +47,8 @@ namespace coordinator.Factories
                 {
                     { HttpHeaderKeys.ContentType, HttpHeaderValues.ApplicationJson },
                     { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
-                    { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
+                    { HttpHeaderKeys.CorrelationId, correlationId.ToString() },
+                    { HttpHeaderKeys.UpstreamTokenName, upstreamToken }
                 };
                 var content = _jsonConvertWrapper.SerializeObject(new GeneratePdfRequest(caseUrn, caseId, documentCategory, documentId, fileName, versionId));
 

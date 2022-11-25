@@ -37,6 +37,7 @@ namespace pdf_generator.tests.Functions
 		private readonly Stream _pdfStream;
 		private readonly string _serializedGeneratePdfResponse;
 		private HttpResponseMessage _errorHttpResponseMessage;
+		private string _upstreamToken;
 		
 		private readonly Mock<IAuthorizationValidator> _mockAuthorizationValidator;
 		private readonly Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
@@ -52,10 +53,12 @@ namespace pdf_generator.tests.Functions
 		public GeneratePdfTests()
 		{
             _serializedGeneratePdfRequest = _fixture.Create<string>();
+            _upstreamToken = _fixture.Create<string>();
 			_httpRequestMessage = new HttpRequestMessage()
 			{
 				Content = new StringContent(_serializedGeneratePdfRequest)
 			};
+			_httpRequestMessage.Headers.Add("upstream-token", _upstreamToken);
 			_generatePdfRequest = _fixture.Build<GeneratePdfRequest>()
 									.With(r => r.FileName, "Test.doc")
 									.With(r => r.CaseId, 123456)

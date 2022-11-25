@@ -225,7 +225,7 @@ namespace coordinator.Functions.SubOrchestrators
             
             var request = await context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
-                new CreateGeneratePdfHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentCategory, payload.DocumentId, payload.FileName, payload.VersionId, payload.CorrelationId));
+                new CreateGeneratePdfHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentCategory, payload.DocumentId, payload.FileName, payload.VersionId, payload.UpstreamToken, payload.CorrelationId));
             var response = await context.CallHttpAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)

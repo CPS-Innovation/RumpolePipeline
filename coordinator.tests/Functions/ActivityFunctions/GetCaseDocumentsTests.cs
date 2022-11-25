@@ -34,7 +34,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
                 .Returns(_payload);
 
-            mockDocumentExtractionService.Setup(client => client.ListDocumentsAsync(_payload.CaseUrn, _payload.CaseId.ToString(), _payload.AccessToken, 
+            mockDocumentExtractionService.Setup(client => client.ListDocumentsAsync(_payload.CaseUrn, _payload.CaseId.ToString(), _payload.UpstreamToken, 
                     _payload.CorrelationId))
                 .ReturnsAsync(_case.CaseDocuments);
 
@@ -65,9 +65,9 @@ namespace coordinator.tests.Functions.ActivityFunctions
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task Run_WhenAccessTokenIsNullOrWhitespace_ThrowsArgumentException(string accessToken)
+        public async Task Run_WhenAccessTokenIsNullOrWhitespace_ThrowsArgumentException(string upstreamToken)
         {
-            _payload.AccessToken = accessToken;
+            _payload.UpstreamToken = upstreamToken;
             _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
                 .Returns(_payload);
 

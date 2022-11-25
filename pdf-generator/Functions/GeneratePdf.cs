@@ -54,6 +54,7 @@ namespace pdf_generator.Functions
         public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "generate")] HttpRequestMessage request)
         {
             Guid currentCorrelationId = default;
+            string upstreamToken = default;
             const string loggingName = "GeneratePdf - Run";
             GeneratePdfResponse generatePdfResponse = null;
 
@@ -66,6 +67,13 @@ namespace pdf_generator.Functions
                 var correlationId = correlationIdValues.First();
                 if (!Guid.TryParse(correlationId, out currentCorrelationId) || currentCorrelationId == Guid.Empty)
                         throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
+                
+                request.Headers.TryGetValues(HttpHeaderKeys.UpstreamTokenName, out var upstreamTokenValues);
+                if (upstreamTokenValues == null)
+                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(request));
+                upstreamToken = upstreamTokenValues.First();
+                if (string.IsNullOrWhiteSpace(upstreamToken))
+                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(request));
 
                 _log.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
@@ -79,10 +87,8 @@ namespace pdf_generator.Functions
 
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
-                {
                     throw new BadRequestException("Request body cannot be null.", nameof(request));
-                }
-
+                
                 var pdfRequest = _jsonConvertWrapper.DeserializeObject<GeneratePdfRequest>(content);
 
                 var results = _validatorWrapper.Validate(pdfRequest);
@@ -93,7 +99,8 @@ namespace pdf_generator.Functions
 
                 //Will need to prepare a custom oAuth request to send to Cde
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"Retrieving Document from Cde for documentId: '{pdfRequest.DocumentId}'");
-                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.CaseUrn, pdfRequest.CaseId.ToString(), pdfRequest.DocumentCategory, pdfRequest.DocumentId, string.Empty, currentCorrelationId);
+                
+                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.CaseUrn, pdfRequest.CaseId.ToString(), pdfRequest.DocumentCategory, pdfRequest.DocumentId, upstreamToken, currentCorrelationId);
 
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
                 var fileType = pdfRequest.FileName.Split('.').Last().ToFileType();

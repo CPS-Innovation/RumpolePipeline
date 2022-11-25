@@ -12,6 +12,7 @@
         public const string Authorization = "Authorization";
         public const string ContentType = "Content-Type";
         public const string CorrelationId = "Correlation-Id";
+        public const string UpstreamTokenName = "upstream-token";
     }
 
     public static class HttpHeaderValues
