@@ -38,12 +38,12 @@ namespace Common.Handlers
             if (authenticationHeader == null) return new Tuple<bool, string>(false, string.Empty);
             if (string.IsNullOrEmpty(authenticationHeader.Parameter)) throw new ArgumentNullException(nameof(authenticationHeader));
 
-            var isLocal = string.IsNullOrEmpty(Environment.GetEnvironmentVariable(ConfigKeys.SharedKeys.WebsiteInstanceId));
+            /*var isLocal = string.IsNullOrEmpty(Environment.GetEnvironmentVariable(ConfigKeys.SharedKeys.WebsiteInstanceId));
             if (isLocal)
             {
                 _log.LogMethodFlow(correlationId, nameof(ValidateTokenAsync), "In debug mode... bypassing authentication checks...");
                 return new Tuple<bool, string>(true, authenticationHeader.Parameter);
-            }
+            }*/
             
             var issuer = $"https://sts.windows.net/{_configuration[ConfigKeys.SharedKeys.CallingAppTenantId]}/";
             var audience = _configuration[ConfigKeys.SharedKeys.CallingAppValidAudience];

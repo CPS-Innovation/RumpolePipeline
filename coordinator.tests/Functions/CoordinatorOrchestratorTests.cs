@@ -138,14 +138,14 @@ namespace coordinator.tests.Functions
         }
 
         [Fact]
-        public async Task Run_Tracker_RegistersDocumentsNotFoundInCDEWhenCaseDocumentsIsEmpty()
+        public async Task Run_Tracker_RegistersDocumentsNotFoundInDDEIWhenCaseDocumentsIsEmpty()
         {
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId && p.UpstreamToken == _upstreamToken)))
                 .ReturnsAsync(new CaseDocument[] { });
 
             await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            _mockTracker.Verify(tracker => tracker.RegisterNoDocumentsFoundInCDE());
+            _mockTracker.Verify(tracker => tracker.RegisterNoDocumentsFoundInDDEI());
         }
 
 

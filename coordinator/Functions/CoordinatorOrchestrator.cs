@@ -168,7 +168,7 @@ namespace coordinator.Functions
             if (documents.Length != 0) return documents;
             
             safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"No documents found, register this in the tracker for case {payload.CaseId}");
-            await tracker.RegisterNoDocumentsFoundInCDE();
+            await tracker.RegisterNoDocumentsFoundInDDEI();
             return documents;
         }
 

@@ -1,12 +1,12 @@
-using System.Collections.Generic;
-
 namespace Common.Domain.DocumentEvaluation;
 
 public class DocumentInformation
 {
-    public string BlobName { get; set; }
+    public long CaseId { get; set; }
 
-    public string BlobContainerName { get; set; }
+    public string DocumentId { get; set; }
 
-    public Dictionary<string, string> DocumentMetadata { get; set; }
+    public long VersionId { get; set; }
+
+    public string FileName { get; set; }
 }

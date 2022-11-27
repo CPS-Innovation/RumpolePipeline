@@ -6,11 +6,9 @@ using AutoFixture;
 using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
-using Common.Constants;
 using Common.Factories.Contracts;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using pdf_generator.Domain.SearchResults;
@@ -22,8 +20,6 @@ namespace pdf_generator.tests.Services.SearchService;
 public class SearchServiceProcessorTests
 {
     private readonly Fixture _fixture;
-    private readonly string _caseId;
-    private readonly string _documentId;
     private readonly Guid _correlationId;
     private readonly Mock<SearchClient> _mockSearchClient;
     
@@ -35,19 +31,19 @@ public class SearchServiceProcessorTests
     public SearchServiceProcessorTests()
     {
         _fixture = new Fixture();
-        _caseId = _fixture.Create<string>();
-        _documentId = _fixture.Create<string>();
+        var caseId = _fixture.Create<string>();
+        var documentId = _fixture.Create<string>();
         _correlationId = _fixture.Create<Guid>();
 
         _searchOptionsByCaseId = new SearchOptions
         {
-            Filter = $"caseId eq {_caseId}"
+            Filter = $"caseId eq {caseId}"
         };
         _searchOptionsByCaseId.OrderBy.Add("id");
         
         _searchOptionsByCaseAndDocumentId = new SearchOptions
         {
-            Filter = $"caseId eq {_caseId} and documentId eq '{_documentId}'"
+            Filter = $"caseId eq {caseId} and documentId eq '{documentId}'"
         };
         _searchOptionsByCaseId.OrderBy.Add("id");
         
@@ -65,10 +61,8 @@ public class SearchServiceProcessorTests
         mockResponse.Setup(response => response.Value).Returns(mockSearchResults.Object);
 
         var loggerMock = new Mock<ILogger<SearchServiceProcessor>>();
-        var configMock = new Mock<IConfiguration>();
         
-        configMock.Setup(config => config[ConfigKeys.SharedKeys.BlobServiceContainerName]).Returns(_fixture.Create<string>());
-        _searchServiceProcessor = new SearchServiceProcessor(loggerMock.Object, configMock.Object, mockSearchClientFactory.Object);
+        _searchServiceProcessor = new SearchServiceProcessor(loggerMock.Object, mockSearchClientFactory.Object);
     }
     
     [Fact]
@@ -111,9 +105,9 @@ public class SearchServiceProcessorTests
         using (new AssertionScope())
         {
             results.Count.Should().Be(3);
-            results[0].DocumentMetadata[DocumentTags.DocumentId].Should().Be("ABC");
-            results[1].DocumentMetadata[DocumentTags.DocumentId].Should().Be("LMN");
-            results[2].DocumentMetadata[DocumentTags.DocumentId].Should().Be("XYZ");
+            results[0].DocumentId.Should().Be("ABC");
+            results[1].DocumentId.Should().Be("LMN");
+            results[2].DocumentId.Should().Be("XYZ");
         }
     }
     
@@ -141,9 +135,9 @@ public class SearchServiceProcessorTests
         using (new AssertionScope())
         {
             results.Count.Should().Be(3);
-            results[0].DocumentMetadata[DocumentTags.DocumentId].Should().Be("ABC");
-            results[1].DocumentMetadata[DocumentTags.DocumentId].Should().Be("LMN");
-            results[2].DocumentMetadata[DocumentTags.DocumentId].Should().Be("XYZ");
+            results[0].DocumentId.Should().Be("ABC");
+            results[1].DocumentId.Should().Be("LMN");
+            results[2].DocumentId.Should().Be("XYZ");
         }
     }
 }

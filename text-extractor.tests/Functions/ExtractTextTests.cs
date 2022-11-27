@@ -191,7 +191,7 @@ namespace text_extractor.tests.Functions
 			await _extractText.Run(_httpRequestMessage);
 
 			_mockSearchIndexService.Verify(service => service.StoreResultsAsync(_mockAnalyzeResults.Object, _extractTextRequest.CaseId, _extractTextRequest.DocumentId, 
-				_extractTextRequest.VersionId, _correlationId));
+				_extractTextRequest.VersionId, _extractTextRequest.BlobName, _correlationId));
 		}
 
 		[Fact]

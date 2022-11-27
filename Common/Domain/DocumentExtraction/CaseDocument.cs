@@ -2,6 +2,8 @@
 {
 	public class CaseDocument
 	{
+		public CaseDocument() { }
+		
 		public CaseDocument(string documentId, long versionId, string documentType, string documentCategory)
 		{
 			DocumentId = documentId;

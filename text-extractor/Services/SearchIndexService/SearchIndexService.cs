@@ -32,16 +32,16 @@ namespace text_extractor.Services.SearchIndexService
             _logger = logger;
         }
 
-        public async Task StoreResultsAsync(AnalyzeResults analyzeResults, long caseId, string documentId, long versionId, Guid correlationId)
+        public async Task StoreResultsAsync(AnalyzeResults analyzeResults, long caseId, string documentId, long versionId, string blobName, Guid correlationId)
         {
-            _logger.LogMethodEntry(correlationId, nameof(StoreResultsAsync), $"CaseId: {caseId}, DocumentId: {documentId}");
+            _logger.LogMethodEntry(correlationId, nameof(StoreResultsAsync), $"CaseId: {caseId}, DocumentId: {documentId}, Blob Name: {blobName}");
             
             _logger.LogMethodFlow(correlationId, nameof(StoreResultsAsync), "Building search line results");
             var lines = new List<SearchLine>();
             foreach (var readResult in analyzeResults.ReadResults)
             {
                 lines.AddRange(readResult.Lines.Select((line, index) =>
-                                    _searchLineFactory.Create(caseId, documentId, versionId, readResult, line, index)));
+                                    _searchLineFactory.Create(caseId, documentId, versionId, blobName, readResult, line, index)));
             }
 
             _logger.LogMethodFlow(correlationId, nameof(StoreResultsAsync), "Beginning search index update");

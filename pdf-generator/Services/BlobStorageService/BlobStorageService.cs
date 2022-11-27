@@ -26,6 +26,19 @@ namespace pdf_generator.Services.BlobStorageService
             _blobServiceContainerName = blobServiceContainerName;
             _logger = logger;
         }
+        
+        public async Task<bool> DocumentExistsAsync(string blobName, Guid correlationId)
+        {
+            var decodedBlobName = blobName.UrlDecodeString();
+            _logger.LogMethodEntry(correlationId, nameof(GetDocumentAsync), decodedBlobName);
+
+            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
+            if (!await blobContainerClient.ExistsAsync())
+                throw new RequestFailedException((int)HttpStatusCode.NotFound, $"Blob container '{_blobServiceContainerName}' does not exist");
+            
+            var blobClient = blobContainerClient.GetBlobClient(decodedBlobName);
+            return await blobClient.ExistsAsync();
+        }
 
         public async Task<Stream> GetDocumentAsync(string blobName, Guid correlationId)
         {

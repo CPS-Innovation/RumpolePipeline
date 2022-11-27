@@ -42,18 +42,16 @@ public class DocumentEvaluationService : IDocumentEvaluationService
         var currentlyStoredDocuments = await _searchService.ListDocumentsForCaseAsync(caseId, correlationId);
         if (currentlyStoredDocuments.Count == 0)
             return response;
-
+        
         foreach (var storedDocument in currentlyStoredDocuments)
         {
-            var storedDocumentId = storedDocument.DocumentMetadata[DocumentTags.DocumentId];
-            var storedVersionId = long.Parse(storedDocument.DocumentMetadata[DocumentTags.VersionId]);
-
-            var storedDocumentInCms = incomingDocuments.Any(incomingDocument => incomingDocument.DocumentId == storedDocumentId
-                                                                                && incomingDocument.VersionId == storedVersionId);
-
+            var storedDocumentId = storedDocument.DocumentId;
+            
+            var storedDocumentInCms = incomingDocuments.Any(incomingDocument => incomingDocument.DocumentId == storedDocumentId);
+            
             if (storedDocumentInCms) continue;
             
-            await _blobStorageService.RemoveDocumentAsync(storedDocument.BlobName, correlationId);
+            await _blobStorageService.RemoveDocumentAsync(storedDocument.FileName, correlationId);
                 
             response.Add(new EvaluateDocumentResponse
             {
@@ -90,7 +88,7 @@ public class DocumentEvaluationService : IDocumentEvaluationService
             return response;
         }
 
-        var storedVersionId = long.Parse(currentlyStoredDocument.DocumentMetadata[DocumentTags.VersionId]);
+        var storedVersionId = currentlyStoredDocument.VersionId;
 
         if (request.VersionId == storedVersionId)
         {
@@ -99,7 +97,7 @@ public class DocumentEvaluationService : IDocumentEvaluationService
         }
         else
         {
-            await _blobStorageService.RemoveDocumentAsync(currentlyStoredDocument.BlobName, correlationId);
+            await _blobStorageService.RemoveDocumentAsync(currentlyStoredDocument.FileName, correlationId);
             response.EvaluationResult = DocumentEvaluationResult.AcquireDocument;
             response.UpdateSearchIndex = true;
         }

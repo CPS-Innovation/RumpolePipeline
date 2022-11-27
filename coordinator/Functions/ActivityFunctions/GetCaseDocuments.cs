@@ -13,10 +13,10 @@ namespace coordinator.Functions.ActivityFunctions
 {
     public class GetCaseDocuments
     {
-        private readonly IDocumentExtractionService _documentExtractionService;
+        private readonly IDdeiDocumentExtractionService _documentExtractionService;
         private readonly ILogger<GetCaseDocuments> _log;
 
-        public GetCaseDocuments(IDocumentExtractionService documentExtractionService, ILogger<GetCaseDocuments> logger)
+        public GetCaseDocuments(IDdeiDocumentExtractionService documentExtractionService, ILogger<GetCaseDocuments> logger)
         {
            _documentExtractionService = documentExtractionService;
            _log = logger;

@@ -2,6 +2,8 @@
 {
 	public class CmsDocType
 	{
+		public CmsDocType() { }
+		
 		public CmsDocType(string code, string name)
 		{
 			Code = code;

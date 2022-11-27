@@ -1,5 +1,4 @@
 ﻿using Common.Domain.DocumentEvaluation;
-using Common.Domain.Extensions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -36,7 +35,7 @@ namespace pdf_generator.Services.SearchService
 
             var documentsFound = await _searchServiceProcessor.SearchForDocumentsAsync(searchOptions, correlationId);
 
-            _logger.LogMethodExit(correlationId, nameof(ListDocumentsForCaseAsync), documentsFound.ToJson());
+            _logger.LogMethodExit(correlationId, nameof(ListDocumentsForCaseAsync), string.Empty);
             return documentsFound;
         }
 
@@ -58,7 +57,7 @@ namespace pdf_generator.Services.SearchService
 
             var documentsFound = await _searchServiceProcessor.SearchForDocumentsAsync(searchOptions, correlationId);
 
-            _logger.LogMethodExit(correlationId, nameof(FindDocumentForCaseAsync), documentsFound.ToJson());
+            _logger.LogMethodExit(correlationId, nameof(FindDocumentForCaseAsync), string.Empty);
             return documentsFound.FirstOrDefault();
         }
     }

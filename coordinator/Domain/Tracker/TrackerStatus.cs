@@ -5,7 +5,7 @@
 		Initialised,
 		NotStarted,
 		Running,
-		NoDocumentsFoundInCDE,
+		NoDocumentsFoundInDDEI,
 		Completed,
 		Failed,
 		UnableToEvaluateExistingDocuments

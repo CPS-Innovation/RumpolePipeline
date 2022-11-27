@@ -16,6 +16,9 @@ namespace text_extractor.Domain
         
         [JsonProperty("versionId")]
         public long VersionId { get; set; }
+
+        [JsonProperty("fileName")]
+        public string FileName { get; set; }
         
         [JsonProperty("pageIndex")]
         public int PageIndex { get; set; }

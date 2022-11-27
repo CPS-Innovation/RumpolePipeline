@@ -58,13 +58,12 @@ namespace coordinator
             builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory, GeneratePdfHttpRequestFactory>();
             builder.Services.AddSingleton<ITextExtractorHttpRequestFactory, TextExtractorHttpRequestFactory>();
             builder.Services.AddSingleton<IEvaluateExistingDocumentsHttpRequestFactory, EvaluateExistingDocumentsHttpRequestFactory>();
-            builder.Services.AddSingleton<IEvaluateDocumentHttpRequestFactory, EvaluateDocumentHttpRequestFactory>();
             builder.Services.AddSingleton<IUpdateSearchIndexHttpRequestFactory, UpdateSearchIndexHttpRequestFactory>();
 
             builder.Services.AddTransient<IHttpRequestFactory, HttpRequestFactory>();
             builder.Services.AddTransient<ICaseDocumentMapper<DdeiCaseDocumentResponse>, DdeiCaseDocumentMapper>();
             
-            builder.Services.AddHttpClient<IDocumentExtractionService, DdeiDocumentExtractionService>(client =>
+            builder.Services.AddHttpClient<IDdeiDocumentExtractionService, DdeiDocumentExtractionService>(client =>
             {
                 client.BaseAddress = new Uri(GetValueFromConfig(configuration, ConfigKeys.SharedKeys.DocumentsRepositoryBaseUrl));
                 client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };

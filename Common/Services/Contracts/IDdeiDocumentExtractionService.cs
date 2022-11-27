@@ -5,7 +5,7 @@ using Common.Domain.DocumentExtraction;
 
 namespace Common.Services.Contracts;
 
-public interface IDocumentExtractionService
+public interface IDdeiDocumentExtractionService
 {
     Task<CaseDocument[]> ListDocumentsAsync(string caseUrn, string caseId, string upstreamToken, Guid correlationId);
         

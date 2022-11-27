@@ -28,7 +28,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
             _payload = fixture.Create<GetCaseDocumentsActivityPayload>();
             _case = fixture.Create<Case>();
 
-            var mockDocumentExtractionService = new Mock<IDocumentExtractionService>();
+            var mockDocumentExtractionService = new Mock<IDdeiDocumentExtractionService>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
 
             _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())

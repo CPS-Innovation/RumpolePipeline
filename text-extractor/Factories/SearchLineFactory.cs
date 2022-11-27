@@ -7,7 +7,7 @@ namespace text_extractor.Factories
 {
 	public class SearchLineFactory : ISearchLineFactory
 	{
-        public SearchLine Create(long caseId, string documentId, long versionId, ReadResult readResult, Line line, int index)
+        public SearchLine Create(long caseId, string documentId, long versionId, string blobName, ReadResult readResult, Line line, int index)
         {
             var id = $"{caseId}-{documentId}-{readResult.Page}-{index}";
             var bytes = Encoding.UTF8.GetBytes(id);
@@ -19,6 +19,7 @@ namespace text_extractor.Factories
                 CaseId = caseId,
                 DocumentId = documentId,
                 VersionId = versionId,
+                FileName = blobName,
                 PageIndex = readResult.Page,
                 LineIndex = index,
                 Language = line.Language,

@@ -98,14 +98,14 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
-        public async Task RegisterDocumentNotFoundInCDE_Registers()
+        public async Task RegisterDocumentNotFoundInDDEI_Registers()
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterDocumentNotFoundInCDE(_pdfBlobNameArg.DocumentId);
+            await _tracker.RegisterDocumentNotFoundInDDEI(_pdfBlobNameArg.DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
-            document?.Status.Should().Be(DocumentStatus.NotFoundInCDE);
+            document?.Status.Should().Be(DocumentStatus.NotFoundInDDEI);
 
             _tracker.Logs.Count().Should().Be(3);
         }
@@ -137,12 +137,12 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
-        public async Task RegisterNoDocumentsFoundInCDE_RegistersNoDocumentsFoundInCDE()
+        public async Task RegisterNoDocumentsFoundInDDEI_RegistersNoDocumentsFoundInDDEI()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterNoDocumentsFoundInCDE();
+            await _tracker.RegisterNoDocumentsFoundInDDEI();
 
-            _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInCDE);
+            _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInDDEI);
 
             _tracker.Logs.Count().Should().Be(2);
         }
@@ -321,7 +321,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task AllDocumentsFailed_ReturnsTrueIfAllDocumentsFailed()
         {
             _tracker.Documents = new List<TrackerDocument> {
-                new TrackerDocument { Status = DocumentStatus.NotFoundInCDE},
+                new TrackerDocument { Status = DocumentStatus.NotFoundInDDEI},
                 new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
                 new TrackerDocument { Status = DocumentStatus.UnexpectedFailure}
             };
@@ -335,7 +335,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task AllDocumentsFailed_ReturnsFalseIfAllDocumentsHaveNotFailed()
         {
             _tracker.Documents = new List<TrackerDocument> {
-                new TrackerDocument { Status = DocumentStatus.NotFoundInCDE},
+                new TrackerDocument { Status = DocumentStatus.NotFoundInDDEI},
                 new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
                 new TrackerDocument { Status = DocumentStatus.UnexpectedFailure},
                 new TrackerDocument { Status = DocumentStatus.PdfUploadedToBlob},
@@ -357,9 +357,9 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
-        public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsNoDocumentsFoundInCDE()
+        public async Task IsAlreadyProcessed_ReturnsTrueIfStatusIsNoDocumentsFoundInDDEI()
         {
-            _tracker.Status = TrackerStatus.NoDocumentsFoundInCDE;
+            _tracker.Status = TrackerStatus.NoDocumentsFoundInDDEI;
 
             var isAlreadyProcessed = await _tracker.IsAlreadyProcessed();
 
@@ -367,7 +367,7 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
-        public async Task IsAlreadyProcessed_ReturnsFalseIfStatusIsNotCompletedAndNotNoDocumentsFoundInCDE()
+        public async Task IsAlreadyProcessed_ReturnsFalseIfStatusIsNotCompletedAndNotNoDocumentsFoundInDDEI()
         {
             _tracker.Status = TrackerStatus.NotStarted;
 
