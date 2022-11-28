@@ -50,7 +50,7 @@ namespace coordinator.Functions
             log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Retrieve tracker for case {currentCaseId}");
-            var tracker = GetTracker(context, payload.CaseId, payload.CorrelationId, log);
+            var tracker = GetTracker(context, payload.CaseUrn, payload.CaseId, payload.CorrelationId, log);
             
             try
             {
@@ -102,60 +102,17 @@ namespace coordinator.Functions
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Initialising tracker for {context.InstanceId}");
             await tracker.Initialise(context.InstanceId);
 
-            //TODO do we need this token exchange for cde?
-            //log.LogMethodFlow(currentCorrelationId, loggingName, "Get CDE access token");
-            //var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
-
-            log.LogMethodFlow(payload.CorrelationId, loggingName, $"Getting list of documents for case {payload.CaseId}");
-            var documents = await context.CallActivityAsync<CaseDocument[]>(
-                nameof(GetCaseDocuments),
-                new GetCaseDocumentsActivityPayload(payload.CaseId, payload.AccessToken, payload.CorrelationId));
-
+            var documents = await RetrieveDocuments(context, tracker, loggingName, log, payload);
             if (documents.Length == 0)
-            {
-                log.LogMethodFlow(payload.CorrelationId, loggingName, $"No documents found, register this in the tracker for case {payload.CaseId}");
-                await tracker.RegisterNoDocumentsFoundInCDE();
                 return new List<TrackerDocument>();
-            }
 
-            log.LogMethodFlow(payload.CorrelationId, loggingName, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
-            await tracker.RegisterDocumentIds(documents.Select(item => item.DocumentId));
+            await RegisterDocuments(tracker, loggingName, log, payload, documents);
 
-            var includeDocumentEvaluation = bool.Parse(_configuration[FeatureFlags.EvaluateDocuments]);
-            if (includeDocumentEvaluation)
-            {
-                log.LogMethodFlow(payload.CorrelationId, loggingName,
-                    $"Beginning evaluation of existing polaris documents against list of incoming documents for case {payload.CaseId}");
-                var evaluateExistingDocumentsRequest = await context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
-                    new CreateEvaluateExistingDocumentsHttpRequestActivityPayload(payload.CaseId, documents.ToList(), payload.CorrelationId));
-                var response = await context.CallHttpAsync(evaluateExistingDocumentsRequest);
-
-                if (response.StatusCode != HttpStatusCode.OK)
-                {
-                    log.LogMethodFlow(payload.CorrelationId, nameof(RunOrchestrator), $"Could not evaluate existing documents");
-                    await tracker.RegisterUnexpectedExistingDocumentsEvaluationFailure();
-                }
-                
-                var evaluateExistingDocumentsResult = _jsonConvertWrapper.DeserializeObject<List<EvaluateDocumentResponse>>(response.Content);
-
-                var documentsToRemove = evaluateExistingDocumentsResult.Select(x => x.UpdateSearchIndex).Count();
-
-                log.LogMethodFlow(payload.CorrelationId, loggingName,
-                    $"Evaluation of existing polaris documents completed, {documentsToRemove} documents to remove from the search index for {payload.CaseId}");
-                if (documentsToRemove > 0)
-                {
-                    var existingDocumentTasks = (from result in evaluateExistingDocumentsResult
-                        where result.UpdateSearchIndex
-                        select context.CallActivityAsync(nameof(CreateUpdateSearchIndexHttpRequest),
-                            new CreateUpdateSearchIndexHttpRequestActivityPayload(payload.CaseId, result.DocumentId, payload.CorrelationId))).ToList();
-
-                    await Task.WhenAll(existingDocumentTasks.Select(BufferCall));
-                }
-            }
-
+            await EvaluateDocuments(context, tracker, loggingName, log, payload, documents);
+            
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
-                    new CaseDocumentOrchestrationPayload(payload.CaseId, t.DocumentId, t.LastUpdatedDate, t.FileName, payload.CorrelationId)))
+                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Name, t.DocumentId, t.VersionId, t.FileName, payload.UpstreamToken, payload.CorrelationId)))
                 .ToList();
 
             await Task.WhenAll(caseDocumentTasks.Select(BufferCall));
@@ -183,15 +140,74 @@ namespace coordinator.Functions
             }
         }
 
-        private ITracker GetTracker(IDurableOrchestrationContext context, int caseId, Guid correlationId, ILogger safeLoggerInstance)
+        private ITracker GetTracker(IDurableOrchestrationContext context, string caseUrn, long caseId, Guid correlationId, ILogger safeLoggerInstance)
         {
-            safeLoggerInstance.LogMethodEntry(correlationId, nameof(GetTracker), $"CaseId: {caseId.ToString()}");
-            
-            var entityId = new EntityId(nameof(Tracker), caseId.ToString());
+            safeLoggerInstance.LogMethodEntry(correlationId, nameof(GetTracker), $"CaseUrn: {caseUrn}, CaseId: {caseId.ToString()}");
+
+            var entityKey = string.Concat(caseUrn, "-", caseId.ToString());
+            var entityId = new EntityId(nameof(Tracker), entityKey);
             var result = context.CreateEntityProxy<ITracker>(entityId);
             
             safeLoggerInstance.LogMethodExit(correlationId, nameof(GetTracker), "n/a");
             return result;
+        }
+
+        private static async Task<CaseDocument[]> RetrieveDocuments(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, CoordinatorOrchestrationPayload payload)
+        {
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Getting list of documents for case {payload.CaseId}");
+            
+            //do we need this token exchange for cde, maybe not, perhaps some auth config for DDEI?
+            //log.LogMethodFlow(currentCorrelationId, loggingName, "Get CDE access token");
+            //var accessToken = await context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), payload.AccessToken);
+            
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Getting list of documents for case {payload.CaseId}");
+            var documents = await context.CallActivityAsync<CaseDocument[]>(
+                nameof(GetCaseDocuments),
+                new GetCaseDocumentsActivityPayload(payload.CaseUrn, payload.CaseId, payload.UpstreamToken, payload.CorrelationId));
+
+            if (documents.Length != 0) return documents;
+            
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"No documents found, register this in the tracker for case {payload.CaseId}");
+            await tracker.RegisterNoDocumentsFoundInDDEI();
+            return documents;
+        }
+
+        private static async Task RegisterDocuments(ITracker tracker, string nameToLog, ILogger safeLogger, BasePipelinePayload payload, IEnumerable<CaseDocument> documents)
+        {
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
+            await tracker.RegisterDocumentIds(documents.Select(item => new Tuple<string, long>(item.DocumentId, item.VersionId)));
+        }
+
+        private async Task EvaluateDocuments(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, CoordinatorOrchestrationPayload payload, IEnumerable<CaseDocument> documents)
+        {
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog,
+                $"Beginning evaluation of existing polaris documents against list of incoming documents for case {payload.CaseId}");
+            var evaluateExistingDocumentsRequest = await context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
+                new CreateEvaluateExistingDocumentsHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, documents.ToList(), payload.CorrelationId));
+            var response = await context.CallHttpAsync(evaluateExistingDocumentsRequest);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                safeLogger.LogMethodFlow(payload.CorrelationId, nameof(RunOrchestrator), "Could not evaluate existing documents");
+                await tracker.RegisterUnexpectedExistingDocumentsEvaluationFailure();
+                return;
+            }
+            
+            var evaluateExistingDocumentsResult = _jsonConvertWrapper.DeserializeObject<List<EvaluateDocumentResponse>>(response.Content);
+
+            var documentsToRemove = evaluateExistingDocumentsResult.Select(x => x.UpdateSearchIndex).Count();
+
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog,
+                $"Evaluation of existing polaris documents completed, {documentsToRemove} documents to remove from the search index for {payload.CaseId}");
+            if (documentsToRemove > 0)
+            {
+                var existingDocumentTasks = (from result in evaluateExistingDocumentsResult
+                    where result.UpdateSearchIndex
+                    select context.CallActivityAsync(nameof(CreateUpdateSearchIndexHttpRequest),
+                        new CreateUpdateSearchIndexHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, result.DocumentId, payload.CorrelationId))).ToList();
+
+                await Task.WhenAll(existingDocumentTasks.Select(BufferCall));
+            }
         }
     }
 }

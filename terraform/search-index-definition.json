@@ -72,6 +72,19 @@
 			"fields": []
 		},
 		{
+			"name": "versionId",
+			"type": "Edm.Int64",
+			"facetable": false,
+			"filterable": true,
+			"retrievable": true,
+			"sortable": false,
+			"analyzer": null,
+			"indexAnalyzer": null,
+			"searchAnalyzer": null,
+			"synonymMaps": [],
+			"fields": []
+		},
+		{
 			"name": "pageIndex",
 			"type": "Edm.Int64",
 			"facetable": false,

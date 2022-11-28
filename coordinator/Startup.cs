@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Http.Headers;
 using Common.Adapters;
 using Common.Constants;
+using Common.Domain.Responses;
+using Common.Factories;
+using Common.Factories.Contracts;
 using Common.Handlers;
+using Common.Mappers;
+using Common.Mappers.Contracts;
+using Common.Services;
+using Common.Services.Contracts;
 using Common.Wrappers;
 using coordinator;
-using coordinator.Clients;
 using coordinator.Factories;
-using coordinator.TempService;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 
 [assembly: FunctionsStartup(typeof(Startup))]
@@ -53,17 +58,16 @@ namespace coordinator
             builder.Services.AddSingleton<IGeneratePdfHttpRequestFactory, GeneratePdfHttpRequestFactory>();
             builder.Services.AddSingleton<ITextExtractorHttpRequestFactory, TextExtractorHttpRequestFactory>();
             builder.Services.AddSingleton<IEvaluateExistingDocumentsHttpRequestFactory, EvaluateExistingDocumentsHttpRequestFactory>();
-            builder.Services.AddSingleton<IEvaluateDocumentHttpRequestFactory, EvaluateDocumentHttpRequestFactory>();
             builder.Services.AddSingleton<IUpdateSearchIndexHttpRequestFactory, UpdateSearchIndexHttpRequestFactory>();
+
+            builder.Services.AddTransient<IHttpRequestFactory, HttpRequestFactory>();
+            builder.Services.AddTransient<ICaseDocumentMapper<DdeiCaseDocumentResponse>, DdeiCaseDocumentMapper>();
             
-            builder.Services.AddTransient<IBlobStorageService>(serviceProvider =>
+            builder.Services.AddHttpClient<IDdeiDocumentExtractionService, DdeiDocumentExtractionService>(client =>
             {
-                var loggingService = serviceProvider.GetService<ILogger<BlobStorageService>>();
-                
-                return new BlobStorageService(configuration[ConfigKeys.SharedKeys.StubBlobStorageConnectionString],
-                    loggingService, configuration[ConfigKeys.SharedKeys.BlobServiceContainerName]);
+                client.BaseAddress = new Uri(GetValueFromConfig(configuration, ConfigKeys.SharedKeys.DocumentsRepositoryBaseUrl));
+                client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
             });
-            builder.Services.AddTransient<IDocumentExtractionClient, DocumentExtractionClientStub>();
         }
         
         private static string GetValueFromConfig(IConfiguration configuration, string key)

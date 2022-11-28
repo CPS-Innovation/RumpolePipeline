@@ -16,6 +16,10 @@ variable "app_service_plan_sku" {
   })
 }
 
-variable "stub_blob_storage_connection_string" {
-  type = string
+variable "ddei_config" {
+  type = object({
+    base_url = string
+    list_documents_function_key = string
+    get_document_function_key = string
+  })
 }

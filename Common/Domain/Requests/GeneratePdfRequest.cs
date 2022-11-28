@@ -4,25 +4,34 @@ namespace Common.Domain.Requests
 {
     public class GeneratePdfRequest
     {
-        public GeneratePdfRequest(int caseId, string documentId, string fileName, string lastUpdatedDate)
+        public GeneratePdfRequest(string caseUrn, long caseId, string documentCategory, string documentId, string fileName, long versionId)
         {
+            CaseUrn = caseUrn;
             CaseId = caseId;
+            DocumentCategory = documentCategory;
             DocumentId = documentId;
             FileName = fileName;
-            LastUpdatedDate = lastUpdatedDate;
+            VersionId = versionId;
         }
         
+        [Required] 
+        public string CaseUrn { get; set; }
+        
         [Required]
-        public int? CaseId { get; set; }
+        [Range(1, long.MaxValue)]
+        public long CaseId { get; set; }
 
         [Required]
         public string DocumentId { get; set; }
+        
+        public string DocumentCategory { get; set; }
         
         [Required]
         [RegularExpression(@"^.+\.[A-Za-z]{3,4}$")]
         public string FileName { get; set; }
         
         [Required]
-        public string LastUpdatedDate { get; set; }
+        [Range(1, long.MaxValue)]
+        public long VersionId { get; set; }
     }
 }

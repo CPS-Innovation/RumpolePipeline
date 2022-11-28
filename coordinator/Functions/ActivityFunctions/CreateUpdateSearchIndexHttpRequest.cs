@@ -29,6 +29,8 @@ namespace coordinator.Functions.ActivityFunctions
             
             if (payload == null)
                 throw new ArgumentException("Payload cannot be null.");
+            if (string.IsNullOrWhiteSpace(payload.CaseUrn))
+                throw new ArgumentException("CaseUrn cannot be empty");
             if (payload.CaseId == 0)
                 throw new ArgumentException("CaseId cannot be zero");
             if (string.IsNullOrWhiteSpace(payload.DocumentId))

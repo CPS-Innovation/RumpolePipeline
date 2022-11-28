@@ -1,38 +1,37 @@
-﻿using System;
-using System.Net.Http;
-using AutoFixture;
+﻿using AutoFixture;
+using Common.Factories;
+using Common.Factories.Contracts;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using pdf_generator.Factories;
 using Xunit;
 
-namespace pdf_generator.tests.Factories
+namespace Common.tests.Factories
 {
-	public class DocumentExtractionHttpRequestFactoryTests
+	public class HttpRequestFactoryTests
 	{
         private readonly string _requestUri;
         private readonly string _accessToken;
         private readonly Guid _correlationId;
 
-        private readonly IDocumentExtractionHttpRequestFactory _documentExtractionHttpRequestFactory;
+        private readonly IHttpRequestFactory _documentExtractionHttpRequestFactory;
 
-        public DocumentExtractionHttpRequestFactoryTests()
+        public HttpRequestFactoryTests()
         {
             var fixture = new Fixture();
             _requestUri = fixture.Create<string>();
             _accessToken = fixture.Create<string>();
             _correlationId = fixture.Create<Guid>();
 
-            var loggerMock = new Mock<ILogger<DocumentExtractionHttpRequestFactory>>();
+            var loggerMock = new Mock<ILogger<HttpRequestFactory>>();
             
-            _documentExtractionHttpRequestFactory = new DocumentExtractionHttpRequestFactory(loggerMock.Object);
+            _documentExtractionHttpRequestFactory = new HttpRequestFactory(loggerMock.Object);
         }
 
         [Fact]
         public void Create_SetsHttpMethodToGetOnRequestMessage()
         {
-            var message = _documentExtractionHttpRequestFactory.Create(_requestUri, _accessToken, _correlationId);
+            var message = _documentExtractionHttpRequestFactory.CreateGet(_requestUri, _accessToken, _correlationId);
 
             message.Method.Should().Be(HttpMethod.Get);
         }
@@ -40,7 +39,7 @@ namespace pdf_generator.tests.Factories
         [Fact]
         public void Create_SetsRequestUriOnRequestMessage()
         {
-            var message = _documentExtractionHttpRequestFactory.Create(_requestUri, _accessToken, _correlationId);
+            var message = _documentExtractionHttpRequestFactory.CreateGet(_requestUri, _accessToken, _correlationId);
 
             message.RequestUri.Should().Be(_requestUri);
         }
@@ -48,7 +47,7 @@ namespace pdf_generator.tests.Factories
         [Fact]
         public void Create_SetsAccessTokenOnRequestMessageAuthorizationHeader()
         {
-            var message = _documentExtractionHttpRequestFactory.Create(_requestUri, _accessToken, _correlationId);
+            var message = _documentExtractionHttpRequestFactory.CreateGet(_requestUri, _accessToken, _correlationId);
 
             message.Headers.Authorization?.ToString().Should().Be($"Bearer {_accessToken}");
         }

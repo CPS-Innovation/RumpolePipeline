@@ -31,7 +31,7 @@ public class UpdateSearchIndexHttpRequestFactory : IUpdateSearchIndexHttpRequest
         _logger = logger;
     }
     
-    public async Task<DurableHttpRequest> Create(int caseId, string documentId, Guid correlationId)
+    public async Task<DurableHttpRequest> Create(long caseId, string documentId, Guid correlationId)
     {
         _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}");
 

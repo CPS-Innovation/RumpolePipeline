@@ -19,11 +19,14 @@ namespace coordinator.tests.Factories
 {
 	public class GeneratePdfHttpRequestFactoryTests
 	{
-        private readonly int _caseId;
+		private readonly string _caseUrn;
+        private readonly long _caseId;
+        private readonly string _documentCategory;
 		private readonly string _documentId;
 		private readonly string _fileName;
-		private readonly string _lastUpdatedDate;
+		private readonly long _versionId;
 		private readonly AccessToken _clientAccessToken;
+		private readonly string _upstreamToken;
 		private readonly string _content;
         private readonly string _pdfGeneratorUrl;
         private readonly Guid _correlationId;
@@ -35,11 +38,14 @@ namespace coordinator.tests.Factories
 		public GeneratePdfHttpRequestFactoryTests()
 		{
 			var fixture = new Fixture();
+			_caseUrn = fixture.Create<string>();
 			_caseId = fixture.Create<int>();
+			_documentCategory = fixture.Create<string>();
 			_documentId = fixture.Create<string>();
 			_fileName = fixture.Create<string>();
-			_lastUpdatedDate = fixture.Create<string>();
+			_versionId = fixture.Create<long>();
 			_clientAccessToken = fixture.Create<AccessToken>();
+			_upstreamToken = fixture.Create<string>();
 			_content = fixture.Create<string>();
 			var pdfGeneratorScope = fixture.Create<string>();
 			_pdfGeneratorUrl = "https://www.test.co.uk/";
@@ -67,7 +73,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHttpMethodOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _lastUpdatedDate, _correlationId);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _upstreamToken, _correlationId);
 
 			durableRequest.Method.Should().Be(HttpMethod.Post);
 		}
@@ -75,7 +81,7 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedUriOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _lastUpdatedDate, _correlationId);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _upstreamToken, _correlationId);
 
 			durableRequest.Uri.AbsoluteUri.Should().Be(_pdfGeneratorUrl);
 		}
@@ -83,16 +89,18 @@ namespace coordinator.tests.Factories
 		[Fact]
 		public async Task Create_SetsExpectedHeadersOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _lastUpdatedDate, _correlationId);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _upstreamToken, _correlationId);
 
 			durableRequest.Headers.Should().Contain("Content-Type", "application/json");
 			durableRequest.Headers.Should().Contain("Authorization", $"Bearer {_clientAccessToken.Token}");
+			durableRequest.Headers.Should().Contain("upstream-token", _upstreamToken);
+			durableRequest.Headers.Should().Contain("Correlation-Id", _correlationId.ToString());
 		}
 
 		[Fact]
 		public async Task Create_SetsExpectedContentOnDurableRequest()
 		{
-			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _lastUpdatedDate, _correlationId);
+			var durableRequest = await _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _upstreamToken, _correlationId);
 
 			durableRequest.Content.Should().Be(_content);
 		}
@@ -103,7 +111,7 @@ namespace coordinator.tests.Factories
 			_mockIdentityClientAdapter.Setup(x => x.GetClientAccessTokenAsync(It.IsAny<string>(), It.IsAny<Guid>()))
 				.Throws(new Exception());
 
-			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseId, _documentId, _fileName, _lastUpdatedDate, _correlationId));
+			await Assert.ThrowsAsync<GeneratePdfHttpRequestFactoryException>(() => _generatePdfHttpRequestFactory.Create(_caseUrn, _caseId, _documentCategory, _documentId, _fileName, _versionId, _upstreamToken, _correlationId));
 		}
 	}
 }

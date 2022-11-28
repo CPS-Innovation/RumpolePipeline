@@ -11,9 +11,7 @@ using coordinator.Domain;
 using coordinator.Domain.Tracker;
 using coordinator.Functions.ActivityFunctions;
 using coordinator.Functions.SubOrchestrators;
-using FluentAssertions.Execution;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -32,7 +30,6 @@ namespace coordinator.tests.Functions.SubOrchestrators
 
         private readonly Mock<IDurableOrchestrationContext> _mockDurableOrchestrationContext;
         private readonly Mock<ITracker> _mockTracker;
-        private readonly Mock<IConfiguration> _mockConfiguration;
 
         private readonly CaseDocumentOrchestrator _caseDocumentOrchestrator;
 
@@ -47,20 +44,15 @@ namespace coordinator.tests.Functions.SubOrchestrators
             _content = fixture.Create<string>();
             var durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: _content);
             _pdfResponse = fixture.Create<GeneratePdfResponse>();
+            _pdfResponse.AlreadyProcessed = false;
 
             var mockLogger = new Mock<ILogger<CaseDocumentOrchestrator>>();
             _mockDurableOrchestrationContext = new Mock<IDurableOrchestrationContext>();
             _mockTracker = new Mock<ITracker>();
-            _mockConfiguration = new Mock<IConfiguration>();
-            _mockConfiguration.Setup(config => config[FeatureFlags.EvaluateDocuments]).Returns("true");
-
+            
             _evaluateDocumentResponse = fixture.Create<EvaluateDocumentResponse>();
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CaseDocumentOrchestrationPayload>()).Returns(_payload);
-            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
-                    nameof(CreateEvaluateDocumentHttpRequest),
-                    It.Is<CreateEvaluateDocumentHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.LastUpdatedDate == _payload.LastUpdatedDate)))
-                .ReturnsAsync(_evaluateDocumentDurableRequest);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
                     nameof(CreateUpdateSearchIndexHttpRequest),
                     It.Is<CreateUpdateSearchIndexHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId)))
@@ -83,10 +75,10 @@ namespace coordinator.tests.Functions.SubOrchestrators
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _pdfResponse.ToJson()));
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(textExtractorDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _content));
 
-            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
+            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == string.Concat(_payload.CaseUrn, "-", _payload.CaseId.ToString()))))
                 .Returns(_mockTracker.Object);
             
-            _caseDocumentOrchestrator = new CaseDocumentOrchestrator(new JsonConvertWrapper(), mockLogger.Object, _mockConfiguration.Object);
+            _caseDocumentOrchestrator = new CaseDocumentOrchestrator(new JsonConvertWrapper(), mockLogger.Object);
         }
 
         [Fact]
@@ -114,21 +106,6 @@ namespace coordinator.tests.Functions.SubOrchestrators
         }
         
         [Fact]
-        public async Task Run_Tracker_WhenEvaluateDocuments_FeatureKey_SetToFalse_RegistersIndexed_AsNormal()
-        {
-            _mockConfiguration.Setup(config => config[FeatureFlags.EvaluateDocuments]).Returns("false");
-            await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-
-            using (new AssertionScope())
-            {
-                _mockTracker.Verify(tracker => tracker.RegisterIndexed(_payload.DocumentId));
-                _mockDurableOrchestrationContext.Verify(context => context.CallActivityAsync<DurableHttpRequest>(
-                        nameof(CreateEvaluateDocumentHttpRequest),
-                        It.IsAny<CreateEvaluateDocumentHttpRequestActivityPayload>()), Times.Never);
-            }
-        }
-
-        [Fact]
         public async Task Run_ThrowsExceptionWhenCallToGeneratePdfReturnsNonOkResponse()
         {
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest))
@@ -138,7 +115,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
         }
 
         [Fact]
-        public async Task Run_Tracker_RegistersDocumentNotFoundInCDEWhenNotFoundStatusCodeReturned()
+        public async Task Run_Tracker_RegistersDocumentNotFoundInDDEIWhenNotFoundStatusCodeReturned()
         {
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest))
                 .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotFound, content: _content));
@@ -150,7 +127,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
             }
             catch
             {
-                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInCDE(_payload.DocumentId));
+                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInDDEI(_payload.DocumentId));
             }
         }
 
@@ -189,23 +166,6 @@ namespace coordinator.tests.Functions.SubOrchestrators
         }
 
         [Fact]
-        public async Task Run_WhenDocumentEvaluation_EqualsAcquireDocument_RegisterUnexpectedDocumentEvaluationFailure()
-        {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_evaluateDocumentDurableRequest))
-                .ThrowsAsync(new Exception());
-
-            try
-            {
-                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-                Assert.False(true);
-            }
-            catch
-            {
-                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedDocumentEvaluationFailure(_payload.DocumentId));
-            }
-        }
-        
-        [Fact]
         public async Task Run_RegistersAsIndexed_WhenDocumentEvaluation_EqualsDocumentUnchanged()
         {
             _evaluateDocumentResponse.EvaluationResult = DocumentEvaluationResult.DocumentUnchanged;
@@ -223,8 +183,14 @@ namespace coordinator.tests.Functions.SubOrchestrators
         }
         
         [Fact]
-        public async Task Run_Tracker_RegisterDocumentNotFoundInCDE_WhenNotFoundStatusCodeReturned_WhenUpdatingSearchIndex()
+        public async Task Run_Tracker_RegisterDocumentNotFoundInDDEI_WhenNotFoundStatusCodeReturned_WhenUpdatingSearchIndex()
         {
+            _pdfResponse.AlreadyProcessed = false;
+            _pdfResponse.UpdateSearchIndex = true;
+            
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, 
+                content: _pdfResponse.ToJson()));
+            
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_updateSearchIndexDurableRequest))
                 .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotFound, content: _content));
   
@@ -235,13 +201,19 @@ namespace coordinator.tests.Functions.SubOrchestrators
             }
             catch
             {
-                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInCDE(_payload.DocumentId));
+                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInDDEI(_payload.DocumentId));
             }
         }
         
         [Fact]
         public async Task Run_Tracker_RegisterUnableToUpdateSearchIndex_WhenNotFoundStatusCodeReturned_WhenUpdatingSearchIndex()
         {
+            _pdfResponse.AlreadyProcessed = false;
+            _pdfResponse.UpdateSearchIndex = true;
+            
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, 
+                content: _pdfResponse.ToJson()));
+            
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_updateSearchIndexDurableRequest))
                 .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotImplemented, content: _content));
   
@@ -253,57 +225,6 @@ namespace coordinator.tests.Functions.SubOrchestrators
             catch
             {
                 _mockTracker.Verify(tracker => tracker.RegisterUnableToUpdateSearchIndex(_payload.DocumentId));
-            }
-        }
-        
-        [Fact]
-        public async Task Run_Tracker_RegisterUnexpectedDocumentEvaluationFailure_WhenNotFoundStatusCodeReturned()
-        {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_evaluateDocumentDurableRequest))
-                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotFound, content: _content));
-
-            try
-            {
-                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-                Assert.False(true);
-            }
-            catch
-            {
-                _mockTracker.Verify(tracker => tracker.RegisterUnexpectedDocumentEvaluationFailure(_payload.DocumentId));
-            }
-        }
-
-        [Fact]
-        public async Task Run_Tracker_RegisterDocumentNotFoundInCDE_WhenNotFoundStatusCodeReturned_WhenEvaluatingADocument()
-        {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_evaluateDocumentDurableRequest))
-                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotFound, content: _content));
-  
-            try
-            {
-                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-                Assert.False(true);
-            }
-            catch
-            {
-                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInCDE(_payload.DocumentId));
-            }
-        }
-        
-        [Fact]
-        public async Task Run_Tracker_RegisterUnableToEvaluateDocument_WhenNotFoundStatusCodeReturned_WhenEvaluatingADocument()
-        {
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_evaluateDocumentDurableRequest))
-                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotImplemented, content: _content));
-  
-            try
-            {
-                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-                Assert.False(true);
-            }
-            catch
-            {
-                _mockTracker.Verify(tracker => tracker.RegisterUnableToEvaluateDocument(_payload.DocumentId));
             }
         }
     }

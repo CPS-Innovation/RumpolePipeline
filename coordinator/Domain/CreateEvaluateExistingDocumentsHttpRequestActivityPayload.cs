@@ -6,8 +6,8 @@ namespace coordinator.Domain;
 
 public class CreateEvaluateExistingDocumentsHttpRequestActivityPayload : BasePipelinePayload
 {
-    public CreateEvaluateExistingDocumentsHttpRequestActivityPayload(int caseId, List<CaseDocument> caseDocuments, Guid correlationId)
-        : base(caseId, correlationId)
+    public CreateEvaluateExistingDocumentsHttpRequestActivityPayload(string caseUrn, long caseId, List<CaseDocument> caseDocuments, Guid correlationId)
+        : base(caseUrn, caseId, correlationId)
     {
         CaseDocuments = caseDocuments;
     }

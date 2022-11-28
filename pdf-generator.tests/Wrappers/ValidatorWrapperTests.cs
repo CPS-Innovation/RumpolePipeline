@@ -25,6 +25,8 @@ namespace pdf_generator.tests.Wrappers
         {
             var request = _fixture.Build<GeneratePdfRequest>()
                             .With(r => r.FileName, fileName)
+                            .With(r => r.CaseId, 123456)
+                            .With(r => r.VersionId, 123456)
                             .Create();
 
             var results = new ValidatorWrapper<GeneratePdfRequest>().Validate(request);
@@ -36,10 +38,10 @@ namespace pdf_generator.tests.Wrappers
         public void Validate_GeneratePdfRequest_ReturnsNonEmptyValidationResultsWhenCaseIdIsMissing()
         {
             var request = _fixture.Build<GeneratePdfRequest>()
-                            .With(r => r.CaseId, default(int?))
-                            .With(r => r.FileName, "TestFile.doc")
-                            .With(r => r.LastUpdatedDate, "2007-10-02")
-                            .Create();
+                .With(r => r.CaseId, 0)
+                .With(r => r.FileName, "TestFile.doc")
+                .With(r => r.VersionId, 123456)
+                .Create();
 
             var results = new ValidatorWrapper<GeneratePdfRequest>().Validate(request);
 
@@ -47,13 +49,14 @@ namespace pdf_generator.tests.Wrappers
         }
 
         [Fact]
-        public void Validate_GeneratePdfRequest_ReturnsNonEmptyValidationResultsWhenLastUpdatedDateIsMissing()
+        public void Validate_GeneratePdfRequest_ReturnsNonEmptyValidationResultsWhenVersionIdIsMissing()
         {
             var request = _fixture.Build<GeneratePdfRequest>()
-                            .With(r => r.DocumentId, "TestFile")
-                            .With(r => r.FileName, "TestFile.doc")
-                            .With(r => r.LastUpdatedDate, default(string))
-                            .Create();
+                .With(r => r.CaseId, 123456)
+                .With(r => r.DocumentId, "TestFile")
+                .With(r => r.FileName, "TestFile.doc")
+                .With(r => r.VersionId, 0)
+                .Create();
 
             var results = new ValidatorWrapper<GeneratePdfRequest>().Validate(request);
 
@@ -65,6 +68,8 @@ namespace pdf_generator.tests.Wrappers
         {
             var request = _fixture.Build<GeneratePdfRequest>()
                             .With(r => r.FileName, default(string))
+                            .With(r => r.CaseId, 123456)
+                            .With(r => r.VersionId, 123456)
                             .Create();
 
             var results = new ValidatorWrapper<GeneratePdfRequest>().Validate(request);
@@ -80,6 +85,8 @@ namespace pdf_generator.tests.Wrappers
         {
             var request = _fixture.Build<GeneratePdfRequest>()
                             .With(r => r.FileName, fileName)
+                            .With(r => r.CaseId, 123456)
+                            .With(r => r.VersionId, 123456)
                             .Create();
 
             var results = new ValidatorWrapper<GeneratePdfRequest>().Validate(request);

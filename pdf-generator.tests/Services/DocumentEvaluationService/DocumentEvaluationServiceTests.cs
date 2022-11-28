@@ -27,6 +27,7 @@ public class DocumentEvaluationServiceTests
     private readonly Guid _correlationId;
     private readonly List<DocumentInformation> _documentsForCase;
     private readonly List<CaseDocument> _incomingDocuments;
+    private readonly List<string> _listOfConvertedBlobs;
 
     private readonly IDocumentEvaluationService _documentEvaluationService;
 
@@ -47,20 +48,26 @@ public class DocumentEvaluationServiceTests
 
         _mockSearchService.Setup(s => s.ListDocumentsForCaseAsync(_caseId, _correlationId)).ReturnsAsync(_documentsForCase);
         _mockBlobStorageService.Setup(s => s.RemoveDocumentAsync(It.IsAny<string>(), _correlationId)).ReturnsAsync(true);
+
+        _listOfConvertedBlobs = new List<string>();
+        _listOfConvertedBlobs.AddRange(_incomingDocuments.Select(x => x.FileName));
+        
+        _mockBlobStorageService.Setup(x => x.FindBlobsByPrefixAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+            .ReturnsAsync(_listOfConvertedBlobs);
     }
 
     [Fact]
     public async Task EvaluateExistingDocumentsAsync_WhenNoDocumentsFoundForCase_ReturnsEmptyEvaluationResultsCollection()
     {
-        _documentsForCase.Clear();
-        _mockSearchService.Setup(s => s.ListDocumentsForCaseAsync(_caseId, _correlationId)).ReturnsAsync(_documentsForCase);
+        _listOfConvertedBlobs.Clear();
+        _mockBlobStorageService.Setup(s => s.FindBlobsByPrefixAsync(It.IsAny<string>(), _correlationId)).ReturnsAsync(_listOfConvertedBlobs);
 
         var listResult = await _documentEvaluationService.EvaluateExistingDocumentsAsync(_caseId, _incomingDocuments, _correlationId);
 
         using (new AssertionScope())
         {
             listResult.Count.Should().Be(0);
-            _mockSearchService.Verify(v => v.ListDocumentsForCaseAsync(It.IsAny<string>(), _correlationId), Times.Exactly(1));
+            _mockBlobStorageService.Verify(v => v.FindBlobsByPrefixAsync(It.IsAny<string>(), _correlationId), Times.Exactly(1));
         }
     }
 
@@ -68,19 +75,26 @@ public class DocumentEvaluationServiceTests
     public async Task EvaluateExistingDocumentsAsync_WhenIncomingDocuments_EntirelyMatch_DocumentsFoundForCase_ReturnsEmptyEvaluationResultsCollection()
     {
         _documentsForCase.Clear();
-        foreach (var incomingDoc in _incomingDocuments)
+        foreach (var blobItemWrapper in _incomingDocuments.Select(incomingDoc => new DocumentInformation
+                 {
+                     DocumentId = incomingDoc.DocumentId,
+                     VersionId = incomingDoc.VersionId,
+                     FileName = incomingDoc.FileName
+                 }))
         {
-            var blobItemWrapper = new DocumentInformation
-            {
-                DocumentMetadata = new Dictionary<string, string>(),
-                BlobName = incomingDoc.FileName,
-                BlobContainerName = _fixture.Create<string>()
-            };
-            blobItemWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, incomingDoc.DocumentId);
-            blobItemWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, incomingDoc.LastUpdatedDate);
-            
             _documentsForCase.Add(blobItemWrapper);
         }
+
+        var pos = 0;
+        foreach (var doc in _documentsForCase)
+        {
+            _listOfConvertedBlobs[pos] = $"{_caseId}/pdfs/{_documentsForCase[pos].FileName}_{_documentsForCase[pos].DocumentId}.pdf";
+            pos++;
+        }
+        
+        _mockBlobStorageService.Setup(x => x.FindBlobsByPrefixAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+            .ReturnsAsync(_listOfConvertedBlobs);
+        
         _mockSearchService.Setup(s => s.ListDocumentsForCaseAsync(_caseId, _correlationId)).ReturnsAsync(_documentsForCase);
         
         var listResult = await _documentEvaluationService.EvaluateExistingDocumentsAsync(_caseId, _incomingDocuments, _correlationId);
@@ -88,7 +102,7 @@ public class DocumentEvaluationServiceTests
         using (new AssertionScope())
         {
             listResult.Count.Should().Be(0);
-            _mockSearchService.Verify(v => v.ListDocumentsForCaseAsync(It.IsAny<string>(), _correlationId), Times.Exactly(1));
+            _mockBlobStorageService.Verify(v => v.FindBlobsByPrefixAsync(It.IsAny<string>(), _correlationId), Times.Exactly(1));
         }
     }
     
@@ -96,21 +110,22 @@ public class DocumentEvaluationServiceTests
     public async Task EvaluateExistingDocumentsAsync_WhenIncomingDocuments_DoNotEntirelyMatch_DocumentsFoundForCase_ReturnsPopulatedEvaluationResultsCollection_AndSearchIndexUpdated()
     {
         _documentsForCase.Clear();
-        var pos = 1;
-        foreach (var incomingDoc in _incomingDocuments)
+        foreach (var blobItemWrapper in _incomingDocuments.Take(2).Select(incomingDoc => new DocumentInformation
+                 {
+                     DocumentId = incomingDoc.DocumentId,
+                     VersionId = incomingDoc.VersionId,
+                     FileName = incomingDoc.FileName
+                 }))
         {
-            var blobItemWrapper = new DocumentInformation
-            {
-                DocumentMetadata = new Dictionary<string, string>(),
-                BlobName = incomingDoc.FileName,
-                BlobContainerName = _fixture.Create<string>()
-            };
-            blobItemWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, pos % 2 == 0 ? incomingDoc.DocumentId : _fixture.Create<string>());
-            blobItemWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, incomingDoc.LastUpdatedDate);
-            
             _documentsForCase.Add(blobItemWrapper);
-            pos++;
         }
+
+        _listOfConvertedBlobs[0] = $"{_caseId}/pdfs/{_documentsForCase[0].FileName}_{_documentsForCase[0].DocumentId}.pdf";
+        _listOfConvertedBlobs[1] = $"{_caseId}/pdfs/{_documentsForCase[1].FileName}_{_documentsForCase[1].DocumentId}.pdf";
+        
+        _mockBlobStorageService.Setup(x => x.FindBlobsByPrefixAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+            .ReturnsAsync(_listOfConvertedBlobs);
+        
         _mockSearchService.Setup(s => s.ListDocumentsForCaseAsync(_caseId, _correlationId)).ReturnsAsync(_documentsForCase);
         
         var listResult = await _documentEvaluationService.EvaluateExistingDocumentsAsync(_caseId, _incomingDocuments, _correlationId);
@@ -118,7 +133,6 @@ public class DocumentEvaluationServiceTests
         using (new AssertionScope())
         {
             listResult.Count.Should().Be(2);
-            _mockSearchService.Verify(v => v.ListDocumentsForCaseAsync(It.IsAny<string>(), _correlationId), Times.Exactly(1));
             _mockBlobStorageService.Verify(v => v.RemoveDocumentAsync(It.IsAny<string>(), _correlationId), Times.Exactly(2));
         }
     }
@@ -149,11 +163,10 @@ public class DocumentEvaluationServiceTests
         var request = _fixture.Create<EvaluateDocumentRequest>();
         var storedDocument = new DocumentInformation
         {
-            DocumentMetadata = new Dictionary<string, string>(),
-            BlobName = _fixture.Create<string>(),
-            BlobContainerName = _fixture.Create<string>()
+            FileName = _listOfConvertedBlobs.First(),
+            VersionId = request.VersionId
         };
-        storedDocument.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, request.LastUpdatedDate);
+        request.ProposedBlobName = storedDocument.FileName;
         
         _mockSearchService.Setup(s => s.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, _correlationId))
             .ReturnsAsync(storedDocument);
@@ -172,16 +185,14 @@ public class DocumentEvaluationServiceTests
     }
     
     [Fact]
-    public async Task EvaluateDocumentAsync_WhenDocumentIsNotMatchedExactlyToBlobStorage_ByLastUpdatedDate_ShouldAcquireTheNewDocument_AndUpdateTheSearchIndexToRemoveTheOld()
+    public async Task EvaluateDocumentAsync_WhenDocumentIsNotMatchedExactlyToBlobStorage_ByVersionId_ShouldAcquireTheNewDocument_AndUpdateTheSearchIndexToRemoveTheOld()
     {
         var request = _fixture.Create<EvaluateDocumentRequest>();
         var storedDocument = new DocumentInformation
         {
-            DocumentMetadata = new Dictionary<string, string>(),
-            BlobName = _fixture.Create<string>(),
-            BlobContainerName = _fixture.Create<string>()
+            FileName = _fixture.Create<string>(),
+            VersionId = _fixture.Create<long>()
         };
-        storedDocument.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, _fixture.Create<string>());
         
         _mockSearchService.Setup(s => s.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, _correlationId))
             .ReturnsAsync(storedDocument);

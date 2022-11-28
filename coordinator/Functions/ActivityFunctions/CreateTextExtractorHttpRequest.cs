@@ -29,6 +29,8 @@ namespace coordinator.Functions.ActivityFunctions
             
             if (payload == null)
                 throw new ArgumentException("Payload cannot be null.");
+            if (string.IsNullOrWhiteSpace(payload.CaseUrn))
+                throw new ArgumentException("CaseUrn cannot be empty");
             if (payload.CaseId == 0)
                 throw new ArgumentException("CaseId cannot be zero");
             if (string.IsNullOrWhiteSpace(payload.DocumentId))
@@ -39,7 +41,7 @@ namespace coordinator.Functions.ActivityFunctions
                 throw new ArgumentException("CorrelationId must be valid GUID");
             
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
-            var result = await _textExtractorHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.LastUpdatedDate, payload.BlobName, payload.CorrelationId);
+            var result = await _textExtractorHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.VersionId, payload.BlobName, payload.CorrelationId);
             
             _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
             return result;

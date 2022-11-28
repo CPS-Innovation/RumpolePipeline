@@ -22,7 +22,7 @@ namespace coordinator.tests.Factories
 {
 	public class EvaluateExistingDocumentsHttpRequestFactoryTests
 	{
-        private readonly int _caseId;
+        private readonly long _caseId;
         private readonly List<CaseDocument> _existingCaseDocuments;
 		private readonly AccessToken _clientAccessToken;
 		private readonly string _content;

@@ -4,6 +4,7 @@ using System.Net.Http;
 using AutoFixture;
 using Azure;
 using Common.Domain.Exceptions;
+using Common.Exceptions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;

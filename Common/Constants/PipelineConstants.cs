@@ -12,6 +12,7 @@
         public const string Authorization = "Authorization";
         public const string ContentType = "Content-Type";
         public const string CorrelationId = "Correlation-Id";
+        public const string UpstreamTokenName = "upstream-token";
     }
 
     public static class HttpHeaderValues
@@ -49,13 +50,11 @@
     {
         public const string CaseId = "caseId";
         public const string DocumentId = "documentId";
-        public const string LastUpdatedDate = "lastUpdatedDate";
-        public const string OriginalFileName = "originalFileName";
+        public const string VersionId = "versionId";
     }
 
     public static class FeatureFlags
     {
-        public const string EvaluateDocuments = "FeatureFlags_EvaluateDocuments";
     }
 
     public static class ConfigKeys
@@ -75,13 +74,6 @@
             public const string SearchIndexUpdateUrl = "SearchIndexUpdateUrl";
         }
 
-        public static class PdfGeneratorKeys
-        {
-            public const string FakeCmsDocumentsRepository = "FakeCmsDocumentsRepository";
-            public const string FakeCmsDocumentsRepository2 = "FakeCmsDocumentsRepository2";
-            public const string DocumentExtractionBaseUrl = "DocumentExtractionBaseUrl";
-        }
-
         public static class TextExtractorKeys
         {
             public const string ComputerVisionClientServiceKey = "ComputerVisionClientServiceKey";
@@ -99,8 +91,10 @@
             public const string BlobExpirySecs = "BlobExpirySecs";
             public const string BlobUserDelegationKeyExpirySecs = "BlobUserDelegationKeyExpirySecs";
             public const string BlobServiceUrl = "BlobServiceUrl";
-            public const string StubBlobStorageConnectionString = "StubBlobStorageConnectionString";
-            public const string IsRunningLocally = "IsRunningLocally";
+            public const string DocumentsRepositoryBaseUrl = "DocumentsRepositoryBaseUrl";
+            public const string GetDocumentUrl = "GetDocumentUrl";
+            public const string ListDocumentsUrl = "ListDocumentsUrl";
+            public const string WebsiteInstanceId = "WEBSITE_INSTANCE_ID";
         }
     }
 }

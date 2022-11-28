@@ -209,7 +209,7 @@ namespace pdf_generator.tests.Functions
                 .Returns(errorHttpResponseMessage);
 
             var request = _fixture.Create<RedactPdfRequest>();
-            request.CaseId = string.Empty;
+            request.CaseId = 0;
 
             var serializedRedactPdfRequest = JsonConvert.SerializeObject(request);
             _httpRequestMessage = new HttpRequestMessage()

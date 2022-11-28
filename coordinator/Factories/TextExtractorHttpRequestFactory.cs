@@ -31,7 +31,7 @@ namespace coordinator.Factories
             _logger = logger;
         }
 
-        public async Task<DurableHttpRequest> Create(int caseId, string documentId, string lastUpdatedDate, string blobName, Guid correlationId)
+        public async Task<DurableHttpRequest> Create(long caseId, string documentId, long versionId, string blobName, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseId: {caseId}, DocumentId: {documentId}, BlobName: {blobName}");
 
@@ -48,7 +48,7 @@ namespace coordinator.Factories
                     { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
                     { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
                 };
-                var content = _jsonConvertWrapper.SerializeObject(new ExtractTextRequest(caseId, documentId, lastUpdatedDate, blobName));
+                var content = _jsonConvertWrapper.SerializeObject(new ExtractTextRequest(caseId, documentId, versionId, blobName));
 
                 return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration[ConfigKeys.CoordinatorKeys.TextExtractorUrl]), headers,
                     content);

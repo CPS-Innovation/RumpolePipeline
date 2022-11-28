@@ -5,20 +5,20 @@ namespace Common.Domain.Requests
 {
     public class RedactPdfRequest
     {
-        public RedactPdfRequest(string caseId, string documentId, string lastUpdateDate, string fileName, List<RedactionDefinition> redactionDefinitions)
+        public RedactPdfRequest(long caseId, string documentId, long versionId, string fileName, List<RedactionDefinition> redactionDefinitions)
         {
             CaseId = caseId;
             DocumentId = documentId;
-            LastUpdateDate = lastUpdateDate;
+            VersionId = versionId;
             FileName = fileName;
             RedactionDefinitions = redactionDefinitions;
         }
         
-        public string CaseId { get; set; }
+        public long CaseId { get; set; }
 
         public string DocumentId { get; set; }
         
-        public string LastUpdateDate { get; set; }
+        public long VersionId { get; set; }
 
         public string FileName { get; set; }
 

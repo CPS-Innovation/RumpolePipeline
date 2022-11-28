@@ -4,17 +4,17 @@ namespace coordinator.Domain
 {
     public class CreateTextExtractorHttpRequestActivityPayload : BasePipelinePayload
     {
-        public CreateTextExtractorHttpRequestActivityPayload(int caseId, string documentId, string lastUpdatedDate, string blobName, Guid correlationId)
-            : base(caseId, correlationId)
+        public CreateTextExtractorHttpRequestActivityPayload(string caseUrn, long caseId, string documentId, long versionId, string blobName, Guid correlationId)
+            : base(caseUrn, caseId, correlationId)
         {
             DocumentId = documentId;
-            LastUpdatedDate = lastUpdatedDate;
+            VersionId = versionId;
             BlobName = blobName;
         }
         
         public string DocumentId { get; set; }
 
-        public string LastUpdatedDate { get; set; }
+        public long VersionId { get; set; }
 
         public string BlobName { get; set; }
     }

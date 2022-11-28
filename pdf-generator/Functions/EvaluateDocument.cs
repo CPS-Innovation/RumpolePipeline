@@ -79,7 +79,7 @@ public class EvaluateDocument
             if (results.Any())
                 throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
             
-            _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for documentId {evaluateDocumentRequest.DocumentId}, lastUpdatedDate {evaluateDocumentRequest.LastUpdatedDate}");
+            _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for documentId {evaluateDocumentRequest.DocumentId}, versionId {evaluateDocumentRequest.VersionId}");
 
             var evaluationResult = await _documentEvaluationService.EvaluateDocumentAsync(evaluateDocumentRequest, currentCorrelationId);
             

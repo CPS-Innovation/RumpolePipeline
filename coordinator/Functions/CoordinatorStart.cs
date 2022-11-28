@@ -30,8 +30,8 @@ namespace coordinator.Functions
         }
 
         [FunctionName("CoordinatorStart")]
-        public async Task<HttpResponseMessage> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "cases/{caseId}")] HttpRequestMessage req, string caseId, [DurableClient] IDurableOrchestrationClient orchestrationClient)
+        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "cases/{caseUrn}/{caseId}")] HttpRequestMessage req, 
+                string caseUrn, string caseId, [DurableClient] IDurableOrchestrationClient orchestrationClient)
         { 
             Guid currentCorrelationId = default;
             const string loggingName = $"{nameof(CoordinatorStart)} - {nameof(Run)}";
@@ -46,12 +46,22 @@ namespace coordinator.Functions
                 if (!Guid.TryParse(correlationId, out currentCorrelationId))
                     if (currentCorrelationId == Guid.Empty)
                         throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
+                
+                req.Headers.TryGetValues(HttpHeaderKeys.UpstreamTokenName, out var upstreamTokenValues);
+                if (upstreamTokenValues == null)
+                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(req));
+                var upstreamToken = upstreamTokenValues.First();
+                if (string.IsNullOrWhiteSpace(upstreamToken))
+                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(req));
 
                 _logger.LogMethodEntry(currentCorrelationId, loggingName, req.RequestUri?.Query);
                 
                 var authValidation = await _authorizationValidator.ValidateTokenAsync(req.Headers.Authorization, currentCorrelationId);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
+
+                if (string.IsNullOrWhiteSpace(caseUrn))
+                    throw new BadRequestException("A case URN must be supplied.", caseUrn);
 
                 if (!int.TryParse(caseId, out var caseIdNum))
                     throw new BadRequestException("Invalid case id. A 32-bit integer is required.", caseId);
@@ -70,7 +80,8 @@ namespace coordinator.Functions
 
                 // Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled).
                 _logger.LogMethodFlow(currentCorrelationId, loggingName, "Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled");
-                var existingInstance = await orchestrationClient.GetStatusAsync(caseId);
+                var instanceId = string.Concat(caseUrn, "-", caseId);
+                var existingInstance = await orchestrationClient.GetStatusAsync(instanceId);
                 if (existingInstance == null
                     || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Completed
                     || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Failed
@@ -79,17 +90,17 @@ namespace coordinator.Functions
                 {
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),
-                        caseId,
-                        new CoordinatorOrchestrationPayload(caseIdNum, forceRefresh, authValidation.Item2, currentCorrelationId));
+                        instanceId,
+                        new CoordinatorOrchestrationPayload(caseUrn, caseIdNum, forceRefresh, authValidation.Item2, upstreamToken, currentCorrelationId));
 
-                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'");
+                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}'");
                 }
                 else
                 {
-                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - {nameof(CoordinatorOrchestrator)} with instance id '{caseId}' is already running");
+                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}' is already running");
                 }
 
-                return orchestrationClient.CreateCheckStatusResponse(req, caseId);
+                return orchestrationClient.CreateCheckStatusResponse(req, instanceId);
             }
             catch (Exception exception)
             {

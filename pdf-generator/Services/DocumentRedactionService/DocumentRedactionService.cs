@@ -5,12 +5,10 @@ using Aspose.Pdf;
 using Aspose.Pdf.Annotations;
 //using Aspose.Pdf.Devices;
 using Aspose.Pdf.Facades;
-using Common.Constants;
 using Common.Domain.Extensions;
 using Common.Domain.Requests;
 using Common.Domain.Responses;
 using Common.Logging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Services.BlobStorageService;
 
@@ -21,14 +19,12 @@ namespace pdf_generator.Services.DocumentRedactionService
         private readonly IBlobStorageService _blobStorageService;
         private readonly ICoordinateCalculator _coordinateCalculator;
         private readonly ILogger<DocumentRedactionService> _logger;
-        private readonly IConfiguration _configuration;
 
-        public DocumentRedactionService(IBlobStorageService blobStorageService, ICoordinateCalculator coordinateCalculator, ILogger<DocumentRedactionService> logger, IConfiguration configuration)
+        public DocumentRedactionService(IBlobStorageService blobStorageService, ICoordinateCalculator coordinateCalculator, ILogger<DocumentRedactionService> logger)
         {
             _blobStorageService = blobStorageService ?? throw new ArgumentNullException(nameof(blobStorageService));
             _coordinateCalculator = coordinateCalculator ?? throw new ArgumentNullException(nameof(coordinateCalculator));
             _logger = logger;
-            _configuration = configuration;
         }
 
         public async Task<RedactPdfResponse> RedactPdfAsync(RedactPdfRequest redactPdfRequest, string accessToken, Guid correlationId)
@@ -49,8 +45,8 @@ namespace pdf_generator.Services.DocumentRedactionService
 
             var fileNameWithoutExtension = fileName.IndexOf(".pdf", StringComparison.OrdinalIgnoreCase) > -1 ? fileName.Split(".pdf", StringSplitOptions.RemoveEmptyEntries)[0] : fileName;
 
-            var useEndToEnd = bool.Parse(_configuration[FeatureFlags.EvaluateDocuments]);
-            var newFileName = useEndToEnd ? $"{fileNameWithoutExtension}_{DateTime.Now.Ticks.GetHashCode().ToString("x").ToUpper()}.pdf" : fileName;
+            var newFileName = $"{fileNameWithoutExtension}_{DateTime.Now.Ticks.GetHashCode().ToString("x").ToUpper()}.pdf"; //restore save redaction to same storage for now, but with additional randomised identifier
+            //this will be replaced shortly by the TDE upload call
 
             //2. Apply UI instructions by drawing boxes according to co-ordinate data onto existing PDF
             _logger.LogMethodFlow(correlationId, nameof(RedactPdfAsync), "Apply UI instructions by drawing boxes according to co-ordinate data onto existing PDF");
@@ -113,7 +109,7 @@ namespace pdf_generator.Services.DocumentRedactionService
                 redactedDocument.Save(redactedDocumentStream);
             }
             
-            await _blobStorageService.UploadDocumentAsync(redactedDocumentStream, newFileName, redactPdfRequest.CaseId, redactPdfRequest.DocumentId, redactPdfRequest.LastUpdateDate, correlationId);
+            await _blobStorageService.UploadDocumentAsync(redactedDocumentStream, newFileName, redactPdfRequest.CaseId.ToString(), redactPdfRequest.DocumentId, redactPdfRequest.VersionId.ToString(), correlationId);
 
             saveResult.Succeeded = true;
             saveResult.RedactedDocumentName = newFileName;

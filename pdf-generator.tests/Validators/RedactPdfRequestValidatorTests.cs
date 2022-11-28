@@ -20,11 +20,9 @@ namespace pdf_generator.tests.Validators
         }
 
         [Theory]
-        [InlineData(null, false)]
-        [InlineData("", false)]
-        [InlineData(" ", false)]
-        [InlineData("12345", true)]
-        public void Validate_CaseId(string caseId, bool isValid)
+        [InlineData(0, false)]
+        [InlineData(12345, true)]
+        public void Validate_CaseId(long caseId, bool isValid)
         {
             var testRequest = _fixture.Build<RedactPdfRequest>()
                 .With(x => x.CaseId, caseId)

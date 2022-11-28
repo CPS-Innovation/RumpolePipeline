@@ -44,10 +44,10 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterDocumentIds(IEnumerable<string> documentIds)
+        public Task RegisterDocumentIds(IEnumerable<Tuple<string, long>> documentIds)
         {
             Documents = documentIds
-                .Select(documentId => new TrackerDocument { DocumentId = documentId })
+                .Select(item => new TrackerDocument { DocumentId = item.Item1, VersionId = item.Item2})
                 .ToList();
 
             Log(LogType.RegisteredDocumentIds);
@@ -109,13 +109,24 @@ namespace coordinator.Domain.Tracker
 
             return Task.CompletedTask;
         }
+        
+        public Task RegisterBlobAlreadyProcessed(RegisterPdfBlobNameArg arg)
+        {
+            var document = Documents.Find(document => document.DocumentId.Equals(arg.DocumentId, StringComparison.OrdinalIgnoreCase));
+            document!.PdfBlobName = arg.BlobName;
+            document.Status = DocumentStatus.DocumentAlreadyProcessed;
 
-        public Task RegisterDocumentNotFoundInCDE(string documentId)
+            Log(LogType.DocumentAlreadyProcessed, arg.DocumentId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RegisterDocumentNotFoundInDDEI(string documentId)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document!.Status = DocumentStatus.NotFoundInCDE;
+            document!.Status = DocumentStatus.NotFoundInDDEI;
 
-            Log(LogType.DocumentNotFoundInCDE, documentId);
+            Log(LogType.DocumentNotFoundInDDEI, documentId);
 
             return Task.CompletedTask;
         }
@@ -140,10 +151,10 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterNoDocumentsFoundInCDE()
+        public Task RegisterNoDocumentsFoundInDDEI()
         {
-            Status = TrackerStatus.NoDocumentsFoundInCDE;
-            Log(LogType.NoDocumentsFoundInCDE);
+            Status = TrackerStatus.NoDocumentsFoundInDDEI;
+            Log(LogType.NoDocumentsFoundInDDEI);
 
             return Task.CompletedTask;
         }
@@ -222,13 +233,13 @@ namespace coordinator.Domain.Tracker
         public Task<bool> AllDocumentsFailed()
         {
             return Task.FromResult(
-                Documents.All(d => d.Status is DocumentStatus.NotFoundInCDE 
+                Documents.All(d => d.Status is DocumentStatus.NotFoundInDDEI 
                     or DocumentStatus.UnableToConvertToPdf or DocumentStatus.UnexpectedFailure));
         }
 
         public Task<bool> IsAlreadyProcessed()
         {
-            return Task.FromResult(Status is TrackerStatus.Completed or TrackerStatus.NoDocumentsFoundInCDE);
+            return Task.FromResult(Status is TrackerStatus.Completed or TrackerStatus.NoDocumentsFoundInDDEI);
         }
 
         private void Log(LogType status, string documentId = null)
@@ -249,7 +260,8 @@ namespace coordinator.Domain.Tracker
 
         [FunctionName("TrackerStatus")]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "cases/{caseId}/tracker")] HttpRequestMessage req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "cases/{caseUrn}/{caseId}/tracker")] HttpRequestMessage req,
+            string caseUrn,
             string caseId,
             [DurableClient] IDurableEntityClient client,
             ILogger log)
@@ -273,12 +285,13 @@ namespace coordinator.Domain.Tracker
                 }
 
             log.LogMethodEntry(currentCorrelationId, loggingName, caseId);
-            
-            var entityId = new EntityId(nameof(Tracker), caseId);
+
+            var entityKey = string.Concat(caseUrn, "-", caseId);
+            var entityId = new EntityId(nameof(Tracker), entityKey);
             var stateResponse = await client.ReadEntityStateAsync<Tracker>(entityId);
             if (!stateResponse.EntityExists)
             {
-                var baseMessage = $"No pipeline tracker found with id '{caseId}'";
+                var baseMessage = $"No pipeline tracker found with id '{entityKey}'";
                 log.LogMethodFlow(currentCorrelationId, loggingName, baseMessage);
                 return new NotFoundObjectResult(baseMessage);
             }

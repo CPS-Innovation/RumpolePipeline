@@ -4,18 +4,24 @@ namespace coordinator.Domain
 {
     public class CreateGeneratePdfHttpRequestActivityPayload : BasePipelinePayload
     {
-        public CreateGeneratePdfHttpRequestActivityPayload(int caseId, string documentId, string fileName, string lastUpdatedDate, Guid correlationId)
-            : base(caseId, correlationId)
+        public CreateGeneratePdfHttpRequestActivityPayload(string caseUrn, long caseId, string documentCategory, string documentId, string fileName, long versionId, string upstreamToken, Guid correlationId)
+            : base(caseUrn, caseId, correlationId)
         {
             DocumentId = documentId;
+            DocumentCategory = documentCategory;
             FileName = fileName;
-            LastUpdatedDate = lastUpdatedDate;
+            VersionId = versionId;
+            UpstreamToken = upstreamToken;
         }
+
+        public string DocumentCategory { get; set; }
         
         public string DocumentId { get; set; }
 
         public string FileName { get; set; }
 
-        public string LastUpdatedDate { get; set; }
+        public long VersionId { get; set; }
+
+        public string UpstreamToken { get; set; }
     }
 }

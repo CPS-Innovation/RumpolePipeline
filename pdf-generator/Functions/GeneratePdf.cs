@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +13,7 @@ using Common.Domain.Requests;
 using Common.Domain.Responses;
 using Common.Handlers;
 using Common.Logging;
+using Common.Services.Contracts;
 using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -19,7 +21,7 @@ using Microsoft.Extensions.Logging;
 using pdf_generator.Domain;
 using pdf_generator.Handlers;
 using pdf_generator.Services.BlobStorageService;
-using pdf_generator.Services.DocumentExtractionService;
+using pdf_generator.Services.DocumentEvaluationService;
 using pdf_generator.Services.PdfService;
 
 namespace pdf_generator.Functions
@@ -29,7 +31,8 @@ namespace pdf_generator.Functions
         private readonly IAuthorizationValidator _authorizationValidator;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
         private readonly IValidatorWrapper<GeneratePdfRequest> _validatorWrapper;
-        private readonly IDocumentExtractionService _documentExtractionService;
+        private readonly IDocumentEvaluationService _documentEvaluationService;
+        private readonly IDdeiDocumentExtractionService _documentExtractionService;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IPdfOrchestratorService _pdfOrchestratorService;
         private readonly IExceptionHandler _exceptionHandler;
@@ -37,12 +40,13 @@ namespace pdf_generator.Functions
 
         public GeneratePdf(
              IAuthorizationValidator authorizationValidator, IJsonConvertWrapper jsonConvertWrapper,
-             IValidatorWrapper<GeneratePdfRequest> validatorWrapper, IDocumentExtractionService documentExtractionService,
+             IValidatorWrapper<GeneratePdfRequest> validatorWrapper, IDocumentEvaluationService documentEvaluationService, IDdeiDocumentExtractionService documentExtractionService,
              IBlobStorageService blobStorageService, IPdfOrchestratorService pdfOrchestratorService, IExceptionHandler exceptionHandler, ILogger<GeneratePdf> logger)
         {
             _authorizationValidator = authorizationValidator;
             _jsonConvertWrapper = jsonConvertWrapper;
             _validatorWrapper = validatorWrapper;
+            _documentEvaluationService = documentEvaluationService;
             _documentExtractionService = documentExtractionService;
             _blobStorageService = blobStorageService;
             _pdfOrchestratorService = pdfOrchestratorService;
@@ -66,6 +70,13 @@ namespace pdf_generator.Functions
                 var correlationId = correlationIdValues.First();
                 if (!Guid.TryParse(correlationId, out currentCorrelationId) || currentCorrelationId == Guid.Empty)
                         throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
+                
+                request.Headers.TryGetValues(HttpHeaderKeys.UpstreamTokenName, out var upstreamTokenValues);
+                if (upstreamTokenValues == null)
+                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(request));
+                var upstreamToken = upstreamTokenValues.First();
+                if (string.IsNullOrWhiteSpace(upstreamToken))
+                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(request));
 
                 _log.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
@@ -79,10 +90,8 @@ namespace pdf_generator.Functions
 
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
-                {
                     throw new BadRequestException("Request body cannot be null.", nameof(request));
-                }
-
+                
                 var pdfRequest = _jsonConvertWrapper.DeserializeObject<GeneratePdfRequest>(content);
 
                 var results = _validatorWrapper.Validate(pdfRequest);
@@ -90,21 +99,33 @@ namespace pdf_generator.Functions
                 {
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
                 }
+                
+                var blobName = $"{pdfRequest.CaseId}/pdfs/{Path.GetFileNameWithoutExtension(pdfRequest.FileName)}_{pdfRequest.DocumentId}.pdf";
+                generatePdfResponse = new GeneratePdfResponse {BlobName = blobName};
 
-                //Will need to prepare a custom oAuth request to send to Cde
+                _log.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for documentId {pdfRequest.DocumentId}, versionId {pdfRequest.VersionId}, proposedBlobName: {blobName}");
+                var evaluateDocumentRequest = new EvaluateDocumentRequest(pdfRequest.CaseId, pdfRequest.DocumentId, pdfRequest.VersionId, blobName);
+                var evaluationResult = await _documentEvaluationService.EvaluateDocumentAsync(evaluateDocumentRequest, currentCorrelationId);
+
+                if (evaluationResult.EvaluationResult == DocumentEvaluationResult.DocumentUnchanged)
+                {
+                    generatePdfResponse.AlreadyProcessed = true;
+                    return OkResponse(Serialize(generatePdfResponse));
+                }
+
+                //Will need to prepare a custom oAuth request to send to DDEI
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"Retrieving Document from Cde for documentId: '{pdfRequest.DocumentId}'");
-                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.DocumentId,
-                    pdfRequest.FileName, "onBehalfOfAccessToken", currentCorrelationId);
+                
+                var documentStream = await _documentExtractionService.GetDocumentAsync(pdfRequest.CaseUrn, pdfRequest.CaseId.ToString(), pdfRequest.DocumentCategory, pdfRequest.DocumentId, upstreamToken, currentCorrelationId);
 
-                var blobName = $"{pdfRequest.CaseId}/pdfs/{pdfRequest.DocumentId}.pdf";
-                var fileType = pdfRequest.FileName.Split('.').Last().ToFileType();
+                var fileType = Path.GetExtension(pdfRequest.FileName).ToFileType();
                 if (fileType == FileType.PDF)
                 {
                     _log.LogMethodFlow(currentCorrelationId, loggingName, 
                         $"Retrieved document is already a PDF and so no conversion necessary; uploading and storing original file: '{pdfRequest.FileName}' to blob storage as file: '{blobName}'");
                     
                     await _blobStorageService.UploadDocumentAsync(documentStream, blobName, pdfRequest.CaseId.ToString(), pdfRequest.DocumentId, 
-                        pdfRequest.LastUpdatedDate, currentCorrelationId);
+                        pdfRequest.VersionId.ToString(), currentCorrelationId);
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"{blobName} uploaded successfully");
                 }
@@ -116,13 +137,13 @@ namespace pdf_generator.Functions
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"Document converted to PDF successfully, beginning upload of '{blobName}'...");
                     await _blobStorageService.UploadDocumentAsync(pdfStream, blobName, pdfRequest.CaseId.ToString(), pdfRequest.DocumentId, 
-                        pdfRequest.LastUpdatedDate, currentCorrelationId);
+                        pdfRequest.VersionId.ToString(), currentCorrelationId);
                     
                     _log.LogMethodFlow(currentCorrelationId, loggingName, $"'{blobName}' uploaded successfully");
                 }
 
-                generatePdfResponse = new GeneratePdfResponse {BlobName = blobName};
-                
+                generatePdfResponse.UpdateSearchIndex = evaluationResult.UpdateSearchIndex; //if document acquired following a versionId mismatch, the pipeline can clear out
+                                                                                            //the old info before re-ocr begins on the new PDF
                 return OkResponse(Serialize(generatePdfResponse));
             }
             catch (Exception exception)

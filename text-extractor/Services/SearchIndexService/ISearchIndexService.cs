@@ -6,9 +6,9 @@ namespace text_extractor.Services.SearchIndexService
 {
 	public interface ISearchIndexService
 	{
-		Task StoreResultsAsync(AnalyzeResults analyzeresults, int caseId, string documentId, string lastUpdatedDate, Guid correlationId);
+		Task StoreResultsAsync(AnalyzeResults analyzeresults, long caseId, string documentId, long versionId, string blobName, Guid correlationId);
 
-		Task RemoveResultsForDocumentAsync(int caseId, string documentId, Guid correlationId);
+		Task RemoveResultsForDocumentAsync(long caseId, string documentId, Guid correlationId);
 	}
 }
 

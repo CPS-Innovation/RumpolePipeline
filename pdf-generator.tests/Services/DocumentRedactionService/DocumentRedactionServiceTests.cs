@@ -4,12 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Aspose.Cells;
 using AutoFixture;
-using Common.Constants;
 using Common.Domain.Redaction;
 using Common.Domain.Requests;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using pdf_generator.Factories;
@@ -29,7 +27,6 @@ public class DocumentRedactionServiceTests
     private readonly RedactPdfRequest _redactPdfRequest;
     private readonly string _accessToken;
     private readonly Guid _correlationId;
-    private readonly MemoryStream _pdfStream;
 
     public DocumentRedactionServiceTests()
     {
@@ -44,12 +41,8 @@ public class DocumentRedactionServiceTests
 
         IPdfService pdfService = new CellsPdfService(asposeItemFactory.Object);
         
-        var configuration = new Mock<IConfiguration>();
-
-        configuration.Setup(x => x[FeatureFlags.EvaluateDocuments]).Returns("true");
-
         _documentRedactionService = new pdf_generator.Services.DocumentRedactionService.DocumentRedactionService(_mockBlobStorageService.Object,
-            coordinateCalculator, mockLogger.Object, configuration.Object);
+            coordinateCalculator, mockLogger.Object);
 
         _redactPdfRequest = fixture.Create<RedactPdfRequest>();
         _redactPdfRequest.RedactionDefinitions = fixture.CreateMany<RedactionDefinition>(1).ToList();
@@ -58,13 +51,13 @@ public class DocumentRedactionServiceTests
         _accessToken = fixture.Create<string>();
         _correlationId = Guid.NewGuid();
         
-        _pdfStream = new MemoryStream();
+        using var pdfStream = new MemoryStream();
         using var inputStream = GetType().Assembly.GetManifestResourceStream("pdf_generator.tests.TestResources.TestBook.xlsx");
         
-        pdfService.ReadToPdfStream(inputStream, _pdfStream, Guid.NewGuid());
+        pdfService.ReadToPdfStream(inputStream, pdfStream, Guid.NewGuid());
 
         _mockBlobStorageService.Setup(s => s.GetDocumentAsync(It.IsAny<string>(), It.IsAny<Guid>()))
-            .ReturnsAsync(_pdfStream);
+            .ReturnsAsync(pdfStream);
 
         _mockBlobStorageService.Setup(s => s.UploadDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>())).Returns(Task.CompletedTask);

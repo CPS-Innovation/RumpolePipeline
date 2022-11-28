@@ -26,9 +26,11 @@ namespace coordinator.Functions.ActivityFunctions
         {
             const string loggingName = $"{nameof(CreateGeneratePdfHttpRequest)} - {nameof(Run)}";
             var payload = context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>();
-            
+
             if (payload == null)
                 throw new ArgumentException("Payload cannot be null.");
+            if (string.IsNullOrWhiteSpace(payload.CaseUrn))
+                throw new ArgumentException("CaseUrn cannot be empty");
             if (payload.CaseId == 0)
                 throw new ArgumentException("CaseId cannot be zero");
             if (string.IsNullOrWhiteSpace(payload.DocumentId))
@@ -40,7 +42,7 @@ namespace coordinator.Functions.ActivityFunctions
             
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
-            var result = await _generatePdfHttpRequestFactory.Create(payload.CaseId, payload.DocumentId, payload.FileName, payload.LastUpdatedDate, payload.CorrelationId);
+            var result = await _generatePdfHttpRequestFactory.Create(payload.CaseUrn, payload.CaseId, payload.DocumentCategory, payload.DocumentId, payload.FileName, payload.VersionId, payload.UpstreamToken, payload.CorrelationId);
             
             _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
             return result;

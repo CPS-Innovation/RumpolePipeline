@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Common.Constants;
 using Common.Domain.Extensions;
 using Common.Logging;
@@ -26,6 +27,33 @@ namespace pdf_generator.Services.BlobStorageService
             _blobServiceContainerName = blobServiceContainerName;
             _logger = logger;
         }
+        
+        public async Task<bool> DocumentExistsAsync(string blobName, Guid correlationId)
+        {
+            var decodedBlobName = blobName.UrlDecodeString();
+            _logger.LogMethodEntry(correlationId, nameof(GetDocumentAsync), decodedBlobName);
+
+            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
+            if (!await blobContainerClient.ExistsAsync())
+                throw new RequestFailedException((int)HttpStatusCode.NotFound, $"Blob container '{_blobServiceContainerName}' does not exist");
+            
+            var blobClient = blobContainerClient.GetBlobClient(decodedBlobName);
+            return await blobClient.ExistsAsync();
+        }
+
+        public async Task<List<string>> FindBlobsByPrefixAsync(string blobPrefix, Guid correlationId)
+        {
+            _logger.LogMethodEntry(correlationId, nameof(FindBlobsByPrefixAsync), blobPrefix);
+            var result = new List<string>();
+            
+            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
+            await foreach (var blobItem in blobContainerClient.GetBlobsAsync (BlobTraits.None, BlobStates.None, blobPrefix))
+            {
+                result.Add(blobItem.Name);
+            }
+
+            return result;
+        }
 
         public async Task<Stream> GetDocumentAsync(string blobName, Guid correlationId)
         {
@@ -46,7 +74,7 @@ namespace pdf_generator.Services.BlobStorageService
             return blob.Value.Content.ToStream();
         }
 
-        public async Task UploadDocumentAsync(Stream stream, string blobName, string caseId, string documentId, string lastUpdatedDate, Guid correlationId)
+        public async Task UploadDocumentAsync(Stream stream, string blobName, string caseId, string documentId, string versionId, Guid correlationId)
         {
             var decodedBlobName = blobName.UrlDecodeString();
             _logger.LogMethodEntry(correlationId, nameof(UploadDocumentAsync), decodedBlobName);
@@ -64,7 +92,7 @@ namespace pdf_generator.Services.BlobStorageService
             {
                 {DocumentTags.CaseId, caseId},
                 {DocumentTags.DocumentId, documentId},
-                {DocumentTags.LastUpdatedDate, lastUpdatedDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd")}
+                {DocumentTags.VersionId, string.IsNullOrWhiteSpace(versionId) ? "1" : versionId}
             };
 
             await blobClient.SetMetadataAsync(metadata);

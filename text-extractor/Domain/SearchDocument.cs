@@ -6,7 +6,7 @@ namespace text_extractor.Domain
     public class SearchDocument : AnalyzeResults
     {
         [JsonProperty("caseId")]
-        public int CaseId { get; set; }
+        public long caseId { get; set; }
 
         [JsonProperty("id")]
         public string Id { get; set; }

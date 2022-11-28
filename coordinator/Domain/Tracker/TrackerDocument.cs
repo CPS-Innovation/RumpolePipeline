@@ -7,6 +7,9 @@ namespace coordinator.Domain.Tracker
     {
         [JsonProperty("documentId")]
         public string DocumentId { get; set; }
+        
+        [JsonProperty("versionId")]
+        public long VersionId { get; set; }
 
         [JsonProperty("pdfBlobName")]
         public string PdfBlobName { get; set; }

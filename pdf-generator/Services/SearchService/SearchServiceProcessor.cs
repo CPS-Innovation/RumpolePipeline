@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Azure.Search.Documents;
-using Common.Constants;
 using Common.Domain.DocumentEvaluation;
 using Common.Domain.Extensions;
 using Common.Factories.Contracts;
 using Common.Logging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.SearchResults;
 
@@ -17,12 +16,10 @@ namespace pdf_generator.Services.SearchService
     {
         private readonly ILogger<SearchServiceProcessor> _logger;
         private readonly SearchClient _searchClient;
-        private readonly IConfiguration _configuration;
-
-        public SearchServiceProcessor(ILogger<SearchServiceProcessor> logger, IConfiguration configuration, ISearchClientFactory searchClientFactory)
+        
+        public SearchServiceProcessor(ILogger<SearchServiceProcessor> logger, ISearchClientFactory searchClientFactory)
         {
             _logger = logger;
-            _configuration = configuration;
             _searchClient = searchClientFactory.Create();
         }
 
@@ -34,9 +31,10 @@ namespace pdf_generator.Services.SearchService
             var searchResults = await _searchClient.SearchAsync<SearchLine>("*", searchOptions);
 
             var searchLines = new List<SearchLine>();
+            
             await foreach (var searchResult in searchResults.Value.GetResultsAsync())
             {
-                if (searchResult.Document != null && searchLines.Find(sl => sl.Id == searchResult.Document.Id) == null)
+                if (searchResult.Document != null && searchLines.Find(sl => sl.DocumentId == searchResult.Document.DocumentId) == null)
                     searchLines.Add(searchResult.Document);
             }
 
@@ -46,30 +44,11 @@ namespace pdf_generator.Services.SearchService
                 return documentsFound;
             }
 
-            var containerName = _configuration[ConfigKeys.SharedKeys.BlobServiceContainerName];
             _logger.LogMethodFlow(correlationId, nameof(SearchForDocumentsAsync), $"{searchLines.Count} documents found in the index");
 
-            foreach (var line in searchLines)
-            {
-                var blobName = $"{line.CaseId}/pdfs/{line.DocumentId}.pdf";
-                var blobNameEncoded = blobName.UrlEncodeString();
-                if (documentsFound.FindIndex(x => x.BlobName == blobNameEncoded) != -1) continue;
-                
-                var newWrapper = new DocumentInformation
-                {
-                    DocumentMetadata = new Dictionary<string, string>(),
-                    BlobName = blobNameEncoded,
-                    BlobContainerName = containerName
-                };
+            documentsFound.AddRange(searchLines.Select(line => new DocumentInformation {CaseId = line.CaseId, DocumentId = line.DocumentId, VersionId = line.VersionId, FileName = line.FileName}));
 
-                newWrapper.DocumentMetadata.Add(DocumentTags.CaseId, line.CaseId.ToString());
-                newWrapper.DocumentMetadata.Add(DocumentTags.DocumentId, line.DocumentId);
-                newWrapper.DocumentMetadata.Add(DocumentTags.LastUpdatedDate, line.LastUpdatedDate);
-
-                documentsFound.Add(newWrapper);
-            }
-
-            _logger.LogMethodExit(correlationId, nameof(SearchForDocumentsAsync), documentsFound.ToJson());
+            _logger.LogMethodExit(correlationId, nameof(SearchForDocumentsAsync), string.Empty);
             return documentsFound;
         }
     }

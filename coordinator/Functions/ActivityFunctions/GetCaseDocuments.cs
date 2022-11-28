@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Logging;
-using coordinator.Clients;
+using Common.Services.Contracts;
 using coordinator.Domain;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -13,12 +13,12 @@ namespace coordinator.Functions.ActivityFunctions
 {
     public class GetCaseDocuments
     {
-        private readonly IDocumentExtractionClient _documentExtractionClient;
+        private readonly IDdeiDocumentExtractionService _documentExtractionService;
         private readonly ILogger<GetCaseDocuments> _log;
 
-        public GetCaseDocuments(IDocumentExtractionClient documentExtractionClient, ILogger<GetCaseDocuments> logger)
+        public GetCaseDocuments(IDdeiDocumentExtractionService documentExtractionService, ILogger<GetCaseDocuments> logger)
         {
-           _documentExtractionClient = documentExtractionClient;
+           _documentExtractionService = documentExtractionService;
            _log = logger;
         }
 
@@ -30,18 +30,20 @@ namespace coordinator.Functions.ActivityFunctions
             
             if (payload == null)
                 throw new ArgumentException("Payload cannot be null.");
+            if (string.IsNullOrWhiteSpace(payload.CaseUrn))
+                throw new ArgumentException("CaseUrn cannot be empty");
             if (payload.CaseId == 0)
                 throw new ArgumentException("CaseId cannot be zero");
-            if (string.IsNullOrWhiteSpace(payload.AccessToken))
-                throw new ArgumentException("Access Token cannot be null");
+            if (string.IsNullOrWhiteSpace(payload.UpstreamToken))
+                throw new ArgumentException("Upstream Token cannot be null");
             if (payload.CorrelationId == Guid.Empty)
                 throw new ArgumentException("CorrelationId must be valid GUID");
             
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
-            var caseDetails = await _documentExtractionClient.GetCaseDocumentsAsync(payload.CaseId.ToString(), payload.AccessToken, payload.CorrelationId);
+            var caseDetails = await _documentExtractionService.ListDocumentsAsync(payload.CaseUrn, payload.CaseId.ToString(), payload.UpstreamToken, payload.CorrelationId);
             
             _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
-            return caseDetails.CaseDocuments;
+            return caseDetails;
         }
     }
 }
