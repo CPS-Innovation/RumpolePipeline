@@ -12,7 +12,8 @@ public class DdeiCaseDocumentMapper : ICaseDocumentMapper<DdeiCaseDocumentRespon
         if (ddeiResponse == null)
             return null;
 
-        var result = new CaseDocument(ddeiResponse.Id.ToString(), ddeiResponse.VersionId, ddeiResponse.DocumentType, ddeiResponse.CmsDocCategory);
+        var newVersion = ddeiResponse.VersionId;
+        var result = new CaseDocument(ddeiResponse.Id.ToString(), newVersion, ddeiResponse.DocumentType, ddeiResponse.CmsDocCategory);
 
         if (string.IsNullOrWhiteSpace(ddeiResponse.OriginalFileName))
         {

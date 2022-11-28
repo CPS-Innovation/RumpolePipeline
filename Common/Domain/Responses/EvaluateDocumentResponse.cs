@@ -10,6 +10,6 @@ namespace Common.Domain.Responses
 
         public string DocumentId { get; set; }
 
-        public bool UpdateSearchIndex { get; set; } = false;
+        public bool UpdateSearchIndex { get; set; }
     }
 }

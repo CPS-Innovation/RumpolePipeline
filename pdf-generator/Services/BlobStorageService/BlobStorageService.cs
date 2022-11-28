@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Common.Constants;
 using Common.Domain.Extensions;
 using Common.Logging;
@@ -38,6 +39,20 @@ namespace pdf_generator.Services.BlobStorageService
             
             var blobClient = blobContainerClient.GetBlobClient(decodedBlobName);
             return await blobClient.ExistsAsync();
+        }
+
+        public async Task<List<string>> FindBlobsByPrefixAsync(string blobPrefix, Guid correlationId)
+        {
+            _logger.LogMethodEntry(correlationId, nameof(FindBlobsByPrefixAsync), blobPrefix);
+            var result = new List<string>();
+            
+            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
+            await foreach (var blobItem in blobContainerClient.GetBlobsAsync (BlobTraits.None, BlobStates.None, blobPrefix))
+            {
+                result.Add(blobItem.Name);
+            }
+
+            return result;
         }
 
         public async Task<Stream> GetDocumentAsync(string blobName, Guid correlationId)

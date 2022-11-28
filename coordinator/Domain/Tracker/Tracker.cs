@@ -44,10 +44,10 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterDocumentIds(IEnumerable<string> documentIds)
+        public Task RegisterDocumentIds(IEnumerable<Tuple<string, long>> documentIds)
         {
             Documents = documentIds
-                .Select(documentId => new TrackerDocument { DocumentId = documentId })
+                .Select(item => new TrackerDocument { DocumentId = item.Item1, VersionId = item.Item2})
                 .ToList();
 
             Log(LogType.RegisteredDocumentIds);

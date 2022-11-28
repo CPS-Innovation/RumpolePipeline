@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Constants;
@@ -38,25 +39,26 @@ public class DocumentEvaluationService : IDocumentEvaluationService
     {
         _logger.LogMethodEntry(correlationId, nameof(EvaluateExistingDocumentsAsync), caseId);
         var response = new List<EvaluateDocumentResponse>();
-
-        var currentlyStoredDocuments = await _searchService.ListDocumentsForCaseAsync(caseId, correlationId);
+        
+        var blobPrefix = $"{caseId}/pdfs";
+        var currentlyStoredDocuments = await _blobStorageService.FindBlobsByPrefixAsync(blobPrefix, correlationId);
         if (currentlyStoredDocuments.Count == 0)
             return response;
-        
-        foreach (var storedDocument in currentlyStoredDocuments)
+
+        var patternsToExamine = incomingDocuments.Select(incomingDocument => 
+            $"{caseId}/pdfs/{Path.GetFileNameWithoutExtension(incomingDocument.FileName)}_{incomingDocument.DocumentId}.pdf").ToList();
+
+        foreach (var storedDocument in from storedDocument in currentlyStoredDocuments 
+                 let storedDocumentInCms = patternsToExamine.Exists(p => 
+                     p.Equals(storedDocument, StringComparison.InvariantCultureIgnoreCase)) where !storedDocumentInCms select storedDocument)
         {
-            var storedDocumentId = storedDocument.DocumentId;
-            
-            var storedDocumentInCms = incomingDocuments.Any(incomingDocument => incomingDocument.DocumentId == storedDocumentId);
-            
-            if (storedDocumentInCms) continue;
-            
-            await _blobStorageService.RemoveDocumentAsync(storedDocument.FileName, correlationId);
-                
+            await _blobStorageService.RemoveDocumentAsync(storedDocument, correlationId);
+
+            var targetDocumentId = Path.GetFileNameWithoutExtension(storedDocument.Replace($"{caseId}/pdfs/", "")).Split("_").Last();
             response.Add(new EvaluateDocumentResponse
             {
                 CaseId = caseId,
-                DocumentId = storedDocumentId,
+                DocumentId = targetDocumentId,
                 UpdateSearchIndex = true
             });
         }

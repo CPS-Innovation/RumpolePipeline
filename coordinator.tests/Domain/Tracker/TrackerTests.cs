@@ -18,7 +18,7 @@ namespace coordinator.tests.Domain.Tracker
     public class TrackerTests
     {
         private readonly string _transactionId;
-        private readonly IEnumerable<string> _documentIds;
+        private readonly IEnumerable<Tuple<string, long>> _documentIds;
         private readonly RegisterPdfBlobNameArg _pdfBlobNameArg;
         private readonly List<TrackerDocument> _trackerDocuments;
         private readonly string _caseUrn;
@@ -36,10 +36,12 @@ namespace coordinator.tests.Domain.Tracker
         {
             var fixture = new Fixture();
             _transactionId = fixture.Create<string>();
-            _documentIds = fixture.Create<IEnumerable<string>>();
+            _documentIds = fixture.Create<IEnumerable<Tuple<string, long>>>();
             _correlationId = fixture.Create<Guid>();
+            var documentIds = _documentIds.ToList();
             _pdfBlobNameArg = fixture.Build<RegisterPdfBlobNameArg>()
-                                .With(a => a.DocumentId, _documentIds.First())
+                                .With(a => a.DocumentId, documentIds.First().Item1)
+                                .With(a => a.VersionId, documentIds.First().Item2)
                                 .Create();
             _trackerDocuments = fixture.Create<List<TrackerDocument>>();
             _caseUrn = fixture.Create<string>();
@@ -90,7 +92,7 @@ namespace coordinator.tests.Domain.Tracker
             await _tracker.RegisterDocumentIds(_documentIds);
             await _tracker.RegisterPdfBlobName(_pdfBlobNameArg);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
             document?.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
             document?.Status.Should().Be(DocumentStatus.PdfUploadedToBlob);
 
@@ -104,7 +106,7 @@ namespace coordinator.tests.Domain.Tracker
             await _tracker.RegisterDocumentIds(_documentIds);
             await _tracker.RegisterDocumentNotFoundInDDEI(_pdfBlobNameArg.DocumentId);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
             document?.Status.Should().Be(DocumentStatus.NotFoundInDDEI);
 
             _tracker.Logs.Count().Should().Be(3);
@@ -117,7 +119,7 @@ namespace coordinator.tests.Domain.Tracker
             await _tracker.RegisterDocumentIds(_documentIds);
             await _tracker.RegisterUnableToConvertDocumentToPdf(_pdfBlobNameArg.DocumentId);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
             document?.Status.Should().Be(DocumentStatus.UnableToConvertToPdf);
 
             _tracker.Logs.Count().Should().Be(3);
@@ -130,7 +132,7 @@ namespace coordinator.tests.Domain.Tracker
             await _tracker.RegisterDocumentIds(_documentIds);
             await _tracker.RegisterUnexpectedPdfDocumentFailure(_pdfBlobNameArg.DocumentId);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
             document?.Status.Should().Be(DocumentStatus.UnexpectedFailure);
 
             _tracker.Logs.Count().Should().Be(3);
@@ -152,9 +154,9 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterIndexed(_documentIds.First());
+            await _tracker.RegisterIndexed(_documentIds.First().Item1);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
             document?.Status.Should().Be(DocumentStatus.Indexed);
 
             _tracker.Logs.Count().Should().Be(3);
@@ -165,9 +167,9 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterOcrAndIndexFailure(_documentIds.First());
+            await _tracker.RegisterOcrAndIndexFailure(_documentIds.First().Item1);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
             document?.Status.Should().Be(DocumentStatus.OcrAndIndexFailure);
 
             _tracker.Logs.Count().Should().Be(3);
@@ -200,11 +202,11 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterDocumentEvaluated(_documentIds.First());
+            await _tracker.RegisterDocumentEvaluated(_documentIds.First().Item1);
 
             using (new AssertionScope())
             {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
                 document?.Status.Should().Be(DocumentStatus.DocumentEvaluated);
                 _tracker.Status.Should().Be(TrackerStatus.Running);
 
@@ -217,11 +219,11 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnexpectedDocumentEvaluationFailure(_documentIds.First());
+            await _tracker.RegisterUnexpectedDocumentEvaluationFailure(_documentIds.First().Item1);
 
             using (new AssertionScope())
             {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
                 document?.Status.Should().Be(DocumentStatus.UnexpectedFailure);
                 _tracker.Status.Should().Be(TrackerStatus.Running);
 
@@ -245,11 +247,11 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnableToEvaluateDocument(_documentIds.First());
+            await _tracker.RegisterUnableToEvaluateDocument(_documentIds.First().Item1);
 
             using (new AssertionScope())
             {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
                 document?.Status.Should().Be(DocumentStatus.UnableToEvaluateDocument);
                 _tracker.Status.Should().Be(TrackerStatus.Running);
 
@@ -262,11 +264,11 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterDocumentRemovedFromSearchIndex(_documentIds.First());
+            await _tracker.RegisterDocumentRemovedFromSearchIndex(_documentIds.First().Item1);
 
             using (new AssertionScope())
             {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
                 document?.Status.Should().Be(DocumentStatus.DocumentRemovedFromSearchIndex);
                 _tracker.Status.Should().Be(TrackerStatus.Running);
 
@@ -279,11 +281,11 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnexpectedSearchIndexRemovalFailure(_documentIds.First());
+            await _tracker.RegisterUnexpectedSearchIndexRemovalFailure(_documentIds.First().Item1);
 
             using (new AssertionScope())
             {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
                 document?.Status.Should().Be(DocumentStatus.UnexpectedSearchIndexRemovalFailure);
                 _tracker.Status.Should().Be(TrackerStatus.Running);
 
@@ -296,11 +298,11 @@ namespace coordinator.tests.Domain.Tracker
         {
             await _tracker.Initialise(_transactionId);
             await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnableToUpdateSearchIndex(_documentIds.First());
+            await _tracker.RegisterUnableToUpdateSearchIndex(_documentIds.First().Item1);
 
             using (new AssertionScope())
             {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First());
+                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
                 document?.Status.Should().Be(DocumentStatus.SearchIndexUpdateFailure);
                 _tracker.Status.Should().Be(TrackerStatus.Running);
 

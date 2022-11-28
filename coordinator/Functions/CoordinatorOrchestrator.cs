@@ -175,7 +175,7 @@ namespace coordinator.Functions
         private static async Task RegisterDocuments(ITracker tracker, string nameToLog, ILogger safeLogger, BasePipelinePayload payload, IEnumerable<CaseDocument> documents)
         {
             safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
-            await tracker.RegisterDocumentIds(documents.Select(item => item.DocumentId));
+            await tracker.RegisterDocumentIds(documents.Select(item => new Tuple<string, long>(item.DocumentId, item.VersionId)));
         }
 
         private async Task EvaluateDocuments(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, CoordinatorOrchestrationPayload payload, IEnumerable<CaseDocument> documents)

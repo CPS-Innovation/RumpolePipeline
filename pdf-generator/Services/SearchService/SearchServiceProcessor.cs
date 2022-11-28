@@ -31,9 +31,10 @@ namespace pdf_generator.Services.SearchService
             var searchResults = await _searchClient.SearchAsync<SearchLine>("*", searchOptions);
 
             var searchLines = new List<SearchLine>();
+            
             await foreach (var searchResult in searchResults.Value.GetResultsAsync())
             {
-                if (searchResult.Document != null && searchLines.Find(sl => sl.Id == searchResult.Document.Id && sl.VersionId == searchResult.Document.VersionId) == null)
+                if (searchResult.Document != null && searchLines.Find(sl => sl.DocumentId == searchResult.Document.DocumentId) == null)
                     searchLines.Add(searchResult.Document);
             }
 

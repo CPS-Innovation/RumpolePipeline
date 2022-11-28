@@ -51,6 +51,7 @@ namespace pdf_generator.Services.SearchService
 
             var searchOptions = new SearchOptions
             {
+                Size = 1,
                 Filter = $"caseId eq {caseId} and documentId eq '{documentId}'"
             };
             searchOptions.OrderBy.Add("id");
