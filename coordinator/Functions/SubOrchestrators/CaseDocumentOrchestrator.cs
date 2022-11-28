@@ -224,7 +224,7 @@ namespace coordinator.Functions.SubOrchestrators
         {
             log.LogMethodEntry(correlationId, nameof(GetTracker), $"CaseId: {caseId.ToString()}");
             
-            var entityId = new EntityId(nameof(Tracker), string.Concat(caseUrn, "-", caseId.ToString()));
+            var entityId = new EntityId(nameof(Tracker), caseId.ToString());
             
             log.LogMethodExit(correlationId, nameof(GetTracker), string.Empty);
             return context.CreateEntityProxy<ITracker>(entityId);

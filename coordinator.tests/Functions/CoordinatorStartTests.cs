@@ -45,7 +45,7 @@ namespace coordinator.tests.Functions
             _accessToken = _fixture.Create<string>();
             _upstreamToken = _fixture.Create<string>();
             _correlationId = _fixture.Create<Guid>();
-            _instanceId = string.Concat(_caseUrn, "-", _caseId);
+            _instanceId = _caseId;
             _httpRequestMessage = new HttpRequestMessage();
             _httpRequestMessage.RequestUri = new Uri("https://www.test.co.uk");
             _httpRequestHeaders = _httpRequestMessage.Headers;

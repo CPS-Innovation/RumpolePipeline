@@ -9,7 +9,6 @@ using Common.Constants;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Domain.Responses;
-using Common.Wrappers;
 using coordinator.Domain;
 using coordinator.Domain.Exceptions;
 using coordinator.Domain.Tracker;
@@ -32,9 +31,6 @@ namespace coordinator.tests.Functions
         private readonly CaseDocument[] _caseDocuments;
         private readonly string _transactionId;
         private readonly List<TrackerDocument> _trackerDocuments;
-        private readonly DurableHttpRequest _durableRequest;
-        private DurableHttpResponse _durableResponse;
-        private readonly List<EvaluateDocumentResponse> _evaluateDocumentsResponse;
         
         private readonly Mock<IDurableOrchestrationContext> _mockDurableOrchestrationContext;
         private readonly Mock<ITracker> _mockTracker;
@@ -47,7 +43,7 @@ namespace coordinator.tests.Functions
             var accessToken = fixture.Create<string>();
             _upstreamToken = fixture.Create<string>();
             fixture.Create<Guid>();
-            _durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk"));
+            var durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk"));
             _payload = fixture.Build<CoordinatorOrchestrationPayload>()
                         .With(p => p.ForceRefresh, false)
                         .With(p => p.AccessToken, accessToken)
@@ -57,7 +53,7 @@ namespace coordinator.tests.Functions
 
             _transactionId = fixture.Create<string>();
             _trackerDocuments = fixture.Create<List<TrackerDocument>>();
-            _evaluateDocumentsResponse = fixture.CreateMany<EvaluateDocumentResponse>().ToList();
+            var evaluateDocumentsResponse = fixture.CreateMany<EvaluateDocumentResponse>().ToList();
 
             var mockConfiguration = new Mock<IConfiguration>();
             var mockLogger = new Mock<ILogger<CoordinatorOrchestrator>>();
@@ -72,7 +68,7 @@ namespace coordinator.tests.Functions
                 .Returns(_payload);
             _mockDurableOrchestrationContext.Setup(context => context.InstanceId)
                 .Returns(_transactionId);
-            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == string.Concat(_payload.CaseUrn, "-", _payload.CaseId.ToString()))))
+            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
                 .Returns(_mockTracker.Object);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), _payload.AccessToken))
                 .ReturnsAsync(accessToken);
@@ -80,12 +76,12 @@ namespace coordinator.tests.Functions
                     && p.UpstreamToken == _payload.UpstreamToken && p.CorrelationId == _payload.CorrelationId)))
                 .ReturnsAsync(_caseDocuments);
             
-            _durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: _evaluateDocumentsResponse.ToJson());
+            var durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: evaluateDocumentsResponse.ToJson());
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
-                It.IsAny<CreateEvaluateExistingDocumentsHttpRequestActivityPayload>())).ReturnsAsync(_durableRequest);
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest)).ReturnsAsync(_durableResponse);
+                It.IsAny<CreateEvaluateExistingDocumentsHttpRequestActivityPayload>())).ReturnsAsync(durableRequest);
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(durableRequest)).ReturnsAsync(durableResponse);
             
-            _coordinatorOrchestrator = new CoordinatorOrchestrator(mockConfiguration.Object, mockLogger.Object, new JsonConvertWrapper());
+            _coordinatorOrchestrator = new CoordinatorOrchestrator(mockConfiguration.Object, mockLogger.Object);
         }
 
         [Fact]
@@ -199,17 +195,6 @@ namespace coordinator.tests.Functions
             }
         }
         
-        [Fact]
-        public async Task Run_RegistersUnexpectedDocumentEvaluationFailure_WhenCallToEvaluationFails()
-        {
-            _durableResponse = new DurableHttpResponse(HttpStatusCode.BadRequest, content: _evaluateDocumentsResponse.ToJson());
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_durableRequest)).ReturnsAsync(_durableResponse);
-            
-            await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-            
-            _mockTracker.Verify(tracker => tracker.RegisterUnexpectedExistingDocumentsEvaluationFailure());
-        }
-
         [Fact]
         public async Task Run_ThrowsCoordinatorOrchestrationExceptionWhenAllDocumentsHaveFailed()
         {

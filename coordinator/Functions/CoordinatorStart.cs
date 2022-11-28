@@ -80,8 +80,7 @@ namespace coordinator.Functions
 
                 // Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled).
                 _logger.LogMethodFlow(currentCorrelationId, loggingName, "Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled");
-                var instanceId = string.Concat(caseUrn, "-", caseId);
-                var existingInstance = await orchestrationClient.GetStatusAsync(instanceId);
+                var existingInstance = await orchestrationClient.GetStatusAsync(caseId);
                 if (existingInstance == null
                     || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Completed
                     || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Failed
@@ -90,17 +89,17 @@ namespace coordinator.Functions
                 {
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),
-                        instanceId,
+                        caseId,
                         new CoordinatorOrchestrationPayload(caseUrn, caseIdNum, forceRefresh, authValidation.Item2, upstreamToken, currentCorrelationId));
 
-                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}'");
+                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - Started {nameof(CoordinatorOrchestrator)} with instance id '{caseId}'");
                 }
                 else
                 {
-                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - {nameof(CoordinatorOrchestrator)} with instance id '{instanceId}' is already running");
+                    _logger.LogMethodFlow(currentCorrelationId, loggingName, $"Orchestrator StartUp Succeeded - {nameof(CoordinatorOrchestrator)} with instance id '{caseId}' is already running");
                 }
 
-                return orchestrationClient.CreateCheckStatusResponse(req, instanceId);
+                return orchestrationClient.CreateCheckStatusResponse(req, caseId);
             }
             catch (Exception exception)
             {

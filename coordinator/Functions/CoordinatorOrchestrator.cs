@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Constants;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
-using Common.Domain.Responses;
 using Common.Logging;
-using Common.Wrappers;
 using coordinator.Domain;
 using coordinator.Domain.Exceptions;
 using coordinator.Domain.Tracker;
@@ -26,13 +23,11 @@ namespace coordinator.Functions
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<CoordinatorOrchestrator> _log;
-        private readonly IJsonConvertWrapper _jsonConvertWrapper;
 
-        public CoordinatorOrchestrator(IConfiguration configuration, ILogger<CoordinatorOrchestrator> log, IJsonConvertWrapper jsonConvertWrapper)
+        public CoordinatorOrchestrator(IConfiguration configuration, ILogger<CoordinatorOrchestrator> log)
         {
             _configuration = configuration;
             _log = log;
-            _jsonConvertWrapper = jsonConvertWrapper;
         }
 
         [FunctionName("CoordinatorOrchestrator")]
@@ -46,8 +41,6 @@ namespace coordinator.Functions
 
             var log = context.CreateReplaySafeLogger(_log);
             var currentCaseId = payload.CaseId;
-            
-            log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Retrieve tracker for case {currentCaseId}");
             var tracker = GetTracker(context, payload.CaseUrn, payload.CaseId, payload.CorrelationId, log);
@@ -108,8 +101,6 @@ namespace coordinator.Functions
 
             await RegisterDocuments(tracker, loggingName, log, payload, documents);
 
-            await EvaluateDocuments(context, tracker, loggingName, log, payload, documents);
-            
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
                     new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Name, t.DocumentId, t.VersionId, t.FileName, payload.UpstreamToken, payload.CorrelationId)))
@@ -144,8 +135,7 @@ namespace coordinator.Functions
         {
             safeLoggerInstance.LogMethodEntry(correlationId, nameof(GetTracker), $"CaseUrn: {caseUrn}, CaseId: {caseId.ToString()}");
 
-            var entityKey = string.Concat(caseUrn, "-", caseId.ToString());
-            var entityId = new EntityId(nameof(Tracker), entityKey);
+            var entityId = new EntityId(nameof(Tracker), caseId.ToString());
             var result = context.CreateEntityProxy<ITracker>(entityId);
             
             safeLoggerInstance.LogMethodExit(correlationId, nameof(GetTracker), "n/a");
@@ -176,38 +166,6 @@ namespace coordinator.Functions
         {
             safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
             await tracker.RegisterDocumentIds(documents.Select(item => new Tuple<string, long>(item.DocumentId, item.VersionId)));
-        }
-
-        private async Task EvaluateDocuments(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, CoordinatorOrchestrationPayload payload, IEnumerable<CaseDocument> documents)
-        {
-            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog,
-                $"Beginning evaluation of existing polaris documents against list of incoming documents for case {payload.CaseId}");
-            var evaluateExistingDocumentsRequest = await context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
-                new CreateEvaluateExistingDocumentsHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, documents.ToList(), payload.CorrelationId));
-            var response = await context.CallHttpAsync(evaluateExistingDocumentsRequest);
-
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                safeLogger.LogMethodFlow(payload.CorrelationId, nameof(RunOrchestrator), "Could not evaluate existing documents");
-                await tracker.RegisterUnexpectedExistingDocumentsEvaluationFailure();
-                return;
-            }
-            
-            var evaluateExistingDocumentsResult = _jsonConvertWrapper.DeserializeObject<List<EvaluateDocumentResponse>>(response.Content);
-
-            var documentsToRemove = evaluateExistingDocumentsResult.Select(x => x.UpdateSearchIndex).Count();
-
-            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog,
-                $"Evaluation of existing polaris documents completed, {documentsToRemove} documents to remove from the search index for {payload.CaseId}");
-            if (documentsToRemove > 0)
-            {
-                var existingDocumentTasks = (from result in evaluateExistingDocumentsResult
-                    where result.UpdateSearchIndex
-                    select context.CallActivityAsync(nameof(CreateUpdateSearchIndexHttpRequest),
-                        new CreateUpdateSearchIndexHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, result.DocumentId, payload.CorrelationId))).ToList();
-
-                await Task.WhenAll(existingDocumentTasks.Select(BufferCall));
-            }
         }
     }
 }

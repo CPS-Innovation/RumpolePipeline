@@ -12,6 +12,7 @@ using Common.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob.Protocol;
+using pdf_generator.Domain.SearchResults;
 
 namespace pdf_generator.Services.BlobStorageService
 {
@@ -41,15 +42,21 @@ namespace pdf_generator.Services.BlobStorageService
             return await blobClient.ExistsAsync();
         }
 
-        public async Task<List<string>> FindBlobsByPrefixAsync(string blobPrefix, Guid correlationId)
+        public async Task<List<BlobSearchResult>> FindBlobsByPrefixAsync(string blobPrefix, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(FindBlobsByPrefixAsync), blobPrefix);
-            var result = new List<string>();
+            var result = new List<BlobSearchResult>();
             
             var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
-            await foreach (var blobItem in blobContainerClient.GetBlobsAsync (BlobTraits.None, BlobStates.None, blobPrefix))
+            await foreach (var blobItem in blobContainerClient.GetBlobsAsync (BlobTraits.Metadata, BlobStates.None, blobPrefix))
             {
-                result.Add(blobItem.Name);
+                blobItem.Metadata.TryGetValue(DocumentTags.VersionId, out var blobVersionAsString);
+                var convResult = long.TryParse(blobVersionAsString, out var versionId);
+                result.Add(new BlobSearchResult
+                {
+                    BlobName = blobItem.Name,
+                    VersionId = convResult ? versionId : 1
+                });
             }
 
             return result;

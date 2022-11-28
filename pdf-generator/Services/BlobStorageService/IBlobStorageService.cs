@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using pdf_generator.Domain.SearchResults;
 
 namespace pdf_generator.Services.BlobStorageService
 {
@@ -9,7 +10,7 @@ namespace pdf_generator.Services.BlobStorageService
     {
         Task<bool> DocumentExistsAsync(string blobName, Guid correlationId);
 
-        Task<List<string>> FindBlobsByPrefixAsync(string blobPrefix, Guid correlationId);
+        Task<List<BlobSearchResult>> FindBlobsByPrefixAsync(string blobPrefix, Guid correlationId);
         
         Task<Stream> GetDocumentAsync(string blobName, Guid correlationId);
 

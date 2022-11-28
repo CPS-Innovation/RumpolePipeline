@@ -54,7 +54,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == string.Concat(_caseUrn, "-", _caseId)),
+                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
                     null, null))
                 .ReturnsAsync(_entityStateResponse);
 
@@ -198,68 +198,6 @@ namespace coordinator.tests.Domain.Tracker
         }
         
         [Fact]
-        public async Task RegisterDocumentEvaluated()
-        {
-            await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterDocumentEvaluated(_documentIds.First().Item1);
-
-            using (new AssertionScope())
-            {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
-                document?.Status.Should().Be(DocumentStatus.DocumentEvaluated);
-                _tracker.Status.Should().Be(TrackerStatus.Running);
-
-                _tracker.Logs.Count().Should().Be(3);
-            }
-        }
-        
-        [Fact]
-        public async Task RegisterUnexpectedDocumentEvaluationFailure()
-        {
-            await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnexpectedDocumentEvaluationFailure(_documentIds.First().Item1);
-
-            using (new AssertionScope())
-            {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
-                document?.Status.Should().Be(DocumentStatus.UnexpectedFailure);
-                _tracker.Status.Should().Be(TrackerStatus.Running);
-
-                _tracker.Logs.Count().Should().Be(3);
-            }
-        }
-        
-        [Fact]
-        public async Task RegisterUnexpectedExistingDocumentsEvaluationFailure()
-        {
-            await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterUnexpectedExistingDocumentsEvaluationFailure();
-
-            _tracker.Status.Should().Be(TrackerStatus.UnableToEvaluateExistingDocuments);
-
-            _tracker.Logs.Count().Should().Be(2);
-        }
-        
-        [Fact]
-        public async Task RegisterUnableToEvaluateDocument()
-        {
-            await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnableToEvaluateDocument(_documentIds.First().Item1);
-
-            using (new AssertionScope())
-            {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
-                document?.Status.Should().Be(DocumentStatus.UnableToEvaluateDocument);
-                _tracker.Status.Should().Be(TrackerStatus.Running);
-
-                _tracker.Logs.Count().Should().Be(3);
-            }
-        }
-        
-        [Fact]
         public async Task RegisterDocumentRemovedFromSearchIndex()
         {
             await _tracker.Initialise(_transactionId);
@@ -270,23 +208,6 @@ namespace coordinator.tests.Domain.Tracker
             {
                 var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
                 document?.Status.Should().Be(DocumentStatus.DocumentRemovedFromSearchIndex);
-                _tracker.Status.Should().Be(TrackerStatus.Running);
-
-                _tracker.Logs.Count().Should().Be(3);
-            }
-        }
-        
-        [Fact]
-        public async Task RegisterUnexpectedSearchIndexRemovalFailure()
-        {
-            await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnexpectedSearchIndexRemovalFailure(_documentIds.First().Item1);
-
-            using (new AssertionScope())
-            {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
-                document?.Status.Should().Be(DocumentStatus.UnexpectedSearchIndexRemovalFailure);
                 _tracker.Status.Should().Be(TrackerStatus.Running);
 
                 _tracker.Logs.Count().Should().Be(3);
@@ -414,7 +335,7 @@ namespace coordinator.tests.Domain.Tracker
             var entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = false };
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == string.Concat(_caseUrn, "-", _caseId)),
+                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
                     null, null))
                 .ReturnsAsync(entityStateResponse);
 

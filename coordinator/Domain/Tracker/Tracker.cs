@@ -55,50 +55,6 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
         
-        public Task RegisterDocumentEvaluated(string documentId)
-        {
-            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document!.Status = DocumentStatus.DocumentEvaluated;
-
-            Log(LogType.DocumentEvaluated, documentId);
-
-            return Task.CompletedTask;
-        }
-
-        public Task RegisterUnexpectedDocumentEvaluationFailure(string documentId)
-        {
-            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document!.Status = DocumentStatus.UnexpectedFailure;
-
-            Log(LogType.UnexpectedDocumentEvaluationFailure, documentId);
-
-            return Task.CompletedTask;
-        }
-        
-        public Task RegisterUnexpectedExistingDocumentsEvaluationFailure()
-        {
-            Status = TrackerStatus.UnableToEvaluateExistingDocuments;
-            foreach (var doc in Documents)
-            {
-                doc.Status = DocumentStatus.UnexpectedFailure;
-            }
-            
-            Log(LogType.UnexpectedExistingDocumentsEvaluationFailure);
-
-            return Task.CompletedTask;
-        }
-        
-        public Task RegisterUnableToEvaluateDocument(string documentId)
-        {
-            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document!.Status = DocumentStatus.UnableToEvaluateDocument;
-
-            Log(LogType.UnableToEvaluateDocument, documentId);
-
-            return Task.CompletedTask;
-        }
-
-
         public Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg)
         {
             var document = Documents.Find(document => document.DocumentId.Equals(arg.DocumentId, StringComparison.OrdinalIgnoreCase));
@@ -185,16 +141,6 @@ namespace coordinator.Domain.Tracker
             document!.Status = DocumentStatus.DocumentRemovedFromSearchIndex;
 
             Log(LogType.DocumentRemovedFromSearchIndex, documentId);
-
-            return Task.CompletedTask;
-        }
-
-        public Task RegisterUnexpectedSearchIndexRemovalFailure(string documentId)
-        {
-            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document!.Status = DocumentStatus.UnexpectedSearchIndexRemovalFailure;
-
-            Log(LogType.IndexRemovalFailure, documentId);
 
             return Task.CompletedTask;
         }
@@ -286,12 +232,11 @@ namespace coordinator.Domain.Tracker
 
             log.LogMethodEntry(currentCorrelationId, loggingName, caseId);
 
-            var entityKey = string.Concat(caseUrn, "-", caseId);
-            var entityId = new EntityId(nameof(Tracker), entityKey);
+            var entityId = new EntityId(nameof(Tracker), caseId);
             var stateResponse = await client.ReadEntityStateAsync<Tracker>(entityId);
             if (!stateResponse.EntityExists)
             {
-                var baseMessage = $"No pipeline tracker found with id '{entityKey}'";
+                var baseMessage = $"No pipeline tracker found with id '{caseId}'";
                 log.LogMethodFlow(currentCorrelationId, loggingName, baseMessage);
                 return new NotFoundObjectResult(baseMessage);
             }
