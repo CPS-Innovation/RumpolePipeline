@@ -87,17 +87,16 @@
 		{
 			"name": "fileName",
 			"type": "Edm.String",
-			"searchable": false,
+			"facetable": false,
 			"filterable": true,
 			"retrievable": true,
+			"searchable": false,
 			"sortable": false,
-			"facetable": false,
-			"key": false,
+			"analyzer": null,
 			"indexAnalyzer": null,
 			"searchAnalyzer": null,
-			"analyzer": null,
-			"normalizer": null,
-			"synonymMaps": []
+			"synonymMaps": [],
+			"fields": []
 		},
 		{
 			"name": "pageIndex",
