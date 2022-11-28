@@ -103,8 +103,8 @@ namespace pdf_generator.Functions
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{Path.GetFileNameWithoutExtension(pdfRequest.FileName)}_{pdfRequest.DocumentId}.pdf";
                 generatePdfResponse = new GeneratePdfResponse {BlobName = blobName};
 
-                _log.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for documentId {pdfRequest.DocumentId}, versionId {pdfRequest.VersionId}");
-                var evaluateDocumentRequest = new EvaluateDocumentRequest(pdfRequest.CaseId, pdfRequest.DocumentId, pdfRequest.VersionId);
+                _log.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for documentId {pdfRequest.DocumentId}, versionId {pdfRequest.VersionId}, proposedBlobName: {blobName}");
+                var evaluateDocumentRequest = new EvaluateDocumentRequest(pdfRequest.CaseId, pdfRequest.DocumentId, pdfRequest.VersionId, blobName);
                 var evaluationResult = await _documentEvaluationService.EvaluateDocumentAsync(evaluateDocumentRequest, currentCorrelationId);
 
                 if (evaluationResult.EvaluationResult == DocumentEvaluationResult.DocumentUnchanged)

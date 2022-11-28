@@ -41,14 +41,14 @@ public class DocumentEvaluationService : IDocumentEvaluationService
         var response = new List<EvaluateDocumentResponse>();
         
         var blobPrefix = $"{caseId}/pdfs";
-        var currentlyStoredDocuments = await _blobStorageService.FindBlobsByPrefixAsync(blobPrefix, correlationId);
-        if (currentlyStoredDocuments.Count == 0)
+        var currentlyConvertedDocuments = await _blobStorageService.FindBlobsByPrefixAsync(blobPrefix, correlationId);
+        if (currentlyConvertedDocuments.Count == 0)
             return response;
 
         var patternsToExamine = incomingDocuments.Select(incomingDocument => 
             $"{caseId}/pdfs/{Path.GetFileNameWithoutExtension(incomingDocument.FileName)}_{incomingDocument.DocumentId}.pdf").ToList();
 
-        foreach (var storedDocument in from storedDocument in currentlyStoredDocuments 
+        foreach (var storedDocument in from storedDocument in currentlyConvertedDocuments 
                  let storedDocumentInCms = patternsToExamine.Exists(p => 
                      p.Equals(storedDocument, StringComparison.InvariantCultureIgnoreCase)) where !storedDocumentInCms select storedDocument)
         {
@@ -81,25 +81,43 @@ public class DocumentEvaluationService : IDocumentEvaluationService
             CaseId = request.CaseId.ToString(),
             DocumentId = request.DocumentId
         };
+        
+        //to ensure that the index and the blob store are in sync, find the document in both
+        //1. find the document in blob store
+        var isConverted = false;
+        var blobPrefix = $"{request.CaseId}/pdfs";
+        var currentlyConvertedDocuments = await _blobStorageService.FindBlobsByPrefixAsync(blobPrefix, correlationId);
+        if (currentlyConvertedDocuments.Count > 0)
+            if (currentlyConvertedDocuments.Any(convertedDocument => convertedDocument.Equals(request.ProposedBlobName, StringComparison.OrdinalIgnoreCase)))
+                isConverted = true;
 
-        var currentlyStoredDocument = await _searchService.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, correlationId);
-        if (currentlyStoredDocument == null)
+        //2. find the top 1 record in the search index, to establish its existence and indexed document version
+        var currentlyIndexedDocument = await _searchService.FindDocumentForCaseAsync(request.CaseId.ToString(), request.DocumentId, correlationId);
+        if (currentlyIndexedDocument == null)
         {
             response.EvaluationResult = DocumentEvaluationResult.AcquireDocument;
             response.UpdateSearchIndex = false;
             return response;
         }
 
-        var storedVersionId = currentlyStoredDocument.VersionId;
+        var storedVersionId = currentlyIndexedDocument.VersionId;
 
         if (request.VersionId == storedVersionId)
         {
-            response.EvaluationResult = DocumentEvaluationResult.DocumentUnchanged;
-            response.UpdateSearchIndex = false;
+            if (isConverted)
+            {
+                response.EvaluationResult = DocumentEvaluationResult.DocumentUnchanged;
+                response.UpdateSearchIndex = false;
+            }
+            else
+            {
+                response.EvaluationResult = DocumentEvaluationResult.AcquireDocument;
+                response.UpdateSearchIndex = false;
+            }
         }
         else
         {
-            await _blobStorageService.RemoveDocumentAsync(currentlyStoredDocument.FileName, correlationId);
+            await _blobStorageService.RemoveDocumentAsync(currentlyIndexedDocument.FileName, correlationId);
             response.EvaluationResult = DocumentEvaluationResult.AcquireDocument;
             response.UpdateSearchIndex = true;
         }

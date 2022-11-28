@@ -21,8 +21,8 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "SearchClientAuthorizationKey"            = azurerm_search_service.ss.primary_key
     "SearchClientEndpointUrl"                 = "https://${azurerm_search_service.ss.name}.search.windows.net"
     "SearchClientIndexName"                   = jsondecode(file("search-index-definition.json")).name
-    "DocumentsRepositoryBaseUrl"              = var.ddei_base_url
-    "GetDocumentUrl"                          = "urns/{0}/cases/{1}/documents/{2}/{3}?code=Kdk8RI0pQlJ8nm1AANKohWRA69llzAIkHIpbjqlMj9FhAzFucFAWQA=="
+    "DocumentsRepositoryBaseUrl"              = var.ddei_config.base_url
+    "GetDocumentUrl"                          = "urns/{0}/cases/{1}/documents/{2}/{3}?code=${var.ddei_config.get_document_function_key}"
   }
   https_only                 = true
 
