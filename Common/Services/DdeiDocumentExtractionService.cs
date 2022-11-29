@@ -54,6 +54,6 @@ public class DdeiDocumentExtractionService : BaseDocumentExtractionService, IDde
         var ddeiResults = _jsonConvertWrapper.DeserializeObject<List<DdeiCaseDocumentResponse>>(stringContent);
 
         _logger.LogMethodExit(correlationId, nameof(GetDocumentAsync), string.Empty);
-        return ddeiResults.Take(1).Select(ddeiResult => _caseDocumentMapper.Map(ddeiResult)).Where(mappedResult => mappedResult != null).ToArray();
+        return ddeiResults.Select(ddeiResult => _caseDocumentMapper.Map(ddeiResult)).Where(mappedResult => mappedResult != null).ToArray();
     }
 }
