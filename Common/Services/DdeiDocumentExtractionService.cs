@@ -54,34 +54,9 @@ public class DdeiDocumentExtractionService : BaseDocumentExtractionService, IDde
         var ddeiResults = _jsonConvertWrapper.DeserializeObject<List<DdeiCaseDocumentResponse>>(stringContent);
 
         _logger.LogMethodExit(correlationId, nameof(GetDocumentAsync), string.Empty);
-        var results = ddeiResults.Select(ddeiResult => _caseDocumentMapper.Map(ddeiResult)).Where(mappedResult => mappedResult != null);
+        var results = ddeiResults.Where(x => !string.IsNullOrWhiteSpace(x.OriginalFileName))
+            .Select(ddeiResult => _caseDocumentMapper.Map(ddeiResult));
 
-        var fullyPopulatedResults = AssessResults(results.ToList());
-        return fullyPopulatedResults.ToArray();
-    }
-
-    private static IEnumerable<CaseDocument> AssessResults(IReadOnlyList<CaseDocument> results)
-    {
-        var toReturn = new List<CaseDocument>();
-
-        foreach (var result in results)
-        {
-            if (!string.IsNullOrWhiteSpace(result.FileName))
-            {
-                toReturn.Add(result);
-                continue;
-            }
-
-            var duplicate = results.FirstOrDefault(x => x.DocumentId == result.DocumentId && !string.IsNullOrWhiteSpace(x.FileName));
-            if (duplicate == null)
-                continue;
-
-            result.FileName = duplicate.FileName;
-            
-            if (!string.IsNullOrWhiteSpace(result.FileName))
-                toReturn.Add(result);
-        }
-
-        return toReturn;
+        return results.ToArray();
     }
 }

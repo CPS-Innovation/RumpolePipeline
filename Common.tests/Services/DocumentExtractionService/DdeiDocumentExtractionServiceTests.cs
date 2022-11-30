@@ -223,8 +223,6 @@ public class DdeiDocumentExtractionServiceTests
             result.Should().NotBeNull();
             result[0].DocumentId.Should().Be(searchResults[0].Id.ToString());
             result[0].FileName.Should().Be(searchResults[0].OriginalFileName);
-            result[2].DocumentId.Should().Be(searchResults[0].Id.ToString());
-            result[2].FileName.Should().Be(searchResults[0].OriginalFileName);
         }
     }
 
