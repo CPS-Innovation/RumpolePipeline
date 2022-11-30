@@ -1,5 +1,4 @@
-﻿/*
-using System.Net;
+﻿using System.Net;
 using AutoFixture;
 using Common.Constants;
 using Common.Exceptions;
@@ -22,7 +21,7 @@ namespace Common.tests.Services.DocumentExtractionService
         private readonly Guid _correlationId;
         private readonly HttpResponseMessage _httpResponseMessage;
 
-        private readonly IDocumentExtractionService _documentExtractionService;
+        private readonly ICgiDocumentExtractionService _documentExtractionService;
 
         public CgiDocumentExtractionServiceTests()
         {
@@ -106,5 +105,4 @@ namespace Common.tests.Services.DocumentExtractionService
         }
     }
 }
-*/
 

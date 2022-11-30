@@ -31,8 +31,7 @@ public class CgiDocumentExtractionService : BaseDocumentExtractionService, ICgiD
     {
         _logger.LogMethodEntry(correlationId, nameof(ListDocumentsAsync), caseId);
 
-        Case result = null;
-        result = Task.FromResult(caseId switch
+        var result = Task.FromResult(caseId switch
         {
             "18846" => McLoveCase(caseId),
             "18848" => MultipleFileTypeCase(caseId),

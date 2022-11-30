@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Common.Services;
 
-public class BaseDocumentExtractionService
+public abstract class BaseDocumentExtractionService
 {
     private readonly ILogger _logger;
     private readonly IHttpRequestFactory _httpRequestFactory;
@@ -16,9 +16,9 @@ public class BaseDocumentExtractionService
     
     protected BaseDocumentExtractionService(ILogger logger, IHttpRequestFactory httpRequestFactory, HttpClient httpClient)
     {
-        _logger = logger;
-        _httpRequestFactory = httpRequestFactory;
-        _httpClient = httpClient;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _httpRequestFactory = httpRequestFactory ?? throw new ArgumentNullException(nameof(httpRequestFactory));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
     
     protected async Task<HttpContent> GetHttpContentAsync(string requestUri, string accessToken, Guid correlationId)

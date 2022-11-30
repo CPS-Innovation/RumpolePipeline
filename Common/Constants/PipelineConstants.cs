@@ -53,6 +53,11 @@
         public const string VersionId = "versionId";
     }
 
+    public static class MiscCategories
+    {
+        public const string UnknownDocumentType = "1029";
+    }
+
     public static class FeatureFlags
     {
     }

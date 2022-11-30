@@ -1,13 +1,15 @@
-﻿namespace Common.Domain.DocumentExtraction
+﻿using Common.Constants;
+
+namespace Common.Domain.DocumentExtraction
 {
 	public class CmsDocType
 	{
 		public CmsDocType() { }
 		
-		public CmsDocType(string code, string name)
+		public CmsDocType(string documentType, string documentCategory)
 		{
-			Code = code;
-			Name = name;
+			Code = documentType ?? MiscCategories.UnknownDocumentType;
+			Name = documentCategory;
 		}
 		
 		public string Code { get; set; }

@@ -28,10 +28,10 @@ public class DdeiDocumentExtractionService : BaseDocumentExtractionService, IDde
         IConfiguration configuration, IJsonConvertWrapper jsonConvertWrapper, ICaseDocumentMapper<DdeiCaseDocumentResponse> caseDocumentMapper)
         : base(logger, httpRequestFactory, httpClient)
     {
-        _logger = logger;
-        _configuration = configuration;
-        _jsonConvertWrapper = jsonConvertWrapper;
-        _caseDocumentMapper = caseDocumentMapper;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _jsonConvertWrapper = jsonConvertWrapper ?? throw new ArgumentNullException(nameof(jsonConvertWrapper));
+        _caseDocumentMapper = caseDocumentMapper ?? throw new ArgumentNullException(nameof(caseDocumentMapper));
     }
 
     public async Task<Stream> GetDocumentAsync(string caseUrn, string caseId, string documentCategory, string documentId, string upstreamToken, Guid correlationId)
@@ -54,6 +54,34 @@ public class DdeiDocumentExtractionService : BaseDocumentExtractionService, IDde
         var ddeiResults = _jsonConvertWrapper.DeserializeObject<List<DdeiCaseDocumentResponse>>(stringContent);
 
         _logger.LogMethodExit(correlationId, nameof(GetDocumentAsync), string.Empty);
-        return ddeiResults.Select(ddeiResult => _caseDocumentMapper.Map(ddeiResult)).Where(mappedResult => mappedResult != null).ToArray();
+        var results = ddeiResults.Select(ddeiResult => _caseDocumentMapper.Map(ddeiResult)).Where(mappedResult => mappedResult != null);
+
+        var fullyPopulatedResults = AssessResults(results.ToList());
+        return fullyPopulatedResults.ToArray();
+    }
+
+    private static IEnumerable<CaseDocument> AssessResults(IReadOnlyList<CaseDocument> results)
+    {
+        var toReturn = new List<CaseDocument>();
+
+        foreach (var result in results)
+        {
+            if (!string.IsNullOrWhiteSpace(result.FileName))
+            {
+                toReturn.Add(result);
+                continue;
+            }
+
+            var duplicate = results.FirstOrDefault(x => x.DocumentId == result.DocumentId && !string.IsNullOrWhiteSpace(x.FileName));
+            if (duplicate == null)
+                continue;
+
+            result.FileName = duplicate.FileName;
+            
+            if (!string.IsNullOrWhiteSpace(result.FileName))
+                toReturn.Add(result);
+        }
+
+        return toReturn;
     }
 }

@@ -74,6 +74,19 @@ namespace coordinator.tests.Functions.ActivityFunctions
             await Assert.ThrowsAsync<ArgumentException>(() => _getCaseDocuments.Run(_mockDurableActivityContext.Object));
         }
         
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task Run_WhenCaseUrnIsNullOrWhitespace_ThrowsArgumentException(string caseUrn)
+        {
+            _payload.CaseUrn = caseUrn;
+            _mockDurableActivityContext.Setup(context => context.GetInput<GetCaseDocumentsActivityPayload>())
+                .Returns(_payload);
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _getCaseDocuments.Run(_mockDurableActivityContext.Object));
+        }
+        
         [Fact]
         public async Task Run_WhenCorrelationIdIsEmpty_ThrowsArgumentException()
         {

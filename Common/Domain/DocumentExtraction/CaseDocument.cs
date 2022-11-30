@@ -4,10 +4,11 @@
 	{
 		public CaseDocument() { }
 		
-		public CaseDocument(string documentId, long versionId, string documentType, string documentCategory)
+		public CaseDocument(string documentId, long versionId, string fileName, string documentType, string documentCategory)
 		{
 			DocumentId = documentId;
 			VersionId = versionId;
+			FileName = fileName;
 			CmsDocType = new CmsDocType(documentType, documentCategory);
 		}
 

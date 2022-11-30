@@ -1,5 +1,4 @@
 using Common.Domain.DocumentExtraction;
-using Common.Domain.Extensions;
 using Common.Domain.Responses;
 using Common.Mappers.Contracts;
 
@@ -9,28 +8,6 @@ public class DdeiCaseDocumentMapper : ICaseDocumentMapper<DdeiCaseDocumentRespon
 {
     public CaseDocument Map(DdeiCaseDocumentResponse ddeiResponse)
     {
-        if (ddeiResponse == null)
-            return null;
-
-        var newVersion = ddeiResponse.VersionId;
-        var result = new CaseDocument(ddeiResponse.Id.ToString(), newVersion, ddeiResponse.DocumentType, ddeiResponse.CmsDocCategory);
-
-        if (string.IsNullOrWhiteSpace(ddeiResponse.OriginalFileName))
-        {
-            if (string.IsNullOrWhiteSpace(ddeiResponse.MimeType))
-                return null;
-
-            var fileExt = ddeiResponse.MimeType.GetExtension();
-            if (string.IsNullOrWhiteSpace(fileExt))
-                return null;
-
-            result.FileName = string.Concat(ddeiResponse.Id.ToString(), fileExt);
-        }
-        else
-        {
-            result.FileName = ddeiResponse.OriginalFileName;
-        }
-
-        return result;
+        return new CaseDocument(ddeiResponse.Id.ToString(), ddeiResponse.VersionId, ddeiResponse.OriginalFileName, ddeiResponse.TypeId, ddeiResponse.CmsDocCategory);
     }
 }

@@ -8,7 +8,6 @@ using Common.Domain.Responses;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Services.BlobStorageService;
-using pdf_generator.Services.SearchService;
 
 namespace pdf_generator.Services.DocumentEvaluationService;
 
