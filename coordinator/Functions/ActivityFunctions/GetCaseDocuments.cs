@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Logging;
-using Common.Services.Contracts;
+using Common.Services.DocumentExtractionService.Contracts;
 using coordinator.Domain;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;

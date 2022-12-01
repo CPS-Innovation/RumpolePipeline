@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Common.Domain.Exceptions;
 using Common.Domain.Requests;
+using Common.Exceptions.Contracts;
 using Common.Handlers;
+using Common.Services.SearchIndexService.Contracts;
 using Common.Wrappers;
 using FluentAssertions;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Logging;
 using Moq;
 using text_extractor.Functions;
-using text_extractor.Handlers;
 using text_extractor.Services.OcrService;
-using text_extractor.Services.SearchIndexService;
 using Xunit;
 
 namespace text_extractor.tests.Functions

@@ -5,6 +5,7 @@ using AutoFixture;
 using Azure;
 using Common.Domain.Exceptions;
 using Common.Exceptions;
+using Common.Exceptions.Contracts;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;

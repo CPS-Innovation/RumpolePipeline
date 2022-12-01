@@ -9,8 +9,8 @@ using Common.Domain.Extensions;
 using Common.Domain.Requests;
 using Common.Domain.Responses;
 using Common.Logging;
+using Common.Services.BlobStorageService.Contracts;
 using Microsoft.Extensions.Logging;
-using pdf_generator.Services.BlobStorageService;
 
 namespace pdf_generator.Services.DocumentRedactionService
 {

@@ -11,17 +11,17 @@ using Common.Domain.Exceptions;
 using Common.Domain.Extensions;
 using Common.Domain.Requests;
 using Common.Domain.Responses;
+using Common.Exceptions.Contracts;
 using Common.Handlers;
 using Common.Logging;
-using Common.Services.Contracts;
+using Common.Services.BlobStorageService.Contracts;
+using Common.Services.DocumentEvaluationService.Contracts;
+using Common.Services.DocumentExtractionService.Contracts;
 using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain;
-using pdf_generator.Handlers;
-using pdf_generator.Services.BlobStorageService;
-using pdf_generator.Services.DocumentEvaluationService;
 using pdf_generator.Services.PdfService;
 
 namespace pdf_generator.Functions

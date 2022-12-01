@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using AutoFixture;
 using Common.Domain.DocumentExtraction;
-using Common.Services.Contracts;
+using Common.Services.DocumentExtractionService.Contracts;
 using coordinator.Domain;
 using coordinator.Functions.ActivityFunctions;
 using FluentAssertions;

@@ -10,6 +10,7 @@ using Common.Domain.Exceptions;
 using Common.Domain.Extensions;
 using Common.Domain.Requests;
 using Common.Domain.Responses;
+using Common.Exceptions.Contracts;
 using Common.Handlers;
 using Common.Logging;
 using Common.Wrappers;
@@ -17,7 +18,6 @@ using FluentValidation;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using pdf_generator.Handlers;
 using pdf_generator.Services.DocumentRedactionService;
 
 namespace pdf_generator.Functions

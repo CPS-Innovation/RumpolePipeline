@@ -25,7 +25,7 @@ namespace coordinator.Functions.ActivityFunctions
         public async Task<DurableHttpRequest> Run([ActivityTrigger] IDurableActivityContext context)
         {
             const string loggingName = $"{nameof(CreateUpdateSearchIndexHttpRequest)} - {nameof(Run)}";
-            var payload = context.GetInput<CreateUpdateSearchIndexHttpRequestActivityPayload>();
+            var payload = context.GetInput<UpdateSearchIndexHttpRequestActivityPayload>();
             
             if (payload == null)
                 throw new ArgumentException("Payload cannot be null.");

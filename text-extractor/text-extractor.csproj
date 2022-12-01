@@ -45,7 +45,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\OcrService\" />
-    <Folder Include="Services\SearchIndexService\" />
     <Folder Include="Handlers\" />
     <Folder Include="Services\SasGeneratorService\" />
     <Folder Include="Domain\Exceptions\" />

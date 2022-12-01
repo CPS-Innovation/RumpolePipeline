@@ -4,13 +4,13 @@ using AutoFixture;
 using Azure.Messaging.EventGrid;
 using Azure.Messaging.EventGrid.SystemEvents;
 using Common.Constants;
+using Common.Services.SearchIndexService.Contracts;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Moq;
 using text_extractor.Functions;
-using text_extractor.Services.SearchIndexService;
 using Xunit;
 
 namespace text_extractor.tests.Functions;

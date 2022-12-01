@@ -7,13 +7,20 @@ using Azure.Storage.Blobs;
 using Common.Constants;
 using Common.Domain.Requests;
 using Common.Domain.Responses;
+using Common.Exceptions.Contracts;
 using Common.Factories;
 using Common.Factories.Contracts;
 using Common.Handlers;
 using Common.Mappers;
 using Common.Mappers.Contracts;
-using Common.Services;
-using Common.Services.Contracts;
+using Common.Services.BlobStorageService;
+using Common.Services.BlobStorageService.Contracts;
+using Common.Services.DocumentEvaluationService;
+using Common.Services.DocumentEvaluationService.Contracts;
+using Common.Services.DocumentExtractionService;
+using Common.Services.DocumentExtractionService.Contracts;
+using Common.Services.SearchService;
+using Common.Services.SearchService.Contracts;
 using Common.Wrappers;
 using FluentValidation;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -24,11 +31,8 @@ using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.Validators;
 using pdf_generator.Factories;
 using pdf_generator.Handlers;
-using pdf_generator.Services.BlobStorageService;
-using pdf_generator.Services.DocumentEvaluationService;
 using pdf_generator.Services.DocumentRedactionService;
 using pdf_generator.Services.PdfService;
-using pdf_generator.Services.SearchService;
 
 [assembly: FunctionsStartup(typeof(pdf_generator.Startup))]
 namespace pdf_generator
@@ -70,8 +74,6 @@ namespace pdf_generator
 
             builder.Services.AddTransient<ICoordinateCalculator, CoordinateCalculator>();
             builder.Services.AddTransient<IValidatorWrapper<GeneratePdfRequest>, ValidatorWrapper<GeneratePdfRequest>>();
-            builder.Services.AddTransient<IValidatorWrapper<EvaluateExistingDocumentsRequest>, ValidatorWrapper<EvaluateExistingDocumentsRequest>>();
-            builder.Services.AddTransient<IValidatorWrapper<EvaluateDocumentRequest>, ValidatorWrapper<EvaluateDocumentRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IAuthorizationValidator, AuthorizationValidator>();
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
@@ -100,11 +102,11 @@ namespace pdf_generator
             });
             
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
-            builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
             builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();
             builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
             builder.Services.AddTransient<ISearchServiceProcessor, SearchServiceProcessor>();
             builder.Services.AddTransient<ISearchService, SearchService>();
+            builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
         }
     }
 }

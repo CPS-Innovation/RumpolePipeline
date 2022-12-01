@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using text_extractor.Handlers;
 using text_extractor.Services.OcrService;
-using text_extractor.Services.SearchIndexService;
 using text_extractor.Services.SasGeneratorService;
 using text_extractor.Factories;
 using text_extractor.Wrappers;
@@ -14,9 +13,12 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Common.Constants;
 using Common.Domain.Requests;
+using Common.Exceptions.Contracts;
 using Common.Factories;
 using Common.Factories.Contracts;
 using Common.Handlers;
+using Common.Services.SearchIndexService;
+using Common.Services.SearchIndexService.Contracts;
 
 [assembly: FunctionsStartup(typeof(text_extractor.Startup))]
 namespace text_extractor

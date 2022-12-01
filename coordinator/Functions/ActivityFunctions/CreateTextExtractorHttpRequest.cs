@@ -25,7 +25,7 @@ namespace coordinator.Functions.ActivityFunctions
         public async Task<DurableHttpRequest> Run([ActivityTrigger] IDurableActivityContext context)
         {
             const string loggingName = $"{nameof(CreateTextExtractorHttpRequest)} - {nameof(Run)}";
-            var payload = context.GetInput<CreateTextExtractorHttpRequestActivityPayload>();
+            var payload = context.GetInput<TextExtractorHttpRequestActivityPayload>();
             
             if (payload == null)
                 throw new ArgumentException("Payload cannot be null.");

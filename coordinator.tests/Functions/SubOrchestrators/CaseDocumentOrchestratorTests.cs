@@ -37,10 +37,10 @@ namespace coordinator.tests.Functions.SubOrchestrators
         {
             var fixture = new Fixture();
             _payload = fixture.Create<CaseDocumentOrchestrationPayload>();
-            _evaluateDocumentDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("http://www.google.co.uk/evaluateDocument"));
-            _generatePdfDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("http://www.google.co.uk/generatePdf"));
-            _updateSearchIndexDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("http://www.google.co.uk/updateSearchIndex"));
-            var textExtractorDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("http://www.google.co.uk/textExtractor"));
+            _evaluateDocumentDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/evaluateDocument"));
+            _generatePdfDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/generatePdf"));
+            _updateSearchIndexDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/updateSearchIndex"));
+            var textExtractorDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/textExtractor"));
             _content = fixture.Create<string>();
             var durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: _content);
             _pdfResponse = fixture.Create<GeneratePdfResponse>();
@@ -55,15 +55,15 @@ namespace coordinator.tests.Functions.SubOrchestrators
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CaseDocumentOrchestrationPayload>()).Returns(_payload);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
                     nameof(CreateUpdateSearchIndexHttpRequest),
-                    It.Is<CreateUpdateSearchIndexHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId)))
+                    It.Is<UpdateSearchIndexHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId)))
                 .ReturnsAsync(_updateSearchIndexDurableRequest);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
-                It.Is<CreateGeneratePdfHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.FileName == _payload.FileName)))
+                It.Is<GeneratePdfHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.FileName == _payload.FileName)))
                     .ReturnsAsync(_generatePdfDurableRequest);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateTextExtractorHttpRequest),
-                It.Is<CreateTextExtractorHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.BlobName == _pdfResponse.BlobName)))
+                It.Is<TextExtractorHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.BlobName == _pdfResponse.BlobName)))
                     .ReturnsAsync(textExtractorDurableRequest);
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest)).ReturnsAsync(durableResponse);
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(textExtractorDurableRequest)).ReturnsAsync(durableResponse);

@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using Common.Constants;
 using Common.Domain.Exceptions;
 using Common.Domain.Requests;
+using Common.Exceptions.Contracts;
 using Common.Handlers;
 using Common.Logging;
+using Common.Services.SearchIndexService.Contracts;
 using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using text_extractor.Handlers;
-using text_extractor.Services.SearchIndexService;
 
 namespace text_extractor.Functions
 {

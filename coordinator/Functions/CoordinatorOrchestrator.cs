@@ -88,7 +88,8 @@ namespace coordinator.Functions
             
             if (!payload.ForceRefresh && await tracker.IsAlreadyProcessed())
             {
-                log.LogMethodFlow(payload.CorrelationId, loggingName, $"Tracker has already finished processing and a 'force refresh' has not been issued - returning documents - {context.InstanceId}");
+                log.LogMethodFlow(payload.CorrelationId, loggingName, $"Tracker has already finished processing and a 'force refresh' has not been issued - returning " +
+                                                                      $"documents - {context.InstanceId}");
                 return await tracker.GetDocuments();
             }
 

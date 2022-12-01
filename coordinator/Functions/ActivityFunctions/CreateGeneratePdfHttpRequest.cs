@@ -25,7 +25,7 @@ namespace coordinator.Functions.ActivityFunctions
         public async Task<DurableHttpRequest> Run([ActivityTrigger] IDurableActivityContext context)
         {
             const string loggingName = $"{nameof(CreateGeneratePdfHttpRequest)} - {nameof(Run)}";
-            var payload = context.GetInput<CreateGeneratePdfHttpRequestActivityPayload>();
+            var payload = context.GetInput<GeneratePdfHttpRequestActivityPayload>();
 
             if (payload == null)
                 throw new ArgumentException("Payload cannot be null.");

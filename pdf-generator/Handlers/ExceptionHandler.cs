@@ -6,6 +6,7 @@ using System.Text;
 using Azure;
 using Common.Domain.Exceptions;
 using Common.Exceptions;
+using Common.Exceptions.Contracts;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 using pdf_generator.Domain.Exceptions;

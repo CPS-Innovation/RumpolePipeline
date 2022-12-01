@@ -3,7 +3,8 @@ using AutoFixture;
 using Common.Constants;
 using Common.Exceptions;
 using Common.Factories.Contracts;
-using Common.Services.Contracts;
+using Common.Services.DocumentExtractionService;
+using Common.Services.DocumentExtractionService.Contracts;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -37,7 +38,7 @@ namespace Common.tests.Services.DocumentExtractionService
                 Content = new StreamContent(documentStream)
             };
 
-            var loggerMock = new Mock<ILogger<Common.Services.CgiDocumentExtractionService>>();
+            var loggerMock = new Mock<ILogger<CgiDocumentExtractionService>>();
 
             var mockHttpMessageHandler = new Mock<HttpMessageHandler>();
             mockHttpMessageHandler.Protected()
@@ -53,7 +54,7 @@ namespace Common.tests.Services.DocumentExtractionService
             var mockConfiguration = new Mock<IConfiguration>();
             mockConfiguration.Setup(config => config[ConfigKeys.SharedKeys.GetDocumentUrl]).Returns($"doc-fetch/{0}/{1}");
             
-            _documentExtractionService = new Common.Services.CgiDocumentExtractionService(httpClient, mockHttpRequestFactory.Object, loggerMock.Object, mockConfiguration.Object);
+            _documentExtractionService = new CgiDocumentExtractionService(httpClient, mockHttpRequestFactory.Object, loggerMock.Object, mockConfiguration.Object);
         }
 
         [Fact]
