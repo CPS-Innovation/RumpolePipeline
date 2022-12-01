@@ -103,7 +103,7 @@ namespace coordinator.Functions
 
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
-                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Code,  t.CmsDocType.Name, t.DocumentId, 
+                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Name, t.DocumentId, 
                         t.VersionId, t.FileName, payload.UpstreamToken, payload.CorrelationId)))
                 .ToList();
 

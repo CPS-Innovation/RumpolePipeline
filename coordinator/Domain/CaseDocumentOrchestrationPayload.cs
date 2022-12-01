@@ -4,18 +4,15 @@ namespace coordinator.Domain
 {
     public class CaseDocumentOrchestrationPayload : BasePipelinePayload
     {
-        public CaseDocumentOrchestrationPayload(string caseUrn, long caseId, string documentType, string documentCategory, string documentId, long versionId, string fileName, string upstreamToken, Guid correlationId)
+        public CaseDocumentOrchestrationPayload(string caseUrn, long caseId, string documentCategory, string documentId, long versionId, string fileName, string upstreamToken, Guid correlationId)
             : base(caseUrn, caseId, correlationId)
         {
-            DocumentType = documentType;
             DocumentCategory = documentCategory;
             DocumentId = documentId;
             VersionId = versionId;
             FileName = fileName;
             UpstreamToken = upstreamToken;
         }
-
-        public string DocumentType { get; set; }
 
         public string DocumentCategory { get; set; }
         
