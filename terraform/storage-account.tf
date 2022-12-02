@@ -81,8 +81,8 @@ data "azurerm_function_app_host_keys" "fa_text_extractor_generator_host_keys" {
   depends_on = [azurerm_function_app.fa_text_extractor]
 }
 
-resource "azurerm_storage_queue" "evaluate-existing-document" {
-  name                = "evaluate-existing-document"
+resource "azurerm_storage_queue" "evaluate-existing-documents" {
+  name                = "evaluate-existing-documents"
   storage_account_name = azurerm_storage_account.sa.name
   
   depends_on = [azurerm_storage_account.sa]
