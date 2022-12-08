@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Common.Domain.DocumentExtraction;
@@ -6,15 +7,19 @@ namespace Common.Domain.Requests;
 
 public class EvaluateExistingDocumentsRequest
 {
-    public EvaluateExistingDocumentsRequest(string caseId, List<CaseDocument> caseDocuments)
+    public EvaluateExistingDocumentsRequest(long caseId, IEnumerable<CaseDocument> caseDocuments, Guid correlationId)
     {
         CaseId = caseId;
         CaseDocuments = caseDocuments;
+        CorrelationId = correlationId;
     }
     
     [Required]
-    public string CaseId { get; set; }
+    public long CaseId { get; set; }
     
     [Required]
-    public List<CaseDocument> CaseDocuments { get; set; }
+    public IEnumerable<CaseDocument> CaseDocuments { get; set; }
+    
+    [Required]
+    public Guid CorrelationId { get; set; }
 }

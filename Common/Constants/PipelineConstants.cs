@@ -72,11 +72,8 @@
             public const string OnBehalfOfTokenClientSecret = "OnBehalfOfTokenClientSecret";
             public const string PdfGeneratorScope = "PdfGeneratorScope";
             public const string PdfGeneratorUrl = "PdfGeneratorUrl";
-            public const string DocumentEvaluatorUrl = "DocumentEvaluatorUrl";
-            public const string ExistingDocumentsEvaluatorUrl = "ExistingDocumentsEvaluatorUrl";
             public const string TextExtractorScope = "TextExtractorScope";
             public const string TextExtractorUrl = "TextExtractorUrl";
-            public const string SearchIndexUpdateUrl = "SearchIndexUpdateUrl";
         }
 
         public static class TextExtractorKeys
@@ -99,7 +96,10 @@
             public const string DocumentsRepositoryBaseUrl = "DocumentsRepositoryBaseUrl";
             public const string GetDocumentUrl = "GetDocumentUrl";
             public const string ListDocumentsUrl = "ListDocumentsUrl";
-            public const string WebsiteInstanceId = "WEBSITE_INSTANCE_ID";
+            public const string UpdateSearchIndexQueueUrl = "UpdateSearchIndexQueueUrl";
+            public const string EvaluateExistingDocumentsQueueName = "EvaluateExistingDocumentsQueueName";
+            public const string UpdateSearchIndexByVersionQueueName = "UpdateSearchIndexByVersionQueueName";
+            public const string UpdateSearchIndexByBlobNameQueueName = "UpdateSearchIndexByVersionQueueName";
         }
     }
 }

@@ -52,7 +52,7 @@ public class DocumentEvaluationServiceTests
         
         using (new AssertionScope())
         {
-            result.CaseId.Should().Be(request.CaseId.ToString());
+            result.CaseId.Should().Be(request.CaseId);
             result.DocumentId.Should().Be(request.DocumentId);
             result.EvaluationResult.Should().Be(DocumentEvaluationResult.AcquireDocument);
             result.UpdateSearchIndex.Should().BeFalse();
@@ -78,7 +78,7 @@ public class DocumentEvaluationServiceTests
         
         using (new AssertionScope())
         {
-            result.CaseId.Should().Be(request.CaseId.ToString());
+            result.CaseId.Should().Be(request.CaseId);
             result.DocumentId.Should().Be(request.DocumentId);
             result.EvaluationResult.Should().Be(DocumentEvaluationResult.DocumentUnchanged);
             result.UpdateSearchIndex.Should().BeFalse();
@@ -104,7 +104,7 @@ public class DocumentEvaluationServiceTests
         
         using (new AssertionScope())
         {
-            result.CaseId.Should().Be(request.CaseId.ToString());
+            result.CaseId.Should().Be(request.CaseId);
             result.DocumentId.Should().Be(request.DocumentId);
             result.EvaluationResult.Should().Be(DocumentEvaluationResult.AcquireDocument);
             result.UpdateSearchIndex.Should().BeTrue();

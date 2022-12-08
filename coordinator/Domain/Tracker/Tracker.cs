@@ -135,26 +135,6 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task RegisterDocumentRemovedFromSearchIndex(string documentId)
-        {
-            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document!.Status = DocumentStatus.DocumentRemovedFromSearchIndex;
-
-            Log(LogType.DocumentRemovedFromSearchIndex, documentId);
-
-            return Task.CompletedTask;
-        }
-
-        public Task RegisterUnableToUpdateSearchIndex(string documentId)
-        {
-            var document = Documents.Find(document => document.DocumentId.Equals(documentId, StringComparison.OrdinalIgnoreCase));
-            document!.Status = DocumentStatus.SearchIndexUpdateFailure;
-
-            Log(LogType.IndexRemovalFailure, documentId);
-
-            return Task.CompletedTask;
-        }
-
         public Task RegisterCompleted()
         {
             Status = TrackerStatus.Completed;

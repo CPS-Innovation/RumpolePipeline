@@ -23,7 +23,6 @@ namespace coordinator.tests.Functions.SubOrchestrators
         private readonly CaseDocumentOrchestrationPayload _payload;
         private readonly DurableHttpRequest _evaluateDocumentDurableRequest;
         private readonly DurableHttpRequest _generatePdfDurableRequest;
-        private readonly DurableHttpRequest _updateSearchIndexDurableRequest;
         private readonly string _content;
         private readonly GeneratePdfResponse _pdfResponse;
         private readonly EvaluateDocumentResponse _evaluateDocumentResponse;
@@ -39,7 +38,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
             _payload = fixture.Create<CaseDocumentOrchestrationPayload>();
             _evaluateDocumentDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/evaluateDocument"));
             _generatePdfDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/generatePdf"));
-            _updateSearchIndexDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/updateSearchIndex"));
+            var updateSearchIndexDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/updateSearchIndex"));
             var textExtractorDurableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk/textExtractor"));
             _content = fixture.Create<string>();
             var durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: _content);
@@ -54,10 +53,6 @@ namespace coordinator.tests.Functions.SubOrchestrators
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CaseDocumentOrchestrationPayload>()).Returns(_payload);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
-                    nameof(CreateUpdateSearchIndexHttpRequest),
-                    It.Is<UpdateSearchIndexHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId)))
-                .ReturnsAsync(_updateSearchIndexDurableRequest);
-            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(
                 nameof(CreateGeneratePdfHttpRequest),
                 It.Is<GeneratePdfHttpRequestActivityPayload>(p => p.CaseId == _payload.CaseId && p.DocumentId == _payload.DocumentId && p.FileName == _payload.FileName)))
                     .ReturnsAsync(_generatePdfDurableRequest);
@@ -71,7 +66,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
             //set default activity responses
             _evaluateDocumentResponse.EvaluationResult = DocumentEvaluationResult.AcquireDocument;
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_evaluateDocumentDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _evaluateDocumentResponse.ToJson()));
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_updateSearchIndexDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _content));
+            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(updateSearchIndexDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _content));
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _pdfResponse.ToJson()));
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(textExtractorDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, content: _content));
 
@@ -179,52 +174,6 @@ namespace coordinator.tests.Functions.SubOrchestrators
             catch
             {
                 _mockTracker.Verify(tracker => tracker.RegisterIndexed(_payload.DocumentId));
-            }
-        }
-        
-        [Fact]
-        public async Task Run_Tracker_RegisterDocumentNotFoundInDDEI_WhenNotFoundStatusCodeReturned_WhenUpdatingSearchIndex()
-        {
-            _pdfResponse.AlreadyProcessed = false;
-            _pdfResponse.UpdateSearchIndex = true;
-            
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, 
-                content: _pdfResponse.ToJson()));
-            
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_updateSearchIndexDurableRequest))
-                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotFound, content: _content));
-  
-            try
-            {
-                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-                Assert.False(true);
-            }
-            catch
-            {
-                _mockTracker.Verify(tracker => tracker.RegisterDocumentNotFoundInDDEI(_payload.DocumentId));
-            }
-        }
-        
-        [Fact]
-        public async Task Run_Tracker_RegisterUnableToUpdateSearchIndex_WhenNotFoundStatusCodeReturned_WhenUpdatingSearchIndex()
-        {
-            _pdfResponse.AlreadyProcessed = false;
-            _pdfResponse.UpdateSearchIndex = true;
-            
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_generatePdfDurableRequest)).ReturnsAsync(new DurableHttpResponse(HttpStatusCode.OK, 
-                content: _pdfResponse.ToJson()));
-            
-            _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(_updateSearchIndexDurableRequest))
-                .ReturnsAsync(new DurableHttpResponse(HttpStatusCode.NotImplemented, content: _content));
-  
-            try
-            {
-                await _caseDocumentOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-                Assert.False(true);
-            }
-            catch
-            {
-                _mockTracker.Verify(tracker => tracker.RegisterUnableToUpdateSearchIndex(_payload.DocumentId));
             }
         }
     }

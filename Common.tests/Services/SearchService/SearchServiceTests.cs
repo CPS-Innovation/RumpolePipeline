@@ -1,7 +1,6 @@
 using AutoFixture;
 using Azure.Search.Documents;
 using Common.Domain.DocumentEvaluation;
-using Common.Services.SearchService;
 using Common.Services.SearchService.Contracts;
 using FluentAssertions;
 using FluentAssertions.Execution;

@@ -14,23 +14,8 @@ namespace Common.Factories
             var bytes = Encoding.UTF8.GetBytes(id);
             var base64Id = Convert.ToBase64String(bytes);
 
-            return new SearchLine
-            {
-                Id = base64Id,
-                CaseId = caseId,
-                DocumentId = documentId,
-                VersionId = versionId,
-                FileName = blobName,
-                PageIndex = readResult.Page,
-                LineIndex = index,
-                Language = line.Language,
-                BoundingBox = line.BoundingBox,
-                Appearance = line.Appearance,
-                Text = line.Text,
-                Words = line.Words,
-                PageHeight = readResult.Height,
-                PageWidth = readResult.Width
-            };
+            return new SearchLine(base64Id, caseId, documentId, versionId, blobName, readResult.Page, index, line.Language, line.BoundingBox, 
+	            line.Appearance, line.Text, line.Words, readResult.Height, readResult.Width);
         }
 	}
 }

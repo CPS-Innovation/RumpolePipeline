@@ -30,4 +30,8 @@
       <ProjectReference Include="..\document-evaluator\document-evaluator.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Functions" />
+    </ItemGroup>
+
 </Project>

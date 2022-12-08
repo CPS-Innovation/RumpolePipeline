@@ -10,7 +10,7 @@ using Common.Exceptions.Contracts;
 using Common.Logging;
 using Microsoft.Extensions.Logging;
 
-namespace document_evaluation.Domain.Handlers
+namespace document_evaluator.Domain.Handlers
 {
     public class ExceptionHandler : IExceptionHandler
     {

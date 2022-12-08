@@ -21,13 +21,13 @@ namespace coordinator.Functions
 {
     public class CoordinatorOrchestrator
     {
-        private readonly IConfiguration _configuration;
         private readonly ILogger<CoordinatorOrchestrator> _log;
-
-        public CoordinatorOrchestrator(IConfiguration configuration, ILogger<CoordinatorOrchestrator> log)
+        private readonly IConfiguration _configuration;
+        
+        public CoordinatorOrchestrator(ILogger<CoordinatorOrchestrator> log, IConfiguration configuration)
         {
-            _configuration = configuration;
             _log = log;
+            _configuration = configuration;
         }
 
         [FunctionName("CoordinatorOrchestrator")]
@@ -100,7 +100,11 @@ namespace coordinator.Functions
             if (documents.Length == 0)
                 return new List<TrackerDocument>();
 
+            //register documents to be processed in the orchestration's tracker
             await RegisterDocuments(tracker, loggingName, log, payload, documents);
+            
+            //evaluate incoming documents for items removed in CMS but previously processed by Polaris, handle separately to running pipeline
+            await EvaluateIncomingDocuments(context, loggingName, log, payload, documents);
 
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
@@ -168,6 +172,16 @@ namespace coordinator.Functions
         {
             safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
             await tracker.RegisterDocumentIds(documents.Select(item => new Tuple<string, long>(item.DocumentId, item.VersionId)));
+        }
+
+        private static async Task EvaluateIncomingDocuments(IDurableOrchestrationContext context, string nameToLog, ILogger safeLogger, BasePipelinePayload payload, 
+            IEnumerable<CaseDocument> documents)
+        {
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Passing documents to document evaluation process to remove previously processed documents " +
+                                                                       $"that are no longer retrieved via a call to DDEI, for caseId: {payload.CaseId}");
+
+            await context.CallActivityAsync(nameof(QueueExistingDocumentsEvaluation), new QueueExistingDocumentsEvaluationPayload(payload.CaseUrn, payload.CaseId, documents, 
+                payload.CorrelationId));
         }
     }
 }

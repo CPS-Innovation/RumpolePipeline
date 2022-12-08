@@ -14,16 +14,18 @@ using Common.Services.DocumentEvaluationService;
 using Common.Services.DocumentEvaluationService.Contracts;
 using Common.Services.SearchService;
 using Common.Services.SearchService.Contracts;
+using Common.Services.StorageQueueService;
+using Common.Services.StorageQueueService.Contracts;
 using Common.Wrappers;
-using document_evaluation.Domain.Handlers;
+using document_evaluator.Domain.Handlers;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-[assembly: FunctionsStartup(typeof(document_evaluation.Startup))]
-namespace document_evaluation
+[assembly: FunctionsStartup(typeof(document_evaluator.Startup))]
+namespace document_evaluator
 {
     [ExcludeFromCodeCoverage]
     internal class Startup : FunctionsStartup
@@ -62,6 +64,7 @@ namespace document_evaluation
             builder.Services.AddTransient<ISearchServiceProcessor, SearchServiceProcessor>();
             builder.Services.AddTransient<ISearchService, SearchService>();
             builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
+            builder.Services.AddTransient<IStorageQueueService>(_ => new StorageQueueService(configuration[ConfigKeys.SharedKeys.UpdateSearchIndexQueueUrl]));
         }
     }
 }

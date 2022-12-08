@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using AutoFixture;
 using coordinator.Domain.Tracker;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -197,40 +196,6 @@ namespace coordinator.tests.Domain.Tracker
             _tracker.Logs.Count().Should().Be(2);
         }
         
-        [Fact]
-        public async Task RegisterDocumentRemovedFromSearchIndex()
-        {
-            await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterDocumentRemovedFromSearchIndex(_documentIds.First().Item1);
-
-            using (new AssertionScope())
-            {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
-                document?.Status.Should().Be(DocumentStatus.DocumentRemovedFromSearchIndex);
-                _tracker.Status.Should().Be(TrackerStatus.Running);
-
-                _tracker.Logs.Count().Should().Be(3);
-            }
-        }
-        
-        [Fact]
-        public async Task RegisterUnableToUpdateSearchIndex()
-        {
-            await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnableToUpdateSearchIndex(_documentIds.First().Item1);
-
-            using (new AssertionScope())
-            {
-                var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
-                document?.Status.Should().Be(DocumentStatus.SearchIndexUpdateFailure);
-                _tracker.Status.Should().Be(TrackerStatus.Running);
-
-                _tracker.Logs.Count().Should().Be(3);
-            }
-        }
-
         [Fact]
         public async Task GetDocuments_ReturnsDocuments()
         {

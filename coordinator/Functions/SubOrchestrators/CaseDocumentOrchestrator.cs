@@ -49,8 +49,11 @@ namespace coordinator.Functions.SubOrchestrators
             {
                 if (pdfGeneratorResponse.UpdateSearchIndex)
                 {
-                    log.LogMethodFlow(payload.CorrelationId, loggingName, $"Updating the search index for DocumentId: '{payload.DocumentId}'");
-                    await CallUpdateSearchIndexAsync(context, payload, tracker, log);
+                    log.LogMethodFlow(payload.CorrelationId, loggingName, $"Updating the search index for DocumentId: '{payload.DocumentId}' by dropping a message " +
+                                                                          $"onto the queue");
+                    
+                    await context.CallActivityAsync(nameof(QueueUpdateSearchIndexByVersion),
+                        new QueueUpdateSearchIndexByVersionPayload(payload.CaseUrn, payload.CaseId, payload.DocumentId, payload.VersionId, payload.CorrelationId));
                 }
                 
                 log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the Text Extractor for DocumentId: '{payload.DocumentId}', FileName: '{payload.FileName}'");
@@ -122,64 +125,6 @@ namespace coordinator.Functions.SubOrchestrators
             throw new HttpRequestException($"Failed to generate pdf for document id '{payload.DocumentId}'. Status code: {response.StatusCode}.");
         }
         
-        private async Task CallUpdateSearchIndexAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, ITracker tracker, ILogger log)
-        {
-            try
-            {
-                log.LogMethodEntry(payload.CorrelationId, nameof(CallUpdateSearchIndexAsync), payload.ToJson());
-                
-                await CallUpdateSearchIndexHttpAsync(context, payload, tracker, log);
-                await tracker.RegisterDocumentRemovedFromSearchIndex(payload.DocumentId);
-            }
-            catch (Exception exception)
-            {
-                log.LogMethodFlow(payload.CorrelationId, nameof(CallUpdateSearchIndexAsync), $"Register search index removal failure in the tracker for DocumentId {payload.DocumentId}");
-                
-                log.LogMethodError(payload.CorrelationId, nameof(CaseDocumentOrchestrator),
-                    $"Error when running {nameof(CaseDocumentOrchestrator)} orchestration: {exception.Message}",
-                    exception);
-
-                //do not throw, log only
-                //the search index could have been updated earlier in the Pipeline flow by the global documents evaluation process
-                //the ocr and search index update will handle the restoration of search index data for the latest version of the document
-            }
-            finally
-            {
-                log.LogMethodExit(payload.CorrelationId, nameof(CallUpdateSearchIndexAsync), string.Empty);
-            }
-        }
-        
-        private async Task CallUpdateSearchIndexHttpAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, ITracker tracker, ILogger log)
-        {
-            log.LogMethodEntry(payload.CorrelationId, nameof(CallUpdateSearchIndexHttpAsync), payload.ToJson());
-            
-            var request = await context.CallActivityAsync<DurableHttpRequest>(
-                nameof(CreateUpdateSearchIndexHttpRequest),
-                new UpdateSearchIndexHttpRequestActivityPayload(payload.CaseUrn, payload.CaseId, payload.DocumentId, payload.CorrelationId));
-            var response = await context.CallHttpAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                switch (response.StatusCode)
-                {
-                    case HttpStatusCode.NotFound:
-                        log.LogMethodFlow(payload.CorrelationId, nameof(CallUpdateSearchIndexHttpAsync), $"Registering Document Not Found in DDEI in the tracker for, caseId: {payload.CaseId}, documentId: {payload.DocumentId}");
-                        await tracker.RegisterDocumentNotFoundInDDEI(payload.DocumentId);
-                        break;
-                    case HttpStatusCode.NotImplemented:
-                        log.LogMethodFlow(payload.CorrelationId, nameof(CallUpdateSearchIndexHttpAsync), $"Registering Search Index Removal failure in the tracker for caseId: {payload.CaseId}, documentId: {payload.DocumentId}");
-                        await tracker.RegisterUnableToUpdateSearchIndex(payload.DocumentId);
-                        break;
-                }
-
-                request.Headers.TryGetValue(HttpHeaderKeys.Authorization, out var tokenUsed);
-                throw new HttpRequestException($"Failed to update search index for caseId: '{payload.CaseId}' and document id '{payload.DocumentId}'. Status code: {response.StatusCode}. Token Used: [{tokenUsed}]. CorrelationId: {payload.CorrelationId}");
-            }
-
-            log.LogMethodFlow(payload.CorrelationId, nameof(CallUpdateSearchIndexHttpAsync), $"Removed caseId: {payload.CaseId}, documentId: {payload.DocumentId} from the search index");
-            log.LogMethodExit(payload.CorrelationId, nameof(CallUpdateSearchIndexHttpAsync), string.Empty);
-        }
-
         private async Task CallTextExtractorAsync(IDurableOrchestrationContext context, CaseDocumentOrchestrationPayload payload, string blobName, ITracker tracker, ILogger log)
         {
             log.LogMethodEntry(payload.CorrelationId, nameof(CallTextExtractorAsync), payload.ToJson());

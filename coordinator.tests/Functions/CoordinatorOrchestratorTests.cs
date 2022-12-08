@@ -77,11 +77,9 @@ namespace coordinator.tests.Functions
                 .ReturnsAsync(_caseDocuments);
             
             var durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: evaluateDocumentsResponse.ToJson());
-            //_mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<DurableHttpRequest>(nameof(CreateEvaluateExistingDocumentsHttpRequest),
-            //    It.IsAny<CreateEvaluateExistingDocumentsHttpRequestActivityPayload>())).ReturnsAsync(durableRequest);
             _mockDurableOrchestrationContext.Setup(context => context.CallHttpAsync(durableRequest)).ReturnsAsync(durableResponse);
             
-            _coordinatorOrchestrator = new CoordinatorOrchestrator(mockConfiguration.Object, mockLogger.Object);
+            _coordinatorOrchestrator = new CoordinatorOrchestrator(mockLogger.Object, mockConfiguration.Object);
         }
 
         [Fact]

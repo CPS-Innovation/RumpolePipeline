@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using Azure.Messaging.EventGrid;
 using Azure.Messaging.EventGrid.SystemEvents;
 using Common.Constants;
+using Common.Domain.Requests;
 using Common.Logging;
-using Common.Services.SearchIndexService.Contracts;
+using Common.Services.StorageQueueService.Contracts;
+using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Extensions.Logging;
@@ -17,12 +19,14 @@ namespace text_extractor.Functions;
 public class HandlePolarisDocumentDeleted
 {
     private readonly ILogger<HandlePolarisDocumentDeleted> _logger;
-    private readonly ISearchIndexService _searchIndexService;
+    private readonly IJsonConvertWrapper _jsonConvertWrapper;
+    private readonly IStorageQueueService _storageQueueService;
     
-    public HandlePolarisDocumentDeleted(ILogger<HandlePolarisDocumentDeleted> logger, ISearchIndexService searchIndexService)
+    public HandlePolarisDocumentDeleted(ILogger<HandlePolarisDocumentDeleted> logger, IJsonConvertWrapper jsonConvertWrapper, IStorageQueueService storageQueueService)
     {
         _logger = logger;
-        _searchIndexService = searchIndexService;
+        _jsonConvertWrapper = jsonConvertWrapper;
+        _storageQueueService = storageQueueService;
     }
 
     /// <summary>
@@ -58,11 +62,13 @@ public class HandlePolarisDocumentDeleted
                 _logger.LogMethodFlow(correlationId, loggerSource, ReturnEventGridEventLevel(eventData));
 
                 var blobDetails = new Uri(eventData.Url).PathAndQuery.Split("/");
-                var caseId = int.Parse(blobDetails[2]);
-                var documentId = blobDetails[4].Replace(".pdf", "", StringComparison.OrdinalIgnoreCase);
-
-                await _searchIndexService.RemoveResultsForDocumentAsync(caseId, documentId, correlationId);
-                var searchIndexUpdated = $"The search index was updated, removing any joint references to caseId: {caseId} and documentId: '{documentId}'";
+                var caseId = long.Parse(blobDetails[2]);
+                var blobName = blobDetails[4];
+                
+                await _storageQueueService.AddNewMessage(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByBlobNameRequest(caseId, 
+                    blobName, correlationId)), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName);
+                
+                var searchIndexUpdated = $"The search index update was queued and should remove any joint references to caseId: {caseId} and blobName: '{blobName}'";
                 _logger.LogMethodFlow(correlationId, loggerSource, searchIndexUpdated);
             }
             else

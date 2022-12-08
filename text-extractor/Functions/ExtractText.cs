@@ -60,8 +60,8 @@ namespace text_extractor.Functions
 
                 _log.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
-                var authValidation =
-                    await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId, PipelineScopes.ExtractText, PipelineRoles.ExtractText);
+                var authValidation = await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId,
+                    PipelineScopes.ExtractText, PipelineRoles.ExtractText);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
 
@@ -86,7 +86,8 @@ namespace text_extractor.Functions
                 var ocrResults = await _ocrService.GetOcrResultsAsync(extractTextRequest.BlobName, currentCorrelationId);
                 
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"OCR processed finished for {extractTextRequest.BlobName}, beginning search index update");
-                await _searchIndexService.StoreResultsAsync(ocrResults, extractTextRequest.CaseId, extractTextRequest.DocumentId, extractTextRequest.VersionId, extractTextRequest.BlobName, currentCorrelationId);
+                await _searchIndexService.StoreResultsAsync(ocrResults, extractTextRequest.CaseId, extractTextRequest.DocumentId, extractTextRequest.VersionId, 
+                    extractTextRequest.BlobName, currentCorrelationId);
                 
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"Search index update completed for blob {extractTextRequest.BlobName}");
 

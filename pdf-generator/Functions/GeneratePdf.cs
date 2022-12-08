@@ -100,7 +100,7 @@ namespace pdf_generator.Functions
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
                 }
                 
-                var blobName = $"{pdfRequest.CaseId}/pdfs/{Path.GetFileNameWithoutExtension(pdfRequest.FileName)}_{pdfRequest.DocumentId}.pdf";
+                var blobName = $"{pdfRequest.CaseId}/pdfs/{Path.GetFileNameWithoutExtension(pdfRequest.FileName)}.pdf";
                 generatePdfResponse = new GeneratePdfResponse {BlobName = blobName};
 
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning document evaluation process for documentId {pdfRequest.DocumentId}, versionId {pdfRequest.VersionId}, proposedBlobName: {blobName}");

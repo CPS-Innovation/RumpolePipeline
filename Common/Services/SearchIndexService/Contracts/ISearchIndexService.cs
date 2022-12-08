@@ -8,7 +8,9 @@ namespace Common.Services.SearchIndexService.Contracts
 	{
 		Task StoreResultsAsync(AnalyzeResults analyzeresults, long caseId, string documentId, long versionId, string blobName, Guid correlationId);
 
-		Task RemoveResultsForDocumentAsync(long caseId, string documentId, Guid correlationId);
+		Task RemoveResultsByDocumentVersionAsync(long caseId, string documentId, long versionId, Guid correlationId);
+		
+		Task RemoveResultsByBlobNameAsync(long caseId, string blobName, Guid correlationId);
 	}
 }
 

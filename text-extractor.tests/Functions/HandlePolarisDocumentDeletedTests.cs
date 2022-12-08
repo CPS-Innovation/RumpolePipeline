@@ -2,9 +2,9 @@ using System;
 using System.Threading.Tasks;
 using AutoFixture;
 using Azure.Messaging.EventGrid;
-using Azure.Messaging.EventGrid.SystemEvents;
 using Common.Constants;
-using Common.Services.SearchIndexService.Contracts;
+using Common.Services.StorageQueueService.Contracts;
+using Common.Wrappers;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Azure.WebJobs;
@@ -18,17 +18,18 @@ namespace text_extractor.tests.Functions;
 public class HandlePolarisDocumentDeletedTests
 {
     private readonly Fixture _fixture;
-    private readonly Mock<ISearchIndexService> _searchIndexService;
+    private readonly Mock<IStorageQueueService> _mockStorageQueueService;
 
     private readonly HandlePolarisDocumentDeleted _handlePolarisDocumentDeleted;
     
     public HandlePolarisDocumentDeletedTests()
     {
         _fixture = new Fixture();
-        _searchIndexService = new Mock<ISearchIndexService>();
+        _mockStorageQueueService = new Mock<IStorageQueueService>();
 
         var logger = new Mock<ILogger<HandlePolarisDocumentDeleted>>();
-        _handlePolarisDocumentDeleted = new HandlePolarisDocumentDeleted(logger.Object, _searchIndexService.Object);
+        var mockJsonConverterWrapper = new Mock<IJsonConvertWrapper>();
+        _handlePolarisDocumentDeleted = new HandlePolarisDocumentDeleted(logger.Object, mockJsonConverterWrapper.Object, _mockStorageQueueService.Object);
     }
 
     [Fact]
@@ -42,7 +43,7 @@ public class HandlePolarisDocumentDeletedTests
         using (new AssertionScope())
         {
             await act.Should().ThrowAsync<ArgumentNullException>();
-            _searchIndexService.Verify(s => s.RemoveResultsForDocumentAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid>()), 
+            _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName), 
                 Times.Never);
         }
     }
@@ -54,7 +55,7 @@ public class HandlePolarisDocumentDeletedTests
 
         await _handlePolarisDocumentDeleted.RunAsync(evt, new ExecutionContext());
         
-        _searchIndexService.Verify(s => s.RemoveResultsForDocumentAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid>()),
+        _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName), 
             Times.Never);
     }
     
@@ -73,7 +74,7 @@ public class HandlePolarisDocumentDeletedTests
         using (new AssertionScope())
         {
             await act.Should().ThrowAsync<NullReferenceException>();
-            _searchIndexService.Verify(s => s.RemoveResultsForDocumentAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid>()), 
+            _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName), 
                 Times.Never);
         }
     }
@@ -100,18 +101,9 @@ public class HandlePolarisDocumentDeletedTests
                     }";
         evt.Data = new BinaryData(eventJson);
         
-        var eventData = evt.Data.ToObjectFromJson<StorageBlobDeletedEventData>();
-        var caseId = -1;
-        var documentId = "";
-        if (eventData != null)
-        {
-            var blobDetails = new Uri(eventData.Url).PathAndQuery.Split("/");
-            caseId = int.Parse(blobDetails[2]);
-            documentId = blobDetails[4].Replace(".pdf", "", StringComparison.OrdinalIgnoreCase);
-        }
-
         await _handlePolarisDocumentDeleted.RunAsync(evt, new ExecutionContext());
         
-        _searchIndexService.Verify(s => s.RemoveResultsForDocumentAsync(caseId, documentId, It.IsAny<Guid>()), Times.Once);
+        _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName), 
+            Times.Once);
     }
 }

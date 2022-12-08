@@ -19,6 +19,8 @@ using Common.Factories.Contracts;
 using Common.Handlers;
 using Common.Services.SearchIndexService;
 using Common.Services.SearchIndexService.Contracts;
+using Common.Services.StorageQueueService;
+using Common.Services.StorageQueueService.Contracts;
 
 [assembly: FunctionsStartup(typeof(text_extractor.Startup))]
 namespace text_extractor
@@ -45,7 +47,7 @@ namespace text_extractor
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
             builder.Services.AddTransient<IAuthorizationValidator, AuthorizationValidator>();
             builder.Services.AddTransient<IValidatorWrapper<ExtractTextRequest>, ValidatorWrapper<ExtractTextRequest>>();
-            builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexRequest>, ValidatorWrapper<UpdateSearchIndexRequest>>();
+            builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByBlobNameRequest>, ValidatorWrapper<UpdateSearchIndexByBlobNameRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IBlobSasBuilderWrapper, BlobSasBuilderWrapper>();
             builder.Services.AddTransient<IBlobSasBuilderFactory, BlobSasBuilderFactory>();
@@ -54,6 +56,7 @@ namespace text_extractor
             builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
             builder.Services.AddTransient<IComputerVisionClientFactory, ComputerVisionClientFactory>();
             builder.Services.AddTransient<ISearchIndexingBufferedSenderFactory, SearchIndexingBufferedSenderFactory>();
+            builder.Services.AddTransient<IStorageQueueService>(_ => new StorageQueueService(configuration[ConfigKeys.SharedKeys.UpdateSearchIndexQueueUrl]));
         }
     }
 }

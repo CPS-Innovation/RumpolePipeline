@@ -8,5 +8,5 @@ public class DocumentInformation
 
     public long VersionId { get; set; }
 
-    public string FileName { get; set; }
+    public string BlobName { get; set; }
 }

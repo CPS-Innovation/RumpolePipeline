@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+// ReSharper disable InconsistentNaming
 
 namespace coordinator.Domain.Tracker
 {
@@ -18,8 +19,6 @@ namespace coordinator.Domain.Tracker
         Task RegisterOcrAndIndexFailure(string documentId);
         Task RegisterCompleted();
         Task RegisterFailed();
-        Task RegisterDocumentRemovedFromSearchIndex(string documentId);
-        Task RegisterUnableToUpdateSearchIndex(string documentId);
         Task<List<TrackerDocument>> GetDocuments();
         Task<bool> AllDocumentsFailed();
         Task<bool> IsAlreadyProcessed();
