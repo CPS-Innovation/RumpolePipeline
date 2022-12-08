@@ -14,8 +14,3 @@ queue_config = {
     update_search_index_by_version_queue_name = "update-search-index-by-version"
     update_search_index_by_blob_name_queue_name = "update-search-index-by-blob-name"
 }
-queue_config = {
-    evaluate_existing_documents_queue_name = "evaluate-existing-documents"
-    update_search_index_by_version_queue_name = "update-search-index-by-version"
-    update_search_index_by_blob_name_queue_name = "update-search-index-by-blob-name"
-}
