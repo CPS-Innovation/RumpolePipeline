@@ -26,6 +26,8 @@ resource "azurerm_function_app" "fa_text_extractor" {
     "SearchClientAuthorizationKey"            = azurerm_search_service.ss.primary_key
     "SearchClientEndpointUrl"                 = "https://${azurerm_search_service.ss.name}.search.windows.net"
     "SearchClientIndexName"                   = jsondecode(file("search-index-definition.json")).name
+    "UpdateSearchIndexQueueUrl"               = "https://sacps${local.resource_name}rumpolepipeline.queue.core.windows.net/{0}"
+    "UpdateSearchIndexByBlobNameQueueName"    = var.queue_config.update_search_index_by_blob_name_queue_name
   }
   https_only                 = true
 

@@ -25,7 +25,6 @@ resource "azurerm_function_app" "fa_coordinator" {
     "ExistingDocumentsEvaluatorUrl"           = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/evaluateExistingDocuments?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
     "TextExtractorScope"                      = "api://fa-${local.resource_name}-text-extractor/.default"
     "TextExtractorUrl"                        = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/extract?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
-    "SearchIndexUpdateUrl"                    = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/updateSearchIndex?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = "api://fa-${local.resource_name}-coordinator"
     "DocumentsRepositoryBaseUrl"              = var.ddei_config.base_url
