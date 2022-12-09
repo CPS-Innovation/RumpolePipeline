@@ -99,36 +99,22 @@ data "azurerm_function_app_host_keys" "fa_text_extractor_generator_host_keys" {
   depends_on = [azurerm_function_app.fa_text_extractor]
 }
 
-resource "azurerm_storage_queue" "evaluate-existing-documents" {
-  name                = "evaluate-existing-documents"
-  storage_account_name = azurerm_storage_account.sa.name
-  
-  depends_on = [azurerm_storage_account.sa]
-}
-
-resource "azurerm_storage_queue" "update-search-index" {
-  name                = "update-search-index"
-  storage_account_name = azurerm_storage_account.sa.name
-
-  depends_on = [azurerm_storage_account.sa]
-}
-
 resource "azurerm_storage_queue" "evaluate_existing_documents" {
-  name                = "evaluate-existing-documents"
+  name                 = "evaluate-existing-documents"
   storage_account_name = azurerm_storage_account.sa.name
   
   depends_on = [azurerm_storage_account.sa]
 }
 
 resource "azurerm_storage_queue" "update_search_index_by_version" {
-  name                = "update-search-index-by-version"
+  name                 = "update-search-index-by-version"
   storage_account_name = azurerm_storage_account.sa.name
 
   depends_on = [azurerm_storage_account.sa]
 }
 
 resource "azurerm_storage_queue" "update_search_index_by_blob_name" {
-  name                = "update-search-index-by-blob-name"
+  name                 = "update-search-index-by-blob-name"
   storage_account_name = azurerm_storage_account.sa.name
 
   depends_on = [azurerm_storage_account.sa]
