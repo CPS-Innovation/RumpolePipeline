@@ -21,14 +21,13 @@ resource "azurerm_function_app" "fa_coordinator" {
     "OnBehalfOfTokenClientSecret"             = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.kvs_fa_coordinator_client_secret.id})"
     "PdfGeneratorScope"                       = "api://fa-${local.resource_name}-pdf-generator/.default"
     "PdfGeneratorUrl"                         = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/generate?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
-    "DocumentEvaluatorUrl"                    = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/evaluateDocument?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
-    "ExistingDocumentsEvaluatorUrl"           = "https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/api/evaluateExistingDocuments?code=${data.azurerm_function_app_host_keys.ak_pdf_generator.default_function_key}"
     "TextExtractorScope"                      = "api://fa-${local.resource_name}-text-extractor/.default"
     "TextExtractorUrl"                        = "https://fa-${local.resource_name}-text-extractor.azurewebsites.net/api/extract?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = "api://fa-${local.resource_name}-coordinator"
     "DocumentsRepositoryBaseUrl"              = var.ddei_config.base_url
     "ListDocumentsUrl"                        = "urns/{0}/cases/{1}/documents?code=${var.ddei_config.list_documents_function_key}"
+    "DocumentEvaluatorScope"                  = "api://fa-${local.resource_name}-document-evaluator/.default"
     "UpdateSearchIndexQueueUrl"               = "https://sacps${local.resource_name}rumpolepipeline.queue.core.windows.net/{0}"
     "EvaluateExistingDocumentsQueueName"      = var.queue_config.evaluate_existing_documents_queue_name
     "UpdateSearchIndexByVersionQueueName"     = var.queue_config.update_search_index_by_version_queue_name
