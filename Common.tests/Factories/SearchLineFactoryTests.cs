@@ -86,7 +86,7 @@ namespace Common.tests.Factories
 		{
 			var factory = _searchLineFactory.Create(_caseId, _documentId, _versionId, _blobName, _readResult, _line, _index);
 
-			factory.BlobName.Should().Be(_blobName);
+			factory.FileName.Should().Be(_blobName);
 		}
 		
 		[Fact]

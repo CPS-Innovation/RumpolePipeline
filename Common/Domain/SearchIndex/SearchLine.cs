@@ -13,7 +13,7 @@ public class SearchLine : Line
         CaseId = caseId;
         DocumentId = documentId;
         VersionId = versionId;
-        BlobName = blobName;
+        FileName = blobName;
         PageIndex = pageIndex;
         LineIndex = lineIndex;
         PageHeight = pageHeight;
@@ -39,7 +39,7 @@ public class SearchLine : Line
     public long VersionId { get; set; }
 
     [JsonProperty("fileName")]
-    public string BlobName { get; set; }
+    public string FileName { get; set; }
     
     [JsonProperty("pageIndex")]
     public int PageIndex { get; set; }

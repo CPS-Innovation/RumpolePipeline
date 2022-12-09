@@ -47,7 +47,7 @@ namespace Common.Services.SearchService
 
             _logger.LogMethodFlow(correlationId, nameof(SearchForDocumentsAsync), $"{searchLines.Count} documents found in the index");
 
-            documentsFound.AddRange(searchLines.Select(line => new DocumentInformation {CaseId = line.CaseId, DocumentId = line.DocumentId, VersionId = line.VersionId, BlobName = line.BlobName }));
+            documentsFound.AddRange(searchLines.Select(line => new DocumentInformation {CaseId = line.CaseId, DocumentId = line.DocumentId, VersionId = line.VersionId, BlobName = line.FileName }));
 
             _logger.LogMethodExit(correlationId, nameof(SearchForDocumentsAsync), string.Empty);
             return documentsFound;
