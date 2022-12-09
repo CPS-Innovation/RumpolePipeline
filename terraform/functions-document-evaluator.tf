@@ -103,7 +103,7 @@ data "azurerm_function_app_host_keys" "ak_document_evaluator" {
   depends_on = [azurerm_function_app.fa_document_evaluator]
 }
 
-module "azurerm_app_pre_authorized" {
+module "azurerm_app_pre_authorized_fa_document_evaluator" {
   source                = "./modules/terraform-azurerm-azure_ad_application_preauthorized"
 
   # application object id of authorized application
