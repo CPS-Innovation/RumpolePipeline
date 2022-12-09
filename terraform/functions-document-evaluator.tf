@@ -131,3 +131,9 @@ module "azurerm_service_principal_fa_document_evaluator" {
 resource "azuread_service_principal_password" "sp_fa_document_evaluator_pw" {
   service_principal_id = module.azurerm_service_principal_fa_document_evaluator.object_id
 }
+
+resource "azuread_service_principal_delegated_permission_grant" "rumpole_document_evaluator_grant_access_to_msgraph" {
+  service_principal_object_id          = module.azurerm_service_principal_fa_document_evaluator.object_id
+  resource_service_principal_object_id = azuread_service_principal.msgraph.object_id
+  claim_values                         = ["User.Read"]
+}
