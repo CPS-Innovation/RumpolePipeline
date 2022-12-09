@@ -157,7 +157,7 @@ resource "azuread_service_principal_delegated_permission_grant" "rumpole_coordin
   claim_values                         = ["user_impersonation"]
 }
 
-resource "azuread_service_principal_delegated_permission_grant" "rumpole_coordinator_grant_access" {
+resource "azuread_service_principal_delegated_permission_grant" "rumpole_document_evaluator_grant_access" {
   service_principal_object_id          = module.azurerm_service_principal_fa_coordinator.object_id
   resource_service_principal_object_id = module.azurerm_service_principal_fa_document_evaluator.object_id
   claim_values                         = ["user_impersonation"]
