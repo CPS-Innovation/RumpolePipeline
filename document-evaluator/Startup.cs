@@ -40,7 +40,8 @@ namespace document_evaluator
             builder.Services.AddSingleton<IConfiguration>(configuration);
             
             builder.Services.AddTransient<IValidatorWrapper<EvaluateExistingDocumentsRequest>, ValidatorWrapper<EvaluateExistingDocumentsRequest>>();
-            builder.Services.AddTransient<IValidatorWrapper<EvaluateDocumentRequest>, ValidatorWrapper<EvaluateDocumentRequest>>();
+            builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByBlobNameRequest>, ValidatorWrapper<UpdateSearchIndexByBlobNameRequest>>();
+            builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByVersionRequest>, ValidatorWrapper<UpdateSearchIndexByVersionRequest>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IAuthorizationValidator, AuthorizationValidator>();
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();

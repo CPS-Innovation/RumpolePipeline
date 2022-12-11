@@ -8,6 +8,7 @@ using Common.Logging;
 using Common.Services.SearchIndexService.Contracts;
 using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace document_evaluator.Functions;
@@ -16,19 +17,22 @@ public class UpdateSearchIndexFromQueue
 {
     private readonly IJsonConvertWrapper _jsonConvertWrapper;
     private readonly IValidatorWrapper<UpdateSearchIndexByVersionRequest> _validatorWrapper;
+    private readonly IConfiguration _configuration;
     private readonly ISearchIndexService _searchIndexService;
 
-    public UpdateSearchIndexFromQueue(IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<UpdateSearchIndexByVersionRequest> validatorWrapper, ISearchIndexService searchIndexService)
+    public UpdateSearchIndexFromQueue(IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<UpdateSearchIndexByVersionRequest> validatorWrapper, 
+        IConfiguration configuration, ISearchIndexService searchIndexService)
     {
         _jsonConvertWrapper = jsonConvertWrapper;
         _validatorWrapper = validatorWrapper;
+        _configuration = configuration;
         _searchIndexService = searchIndexService;
     }
     
     [FunctionName("update-search-index-by-version")]
     public async Task RunAsync([QueueTrigger("update-search-index-by-version")] QueueMessage message, ILogger log)
     {
-        log.LogInformation("Received message from {QueueName}, content={Content}", ConfigKeys.SharedKeys.UpdateSearchIndexByVersionQueueName, message.MessageText);
+        log.LogInformation("Received message from {QueueName}, content={Content}", _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByVersionQueueName], message.MessageText);
         
         var request = _jsonConvertWrapper.DeserializeObject<UpdateSearchIndexByVersionRequest>(message.MessageText);
         var results = _validatorWrapper.Validate(request);

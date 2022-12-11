@@ -9,6 +9,7 @@ using Common.Wrappers;
 using coordinator.Domain;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace coordinator.Functions.ActivityFunctions
@@ -17,12 +18,15 @@ namespace coordinator.Functions.ActivityFunctions
     {
         private readonly ILogger<QueueUpdateSearchIndexByVersion> _log;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
+        private readonly IConfiguration _configuration;
         private readonly IStorageQueueService _storageQueueService;
 
-        public QueueUpdateSearchIndexByVersion(ILogger<QueueUpdateSearchIndexByVersion> logger, IJsonConvertWrapper jsonConvertWrapper, IStorageQueueService storageQueueService)
+        public QueueUpdateSearchIndexByVersion(ILogger<QueueUpdateSearchIndexByVersion> logger, IJsonConvertWrapper jsonConvertWrapper, 
+            IConfiguration configuration, IStorageQueueService storageQueueService)
         {
            _log = logger;
            _jsonConvertWrapper = jsonConvertWrapper;
+           _configuration = configuration;
            _storageQueueService = storageQueueService;
         }
 
@@ -46,7 +50,7 @@ namespace coordinator.Functions.ActivityFunctions
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
             await _storageQueueService.AddNewMessage(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByVersionRequest(payload.CaseId, 
-                     payload.DocumentId, payload.VersionId, payload.CorrelationId)), ConfigKeys.SharedKeys.UpdateSearchIndexByVersionQueueName);
+                     payload.DocumentId, payload.VersionId, payload.CorrelationId)), _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByVersionQueueName]);
             
             _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
         }

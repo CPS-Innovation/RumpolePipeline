@@ -10,6 +10,7 @@ using Common.Wrappers;
 using coordinator.Domain;
 using coordinator.Functions.ActivityFunctions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -20,6 +21,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
     {
         private readonly QueueExistingDocumentsEvaluationPayload _payload;
         private readonly string _content;
+        private const string QueueName = "evaluate-existing-documents";
 
         private readonly Mock<IStorageQueueService> _mockStorageQueueService;
         private readonly Mock<IDurableActivityContext> _mockDurableActivityContext;
@@ -34,6 +36,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
 
             _mockStorageQueueService = new Mock<IStorageQueueService>();
             var mockJsonConverterWrapper = new Mock<IJsonConvertWrapper>();
+            var mockConfiguration = new Mock<IConfiguration>();
             _mockDurableActivityContext = new Mock<IDurableActivityContext>();
 
             _mockDurableActivityContext.Setup(context => context.GetInput<QueueExistingDocumentsEvaluationPayload>())
@@ -41,11 +44,12 @@ namespace coordinator.tests.Functions.ActivityFunctions
 
             mockJsonConverterWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<EvaluateExistingDocumentsRequest>(r => 
                     r.CaseId == _payload.CaseId && r.CorrelationId == _payload.CorrelationId))).Returns(_content);
+            mockConfiguration.Setup(x => x[ConfigKeys.SharedKeys.EvaluateExistingDocumentsQueueName]).Returns(QueueName);
             _mockStorageQueueService.Setup(client => client.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
 
             var mockLogger = new Mock<ILogger<QueueExistingDocumentsEvaluation>>();
-            _evaluateExistingDocuments = new QueueExistingDocumentsEvaluation(mockLogger.Object, mockJsonConverterWrapper.Object, _mockStorageQueueService.Object);
+            _evaluateExistingDocuments = new QueueExistingDocumentsEvaluation(mockLogger.Object, mockJsonConverterWrapper.Object, mockConfiguration.Object, _mockStorageQueueService.Object);
         }
 
         [Fact]
@@ -115,7 +119,7 @@ namespace coordinator.tests.Functions.ActivityFunctions
         {
             await _evaluateExistingDocuments.Run(_mockDurableActivityContext.Object);
 
-            _mockStorageQueueService.Verify(x => x.AddNewMessage(_content, ConfigKeys.SharedKeys.EvaluateExistingDocumentsQueueName), Times.Exactly(1));
+            _mockStorageQueueService.Verify(x => x.AddNewMessage(_content, QueueName), Times.Exactly(1));
         }
     }
 }

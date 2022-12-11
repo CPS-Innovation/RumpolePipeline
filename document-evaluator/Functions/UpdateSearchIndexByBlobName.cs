@@ -8,6 +8,7 @@ using Common.Logging;
 using Common.Services.SearchIndexService.Contracts;
 using Common.Wrappers;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace document_evaluator.Functions;
@@ -16,19 +17,22 @@ public class UpdateSearchIndexByBlobName
 {
     private readonly IJsonConvertWrapper _jsonConvertWrapper;
     private readonly IValidatorWrapper<UpdateSearchIndexByBlobNameRequest> _validatorWrapper;
+    private readonly IConfiguration _configuration;
     private readonly ISearchIndexService _searchIndexService;
 
-    public UpdateSearchIndexByBlobName(IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<UpdateSearchIndexByBlobNameRequest> validatorWrapper, ISearchIndexService searchIndexService)
+    public UpdateSearchIndexByBlobName(IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<UpdateSearchIndexByBlobNameRequest> validatorWrapper, 
+        IConfiguration configuration, ISearchIndexService searchIndexService)
     {
         _jsonConvertWrapper = jsonConvertWrapper;
         _validatorWrapper = validatorWrapper;
+        _configuration = configuration;
         _searchIndexService = searchIndexService;
     }
     
     [FunctionName("update-search-index-by-blob-name")]
     public async Task RunAsync([QueueTrigger("update-search-index-by-blob-name")] QueueMessage message, ILogger log)
     {
-        log.LogInformation("Received message from {QueueName}, content={Content}", ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName, message.MessageText);
+        log.LogInformation("Received message from {QueueName}, content={Content}", _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName], message.MessageText);
         
         var request = _jsonConvertWrapper.DeserializeObject<UpdateSearchIndexByBlobNameRequest>(message.MessageText);
         var results = _validatorWrapper.Validate(request);

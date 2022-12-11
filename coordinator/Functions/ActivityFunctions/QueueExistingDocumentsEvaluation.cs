@@ -10,6 +10,7 @@ using Common.Wrappers;
 using coordinator.Domain;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace coordinator.Functions.ActivityFunctions
@@ -18,12 +19,15 @@ namespace coordinator.Functions.ActivityFunctions
     {
         private readonly ILogger<QueueExistingDocumentsEvaluation> _log;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
+        private readonly IConfiguration _configuration;
         private readonly IStorageQueueService _storageQueueService;
-
-        public QueueExistingDocumentsEvaluation(ILogger<QueueExistingDocumentsEvaluation> logger, IJsonConvertWrapper jsonConvertWrapper, IStorageQueueService storageQueueService)
+        
+        public QueueExistingDocumentsEvaluation(ILogger<QueueExistingDocumentsEvaluation> logger, IJsonConvertWrapper jsonConvertWrapper, 
+            IConfiguration configuration, IStorageQueueService storageQueueService)
         {
            _log = logger;
            _jsonConvertWrapper = jsonConvertWrapper;
+           _configuration = configuration;
            _storageQueueService = storageQueueService;
         }
 
@@ -49,7 +53,7 @@ namespace coordinator.Functions.ActivityFunctions
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
             await _storageQueueService.AddNewMessage(_jsonConvertWrapper.SerializeObject(new EvaluateExistingDocumentsRequest(payload.CaseId, payload.CaseDocuments, 
-                payload.CorrelationId)), ConfigKeys.SharedKeys.EvaluateExistingDocumentsQueueName);
+                payload.CorrelationId)), _configuration[ConfigKeys.SharedKeys.EvaluateExistingDocumentsQueueName]);
             
             _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
         }

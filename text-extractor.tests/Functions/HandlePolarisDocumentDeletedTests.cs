@@ -8,6 +8,7 @@ using Common.Wrappers;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using text_extractor.Functions;
@@ -18,6 +19,7 @@ namespace text_extractor.tests.Functions;
 public class HandlePolarisDocumentDeletedTests
 {
     private readonly Fixture _fixture;
+    private const string QueueName = "update-search-index-by-blob-name";
     private readonly Mock<IStorageQueueService> _mockStorageQueueService;
 
     private readonly HandlePolarisDocumentDeleted _handlePolarisDocumentDeleted;
@@ -29,7 +31,11 @@ public class HandlePolarisDocumentDeletedTests
 
         var logger = new Mock<ILogger<HandlePolarisDocumentDeleted>>();
         var mockJsonConverterWrapper = new Mock<IJsonConvertWrapper>();
-        _handlePolarisDocumentDeleted = new HandlePolarisDocumentDeleted(logger.Object, mockJsonConverterWrapper.Object, _mockStorageQueueService.Object);
+        var mockConfiguration = new Mock<IConfiguration>();
+        
+        mockConfiguration.Setup(x => x[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName]).Returns(QueueName);
+        
+        _handlePolarisDocumentDeleted = new HandlePolarisDocumentDeleted(logger.Object, mockJsonConverterWrapper.Object, mockConfiguration.Object, _mockStorageQueueService.Object);
     }
 
     [Fact]
@@ -43,7 +49,7 @@ public class HandlePolarisDocumentDeletedTests
         using (new AssertionScope())
         {
             await act.Should().ThrowAsync<ArgumentNullException>();
-            _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName), 
+            _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
                 Times.Never);
         }
     }
@@ -55,7 +61,7 @@ public class HandlePolarisDocumentDeletedTests
 
         await _handlePolarisDocumentDeleted.RunAsync(evt, new ExecutionContext());
         
-        _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName), 
+        _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
             Times.Never);
     }
     
@@ -74,7 +80,7 @@ public class HandlePolarisDocumentDeletedTests
         using (new AssertionScope())
         {
             await act.Should().ThrowAsync<NullReferenceException>();
-            _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName), 
+            _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
                 Times.Never);
         }
     }
@@ -103,7 +109,7 @@ public class HandlePolarisDocumentDeletedTests
         
         await _handlePolarisDocumentDeleted.RunAsync(evt, new ExecutionContext());
         
-        _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName), 
+        _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
             Times.Once);
     }
 }

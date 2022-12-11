@@ -41,9 +41,6 @@ public class StorageQueueService : IStorageQueueService
     {
         var credential = new DefaultAzureCredential();
         
-        
-        
-        
         return new QueueClient(new Uri(string.Format(_connectionString, queueName)), credential);
     }
     
