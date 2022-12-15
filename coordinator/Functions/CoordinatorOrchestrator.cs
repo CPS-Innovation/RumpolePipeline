@@ -104,7 +104,7 @@ namespace coordinator.Functions
             await RegisterDocuments(tracker, loggingName, log, payload, documents);
             
             //evaluate incoming documents for items removed in CMS but previously processed by Polaris, handle separately to running pipeline
-            await EvaluateIncomingDocuments(context, loggingName, log, payload, documents);
+            //await EvaluateIncomingDocuments(context, loggingName, log, payload, documents);
 
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
