@@ -8,14 +8,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AutoFixture;
-using Common.Constants;
 using Common.Domain.Exceptions;
 using Common.Domain.Requests;
 using Common.Domain.Responses;
 using Common.Exceptions.Contracts;
 using Common.Handlers;
 using Common.Services.BlobStorageService.Contracts;
-using Common.Services.DocumentEvaluationService.Contracts;
 using Common.Services.DocumentExtractionService.Contracts;
 using Common.Wrappers;
 using FluentAssertions;
@@ -74,7 +72,6 @@ namespace pdf_generator.tests.Functions
 			_mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
 			_mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
 			_mockValidatorWrapper = new Mock<IValidatorWrapper<GeneratePdfRequest>>();
-			var mockDocumentEvaluationService = new Mock<IDocumentEvaluationService>();
 			_mockDocumentExtractionService = new Mock<IDdeiDocumentExtractionService>();
 			_mockBlobStorageService = new Mock<IBlobStorageService>();
 			var mockPdfOrchestratorService = new Mock<IPdfOrchestratorService>();
@@ -89,8 +86,6 @@ namespace pdf_generator.tests.Functions
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfResponse>(r => r.BlobName == _blobName)))
 				.Returns(_serializedGeneratePdfResponse);
 			_mockValidatorWrapper.Setup(wrapper => wrapper.Validate(_generatePdfRequest)).Returns(new List<ValidationResult>());
-			mockDocumentEvaluationService.Setup(service => service.EvaluateDocumentAsync(It.IsAny<EvaluateDocumentRequest>(), It.IsAny<Guid>()))
-				.ReturnsAsync(new EvaluateDocumentResponse(_generatePdfRequest.CaseId, _generatePdfRequest.DocumentId, _generatePdfRequest.VersionId, false, DocumentEvaluationResult.AcquireDocument));
 			_mockDocumentExtractionService.Setup(service => service.GetDocumentAsync(_generatePdfRequest.CaseUrn, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentCategory, _generatePdfRequest.DocumentId, It.IsAny<string>(), It.IsAny<Guid>()))
 				.ReturnsAsync(_documentStream);
 			mockPdfOrchestratorService.Setup(service => service.ReadToPdfStream(_documentStream, FileType.DOC, _generatePdfRequest.DocumentId, _correlationId))
@@ -100,7 +95,6 @@ namespace pdf_generator.tests.Functions
 								_mockAuthorizationValidator.Object,
 								_mockJsonConvertWrapper.Object,
 								_mockValidatorWrapper.Object,
-								mockDocumentEvaluationService.Object,
 								_mockDocumentExtractionService.Object,
 								_mockBlobStorageService.Object,
 								mockPdfOrchestratorService.Object,

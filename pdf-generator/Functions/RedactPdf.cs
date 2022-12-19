@@ -63,7 +63,7 @@ namespace pdf_generator.Functions
                 _logger.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
                 var authValidation =
-                    await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId, PipelineScopes.RedactPdf, PipelineRoles.RedactPdf);
+                    await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId, PipelineScopes.RedactPdf, PipelineRoles.EmptyRole);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
 

@@ -5,6 +5,12 @@ namespace coordinator.Domain.Tracker
 {
     public class TrackerDocument
     {
+        public TrackerDocument(string documentId, long versionId)
+        {
+            DocumentId = documentId;
+            VersionId = versionId;
+        }
+        
         [JsonProperty("documentId")]
         public string DocumentId { get; set; }
         

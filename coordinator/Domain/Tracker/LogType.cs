@@ -14,11 +14,6 @@
         OcrAndIndexFailure,
         Completed,
         Failed, 
-        DocumentEvaluated,
-        UnexpectedDocumentEvaluationFailure, 
-        UnableToEvaluateDocument,
-        DocumentRemovedFromSearchIndex,
-        IndexRemovalFailure,
-        UnexpectedExistingDocumentsEvaluationFailure
+        ProcessedEvaluatedDocuments
     }
 }

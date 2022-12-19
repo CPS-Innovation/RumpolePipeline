@@ -18,7 +18,7 @@ namespace Common.Domain.Requests
         [Required]
         public string DocumentId { get; set; }
         
-        [Required] 
+        [Required]
         public long VersionId { get; set; }
         
         [Required]

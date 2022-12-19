@@ -22,17 +22,17 @@ namespace coordinator.Factories
         private readonly IConfiguration _configuration;
         private readonly ILogger<GeneratePdfHttpRequestFactory> _logger;
 
-        public GeneratePdfHttpRequestFactory(IIdentityClientAdapter identityClientAdapter,
-            IJsonConvertWrapper jsonConvertWrapper,
-            IConfiguration configuration, ILogger<GeneratePdfHttpRequestFactory> logger)
+        public GeneratePdfHttpRequestFactory(IIdentityClientAdapter identityClientAdapter, IJsonConvertWrapper jsonConvertWrapper, IConfiguration configuration, 
+            ILogger<GeneratePdfHttpRequestFactory> logger)
 		{
             _identityClientAdapter = identityClientAdapter ?? throw new ArgumentNullException(nameof(identityClientAdapter));
             _jsonConvertWrapper = jsonConvertWrapper ?? throw new ArgumentNullException(nameof(jsonConvertWrapper));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<DurableHttpRequest> Create(string caseUrn, long caseId, string documentCategory, string documentId, string fileName, long versionId, string upstreamToken, Guid correlationId)
+        public async Task<DurableHttpRequest> Create(string caseUrn, long caseId, string documentCategory, string documentId, string fileName, long versionId, 
+            string upstreamToken, Guid correlationId)
         {
             _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseUrn: {caseUrn}, CaseId: {caseId}, DocumentId: {documentId}, VersionId: {versionId}, " +
                                                                   $"FileName: {fileName}");

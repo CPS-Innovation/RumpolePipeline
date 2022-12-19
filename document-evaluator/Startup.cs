@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Common.Constants;
+using Common.Domain.QueueItems;
 using Common.Domain.Requests;
 using Common.Exceptions.Contracts;
 using Common.Factories;
@@ -10,10 +11,6 @@ using Common.Factories.Contracts;
 using Common.Handlers;
 using Common.Services.BlobStorageService;
 using Common.Services.BlobStorageService.Contracts;
-using Common.Services.DocumentEvaluationService;
-using Common.Services.DocumentEvaluationService.Contracts;
-using Common.Services.SearchService;
-using Common.Services.SearchService.Contracts;
 using Common.Services.StorageQueueService;
 using Common.Services.StorageQueueService.Contracts;
 using Common.Wrappers;
@@ -39,9 +36,10 @@ namespace document_evaluator
             
             builder.Services.AddSingleton<IConfiguration>(configuration);
             
-            builder.Services.AddTransient<IValidatorWrapper<EvaluateExistingDocumentsRequest>, ValidatorWrapper<EvaluateExistingDocumentsRequest>>();
-            builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByBlobNameRequest>, ValidatorWrapper<UpdateSearchIndexByBlobNameRequest>>();
-            builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByVersionRequest>, ValidatorWrapper<UpdateSearchIndexByVersionRequest>>();
+            builder.Services.AddTransient<IValidatorWrapper<ProcessEvaluateDocumentsRequest>, ValidatorWrapper<ProcessEvaluateDocumentsRequest>>();
+            builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByBlobNameQueueItem>, ValidatorWrapper<UpdateSearchIndexByBlobNameQueueItem>>();
+            builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByVersionQueueItem>, ValidatorWrapper<UpdateSearchIndexByVersionQueueItem>>();
+            builder.Services.AddTransient<IValidatorWrapper<UpdateBlobStorageQueueItem>, ValidatorWrapper<UpdateBlobStorageQueueItem>>();
             builder.Services.AddTransient<IJsonConvertWrapper, JsonConvertWrapper>();
             builder.Services.AddTransient<IAuthorizationValidator, AuthorizationValidator>();
             builder.Services.AddTransient<IExceptionHandler, ExceptionHandler>();
@@ -62,10 +60,7 @@ namespace document_evaluator
             builder.Services.AddTransient<IHttpRequestFactory, HttpRequestFactory>();
 
             builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
-            builder.Services.AddTransient<ISearchServiceProcessor, SearchServiceProcessor>();
-            builder.Services.AddTransient<ISearchService, SearchService>();
-            builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
-            builder.Services.AddTransient<IStorageQueueService>(_ => new StorageQueueService(configuration[ConfigKeys.SharedKeys.UpdateSearchIndexQueueUrl]));
+            builder.Services.AddTransient<IStorageQueueService>(_ => new StorageQueueService(configuration[ConfigKeys.SharedKeys.DocumentEvaluatorQueueUrl]));
         }
     }
 }

@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using Azure.Storage.Queues.Models;
 using Common.Constants;
-using Common.Domain.Requests;
+using Common.Domain.QueueItems;
 using Common.Logging;
 using Common.Services.SearchIndexService.Contracts;
 using Common.Wrappers;
@@ -16,11 +16,11 @@ namespace document_evaluator.Functions;
 public class UpdateSearchIndexFromQueue
 {
     private readonly IJsonConvertWrapper _jsonConvertWrapper;
-    private readonly IValidatorWrapper<UpdateSearchIndexByVersionRequest> _validatorWrapper;
+    private readonly IValidatorWrapper<UpdateSearchIndexByVersionQueueItem> _validatorWrapper;
     private readonly IConfiguration _configuration;
     private readonly ISearchIndexService _searchIndexService;
 
-    public UpdateSearchIndexFromQueue(IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<UpdateSearchIndexByVersionRequest> validatorWrapper, 
+    public UpdateSearchIndexFromQueue(IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<UpdateSearchIndexByVersionQueueItem> validatorWrapper, 
         IConfiguration configuration, ISearchIndexService searchIndexService)
     {
         _jsonConvertWrapper = jsonConvertWrapper;
@@ -34,7 +34,7 @@ public class UpdateSearchIndexFromQueue
     {
         log.LogInformation("Received message from {QueueName}, content={Content}", _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByVersionQueueName], message.MessageText);
         
-        var request = _jsonConvertWrapper.DeserializeObject<UpdateSearchIndexByVersionRequest>(message.MessageText);
+        var request = _jsonConvertWrapper.DeserializeObject<UpdateSearchIndexByVersionQueueItem>(message.MessageText);
         var results = _validatorWrapper.Validate(request);
         if (results.Any())
             throw new Exception(string.Join(Environment.NewLine, results));

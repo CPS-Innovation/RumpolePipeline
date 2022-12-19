@@ -27,6 +27,9 @@ namespace coordinator.tests.Functions
     public class CoordinatorOrchestratorTests
     {
         private readonly CoordinatorOrchestrationPayload _payload;
+        private readonly string _caseUrn;
+        private readonly long _caseId;
+        private readonly Guid _correlationId;
         private readonly string _upstreamToken;
         private readonly CaseDocument[] _caseDocuments;
         private readonly string _transactionId;
@@ -42,6 +45,10 @@ namespace coordinator.tests.Functions
             var fixture = new Fixture();
             var accessToken = fixture.Create<string>();
             _upstreamToken = fixture.Create<string>();
+            _caseUrn = fixture.Create<string>();
+            _caseId = fixture.Create<long>();
+            _correlationId = fixture.Create<Guid>();
+            var documentEvaluationActivityPayload = new DocumentEvaluationActivityPayload(_caseUrn, _caseId, _correlationId);
             fixture.Create<Guid>();
             var durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk"));
             _payload = fixture.Build<CoordinatorOrchestrationPayload>()
@@ -63,6 +70,9 @@ namespace coordinator.tests.Functions
             mockConfiguration.Setup(config => config[ConfigKeys.CoordinatorKeys.CoordinatorOrchestratorTimeoutSecs]).Returns("300");
             
             _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
+            _mockTracker.Setup(tracker => tracker.IsStale(false)).ReturnsAsync(true); //default, marked as Stale to perform a new run
+            _mockTracker.Setup(tracker => tracker.RegisterDocumentIds(It.IsAny<IEnumerable<Tuple<string, long>>>(), 
+                It.IsAny<string>(), It.IsAny<long>(), It.IsAny<Guid>())).ReturnsAsync(documentEvaluationActivityPayload);
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CoordinatorOrchestrationPayload>())
                 .Returns(_payload);
@@ -112,14 +122,24 @@ namespace coordinator.tests.Functions
         }
 
         [Fact]
-        public async Task Run_Tracker_InitialisesWheTrackerIsAlreadyProcessedAndForceRefreshIsTrue()
+        public async Task Run_Tracker_DoesNotInitialiseTheTrackerWhenIsAlreadyProcessed()
         {
             _mockTracker.Setup(tracker => tracker.IsAlreadyProcessed()).ReturnsAsync(true);
-            _payload.ForceRefresh = true;
-
+            
             await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            _mockTracker.Verify(tracker => tracker.Initialise(_transactionId));
+            _mockTracker.Verify(tracker => tracker.Initialise(_transactionId), Times.Never);
+        }
+        
+        [Fact]
+        public async Task Run_Tracker_InitialisesTheTrackerWhenIsAlreadyProcessed_ButForceRefresh_IsTrue()
+        {
+            _mockTracker.Setup(tracker => tracker.IsAlreadyProcessed()).ReturnsAsync(true);
+            _mockTracker.Setup(tracker => tracker.IsStale(true)).ReturnsAsync(true); //default, marked as Stale to perform a new run
+            
+            await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+
+            _mockTracker.Verify(tracker => tracker.Initialise(_transactionId), Times.Never);
         }
 
         [Fact]
@@ -153,15 +173,6 @@ namespace coordinator.tests.Functions
             documents.Should().BeEmpty();
         }
 
-
-        [Fact]
-        public async Task Run_Tracker_RegistersDocumentIds()
-        {
-            await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
-
-            var documentIds = _caseDocuments.Select(c => new Tuple<string, long>(c.DocumentId, c.VersionId)).ToList();
-            _mockTracker.Verify(tracker => tracker.RegisterDocumentIds(documentIds));
-        }
 
         [Fact]
         public async Task Run_CallsSubOrchestratorForEachDocumentId()

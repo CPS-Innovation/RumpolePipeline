@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Azure.Messaging.EventGrid;
 using Azure.Messaging.EventGrid.SystemEvents;
 using Common.Constants;
-using Common.Domain.Requests;
+using Common.Domain.QueueItems;
 using Common.Logging;
 using Common.Services.StorageQueueService.Contracts;
 using Common.Wrappers;
@@ -17,14 +17,14 @@ using Microsoft.Extensions.Logging;
 
 namespace text_extractor.Functions;
 
-public class HandlePolarisDocumentDeleted
+public class HandleDocumentDeletedEvent
 {
-    private readonly ILogger<HandlePolarisDocumentDeleted> _logger;
+    private readonly ILogger<HandleDocumentDeletedEvent> _logger;
     private readonly IJsonConvertWrapper _jsonConvertWrapper;
     private readonly IConfiguration _configuration;
     private readonly IStorageQueueService _storageQueueService;
     
-    public HandlePolarisDocumentDeleted(ILogger<HandlePolarisDocumentDeleted> logger, IJsonConvertWrapper jsonConvertWrapper, 
+    public HandleDocumentDeletedEvent(ILogger<HandleDocumentDeletedEvent> logger, IJsonConvertWrapper jsonConvertWrapper, 
         IConfiguration configuration, IStorageQueueService storageQueueService)
     {
         _logger = logger;
@@ -69,7 +69,7 @@ public class HandlePolarisDocumentDeleted
                 var caseId = long.Parse(blobDetails[2]);
                 var blobName = blobDetails[4];
                 
-                await _storageQueueService.AddNewMessage(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByBlobNameRequest(caseId, 
+                await _storageQueueService.AddNewMessage(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByBlobNameQueueItem(caseId, 
                     blobName, correlationId)), _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName]);
                 
                 var searchIndexUpdated = $"The search index update was queued and should remove any joint references to caseId: {caseId} and blobName: '{blobName}'";

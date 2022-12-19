@@ -28,22 +28,16 @@
 
     public static class PipelineRoles
     {
-        public const string GeneratePdf = "";
-        public const string RedactPdf = "";
-        public const string EvaluateDocument = "";
-        public const string EvaluateExistingDocuments = "";
+        public const string EmptyRole = "";
         public const string ExtractText = "application.extracttext";
-        public const string UpdateSearchIndex = "";
     }
 
     public static class PipelineScopes
     {
         public const string GeneratePdf = "user_impersonation";
         public const string RedactPdf = "user_impersonation";
-        public const string EvaluateDocument = "user_impersonation";
-        public const string EvaluateExistingDocuments = "user_impersonation";
-        public const string ExtractText = "";
-        public const string UpdateSearchIndex = "";
+        public const string ProcessEvaluatedDocuments = "user_impersonation";
+        public const string EmptyScope = "";
     }
     
     public static class DocumentTags
@@ -74,6 +68,8 @@
             public const string PdfGeneratorUrl = "PdfGeneratorUrl";
             public const string TextExtractorScope = "TextExtractorScope";
             public const string TextExtractorUrl = "TextExtractorUrl";
+            public const string DocumentEvaluatorScope = "DocumentEvaluatorScope";
+            public const string DocumentEvaluatorUrl = "DocumentEvaluatorUrl";
         }
 
         public static class TextExtractorKeys
@@ -96,8 +92,8 @@
             public const string DocumentsRepositoryBaseUrl = "DocumentsRepositoryBaseUrl";
             public const string GetDocumentUrl = "GetDocumentUrl";
             public const string ListDocumentsUrl = "ListDocumentsUrl";
-            public const string UpdateSearchIndexQueueUrl = "UpdateSearchIndexQueueUrl";
-            public const string EvaluateExistingDocumentsQueueName = "EvaluateExistingDocumentsQueueName";
+            public const string DocumentEvaluatorQueueUrl = "DocumentEvaluatorQueueUrl";
+            public const string UpdateBlobStorageQueueName = "UpdateBlobStorageQueueName";
             public const string UpdateSearchIndexByVersionQueueName = "UpdateSearchIndexByVersionQueueName";
             public const string UpdateSearchIndexByBlobNameQueueName = "UpdateSearchIndexByVersionQueueName";
         }

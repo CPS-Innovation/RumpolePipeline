@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Common.Constants;
+using Common.Domain.DocumentEvaluation;
 using Common.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -31,26 +32,82 @@ namespace coordinator.Domain.Tracker
 
         [JsonProperty("logs")]
         public List<Log> Logs { get; set; }
+        
+        [JsonProperty("processingCompleted")]
+        public DateTime? ProcessingCompleted { get; set; }
 
         public Task Initialise(string transactionId)
         {
             TransactionId = transactionId;
-            Documents = new List<TrackerDocument>();
+            
+            Documents ??= new List<TrackerDocument>(); //preserve last run
+            foreach (var document in Documents) //but reset any document status values
+                document.Status = DocumentStatus.None;
+            
             Status = TrackerStatus.Running;
             Logs = new List<Log>();
+            ProcessingCompleted = null; //reset the processing date
 
             Log(LogType.Initialised);
 
             return Task.CompletedTask;
         }
 
-        public Task RegisterDocumentIds(IEnumerable<Tuple<string, long>> documentIds)
+        public Task<DocumentEvaluationActivityPayload> RegisterDocumentIds(IEnumerable<Tuple<string, long>> documentIds, string caseUrn, long caseId, Guid correlationId)
         {
-            Documents = documentIds
-                .Select(item => new TrackerDocument { DocumentId = item.Item1, VersionId = item.Item2})
-                .ToList();
+            var incomingDocuments = documentIds.ToList();
+            var evaluationResults = new DocumentEvaluationActivityPayload(caseUrn, caseId, correlationId);
+            if (Documents.Count == 0)
+            {
+                Documents = incomingDocuments
+                    .Select(item => new TrackerDocument(item.Item1, item.Item2))
+                    .ToList();
+                Log(LogType.RegisteredDocumentIds);
+            }
+            else
+            {
+                evaluationResults.DocumentsToRemove.AddRange(from trackedDocument in Documents 
+                    let isStillValid 
+                        = incomingDocuments.FirstOrDefault(x => x.Item1 == trackedDocument.DocumentId) 
+                    where isStillValid == null select new DocumentToRemove(trackedDocument.DocumentId, trackedDocument.VersionId));
+                
+                evaluationResults.DocumentsToUpdate.AddRange(from trackedDocument in Documents
+                    let isOutOfDate 
+                        = incomingDocuments.FirstOrDefault(x => x.Item1 == trackedDocument.DocumentId && x.Item2 != trackedDocument.VersionId)
+                    where isOutOfDate != null select new DocumentToUpdate(trackedDocument.DocumentId, trackedDocument.VersionId, trackedDocument.PdfBlobName));
+            }
 
-            Log(LogType.RegisteredDocumentIds);
+            if (evaluationResults.DocumentsToRemove.Count == 0 && evaluationResults.DocumentsToUpdate.Count == 0) return Task.FromResult(evaluationResults);
+            
+            //remove any documents that are no longer present in the list retrieved from CMS from the tracker so they are no reprocessed
+            foreach (var idx in evaluationResults.DocumentsToRemove
+                         .Select(invalidDocument => 
+                             Documents.FindLastIndex(x => x.DocumentId == invalidDocument.DocumentId && x.VersionId == invalidDocument.VersionId)))
+            {
+                Documents.RemoveAt(idx);
+            }
+
+            //update any document in the tracker that has had its version updated to preserve its most recent processed state
+            foreach (var item in evaluationResults.DocumentsToUpdate)
+            {
+                var toUpdate = Documents.FirstOrDefault(x => x.DocumentId == item.DocumentId);
+                if (toUpdate != null)
+                    toUpdate.VersionId = item.VersionId;
+            }
+            
+            //now add any new incoming documents not already tracked
+            foreach (var incomingDocument in incomingDocuments
+                         .Where(incomingDocument => !Documents.Exists(x => x.DocumentId == incomingDocument.Item1)))
+            {
+                Documents.Add(new TrackerDocument(incomingDocument.Item1, incomingDocument.Item2));
+            }
+
+            return Task.FromResult(evaluationResults);
+        }
+
+        public Task ProcessEvaluatedDocuments()
+        {
+            Log(LogType.ProcessedEvaluatedDocuments);
 
             return Task.CompletedTask;
         }
@@ -111,6 +168,7 @@ namespace coordinator.Domain.Tracker
         {
             Status = TrackerStatus.NoDocumentsFoundInDDEI;
             Log(LogType.NoDocumentsFoundInDDEI);
+            ProcessingCompleted = DateTime.Now;
 
             return Task.CompletedTask;
         }
@@ -139,6 +197,7 @@ namespace coordinator.Domain.Tracker
         {
             Status = TrackerStatus.Completed;
             Log(LogType.Completed);
+            ProcessingCompleted = DateTime.Now;
 
             return Task.CompletedTask;
         }
@@ -147,6 +206,7 @@ namespace coordinator.Domain.Tracker
         {
             Status = TrackerStatus.Failed;
             Log(LogType.Failed);
+            ProcessingCompleted = DateTime.Now;
 
             return Task.CompletedTask;
         }
@@ -166,6 +226,19 @@ namespace coordinator.Domain.Tracker
         public Task<bool> IsAlreadyProcessed()
         {
             return Task.FromResult(Status is TrackerStatus.Completed or TrackerStatus.NoDocumentsFoundInDDEI);
+        }
+
+        public Task<bool> IsStale(bool forceRefresh)
+        {
+            if (forceRefresh || Status is TrackerStatus.Failed)
+                return Task.FromResult(true);
+
+            if (Status is TrackerStatus.Running)
+                return Task.FromResult(false);
+
+            return ProcessingCompleted.HasValue 
+                ? Task.FromResult(ProcessingCompleted.Value.Date != DateTime.Now.Date) 
+                : Task.FromResult(false);
         }
 
         private void Log(LogType status, string documentId = null)

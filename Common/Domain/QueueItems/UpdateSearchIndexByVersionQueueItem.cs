@@ -1,15 +1,16 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Common.Domain.Requests;
+namespace Common.Domain.QueueItems;
 
-public class EvaluateDocumentRequest
+public class UpdateSearchIndexByVersionQueueItem
 {
-    public EvaluateDocumentRequest(long caseId, string documentId, long versionId, string proposedBlobName)
+    public UpdateSearchIndexByVersionQueueItem(long caseId, string documentId, long versionId, Guid correlationId)
     {
         CaseId = caseId;
         DocumentId = documentId;
         VersionId = versionId;
-        ProposedBlobName = proposedBlobName;
+        CorrelationId = correlationId;
     }
     
     [Required]
@@ -17,10 +18,10 @@ public class EvaluateDocumentRequest
 
     [Required]
     public string DocumentId { get; set; }
-        
-    [Required] 
+    
+    [Required]
     public long VersionId { get; set; }
     
     [Required]
-    public string ProposedBlobName { get; set; }
+    public Guid CorrelationId { get; set; }
 }

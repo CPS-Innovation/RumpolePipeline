@@ -15,12 +15,8 @@ using Common.Mappers;
 using Common.Mappers.Contracts;
 using Common.Services.BlobStorageService;
 using Common.Services.BlobStorageService.Contracts;
-using Common.Services.DocumentEvaluationService;
-using Common.Services.DocumentEvaluationService.Contracts;
 using Common.Services.DocumentExtractionService;
 using Common.Services.DocumentExtractionService.Contracts;
-using Common.Services.SearchService;
-using Common.Services.SearchService.Contracts;
 using Common.Wrappers;
 using FluentValidation;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -104,9 +100,6 @@ namespace pdf_generator
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
             builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();
             builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
-            builder.Services.AddTransient<ISearchServiceProcessor, SearchServiceProcessor>();
-            builder.Services.AddTransient<ISearchService, SearchService>();
-            builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
         }
     }
 }

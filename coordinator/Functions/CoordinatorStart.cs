@@ -81,11 +81,8 @@ namespace coordinator.Functions
                 // Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled).
                 _logger.LogMethodFlow(currentCorrelationId, loggingName, "Check if an instance with the specified ID already exists or an existing one stopped running(completed/failed/terminated/cancelled");
                 var existingInstance = await orchestrationClient.GetStatusAsync(caseId);
-                if (existingInstance == null
-                    || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Completed
-                    || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Failed
-                    || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Terminated
-                    || existingInstance.RuntimeStatus == OrchestrationRuntimeStatus.Canceled)
+                if (existingInstance == null || existingInstance.RuntimeStatus is OrchestrationRuntimeStatus.Completed 
+                        or OrchestrationRuntimeStatus.Failed or OrchestrationRuntimeStatus.Terminated or OrchestrationRuntimeStatus.Canceled)
                 {
                     await orchestrationClient.StartNewAsync(
                         nameof(CoordinatorOrchestrator),

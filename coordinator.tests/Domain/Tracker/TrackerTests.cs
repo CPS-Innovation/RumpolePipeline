@@ -16,12 +16,13 @@ namespace coordinator.tests.Domain.Tracker
 {
     public class TrackerTests
     {
+        private readonly Fixture _fixture;
         private readonly string _transactionId;
         private readonly IEnumerable<Tuple<string, long>> _documentIds;
         private readonly RegisterPdfBlobNameArg _pdfBlobNameArg;
         private readonly List<TrackerDocument> _trackerDocuments;
         private readonly string _caseUrn;
-        private readonly string _caseId;
+        private readonly long _caseId;
         private readonly Guid _correlationId;
         private readonly EntityStateResponse<coordinator.Domain.Tracker.Tracker> _entityStateResponse;
 
@@ -33,18 +34,18 @@ namespace coordinator.tests.Domain.Tracker
 
         public TrackerTests()
         {
-            var fixture = new Fixture();
-            _transactionId = fixture.Create<string>();
-            _documentIds = fixture.Create<IEnumerable<Tuple<string, long>>>();
-            _correlationId = fixture.Create<Guid>();
+            _fixture = new Fixture();
+            _transactionId = _fixture.Create<string>();
+            _documentIds = _fixture.Create<IEnumerable<Tuple<string, long>>>();
+            _correlationId = _fixture.Create<Guid>();
             var documentIds = _documentIds.ToList();
-            _pdfBlobNameArg = fixture.Build<RegisterPdfBlobNameArg>()
+            _pdfBlobNameArg = _fixture.Build<RegisterPdfBlobNameArg>()
                                 .With(a => a.DocumentId, documentIds.First().Item1)
                                 .With(a => a.VersionId, documentIds.First().Item2)
                                 .Create();
-            _trackerDocuments = fixture.Create<List<TrackerDocument>>();
-            _caseUrn = fixture.Create<string>();
-            _caseId = fixture.Create<string>();
+            _trackerDocuments = _fixture.Create<List<TrackerDocument>>();
+            _caseUrn = _fixture.Create<string>();
+            _caseId = _fixture.Create<long>();
             _entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = true };
 
             _mockDurableEntityContext = new Mock<IDurableEntityContext>();
@@ -53,7 +54,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId.ToString()),
                     null, null))
                 .ReturnsAsync(_entityStateResponse);
 
@@ -77,7 +78,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterDocumentIds_RegistersDocumentIds()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_documentIds, _caseUrn, _caseId, _correlationId);
 
             _tracker.Documents.Count().Should().Be(_documentIds.Count());
 
@@ -88,7 +89,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterPdfBlobName_RegistersPdfBlobName()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_documentIds, _caseUrn, _caseId, _correlationId);
             await _tracker.RegisterPdfBlobName(_pdfBlobNameArg);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
@@ -102,7 +103,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterDocumentNotFoundInDDEI_Registers()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_documentIds, _caseUrn, _caseId, _correlationId);
             await _tracker.RegisterDocumentNotFoundInDDEI(_pdfBlobNameArg.DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
@@ -115,7 +116,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterFailedToConvertToPdf_Registers()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_documentIds, _caseUrn, _caseId, _correlationId);
             await _tracker.RegisterUnableToConvertDocumentToPdf(_pdfBlobNameArg.DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
@@ -128,7 +129,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterUnexpectedDocumentFailure_Registers()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_documentIds, _caseUrn, _caseId, _correlationId);
             await _tracker.RegisterUnexpectedPdfDocumentFailure(_pdfBlobNameArg.DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
@@ -152,7 +153,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterIndexed_RegistersIndexed()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_documentIds, _caseUrn, _caseId, _correlationId);
             await _tracker.RegisterIndexed(_documentIds.First().Item1);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
@@ -165,7 +166,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterIndexed_RegistersOcrAndIndexFailure()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_documentIds, _caseUrn, _caseId, _correlationId);
             await _tracker.RegisterOcrAndIndexFailure(_documentIds.First().Item1);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
@@ -209,9 +210,9 @@ namespace coordinator.tests.Domain.Tracker
         public async Task AllDocumentsFailed_ReturnsTrueIfAllDocumentsFailed()
         {
             _tracker.Documents = new List<TrackerDocument> {
-                new TrackerDocument { Status = DocumentStatus.NotFoundInDDEI},
-                new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
-                new TrackerDocument { Status = DocumentStatus.UnexpectedFailure}
+                new(_fixture.Create<string>(), _fixture.Create<long>()) { Status = DocumentStatus.NotFoundInDDEI},
+                new(_fixture.Create<string>(), _fixture.Create<long>()) { Status = DocumentStatus.UnableToConvertToPdf},
+                new(_fixture.Create<string>(), _fixture.Create<long>()) { Status = DocumentStatus.UnexpectedFailure}
             };
 
             var output = await _tracker.AllDocumentsFailed();
@@ -223,10 +224,10 @@ namespace coordinator.tests.Domain.Tracker
         public async Task AllDocumentsFailed_ReturnsFalseIfAllDocumentsHaveNotFailed()
         {
             _tracker.Documents = new List<TrackerDocument> {
-                new TrackerDocument { Status = DocumentStatus.NotFoundInDDEI},
-                new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
-                new TrackerDocument { Status = DocumentStatus.UnexpectedFailure},
-                new TrackerDocument { Status = DocumentStatus.PdfUploadedToBlob},
+                new(_fixture.Create<string>(), _fixture.Create<long>()) { Status = DocumentStatus.NotFoundInDDEI},
+                new(_fixture.Create<string>(), _fixture.Create<long>()) { Status = DocumentStatus.UnableToConvertToPdf},
+                new (_fixture.Create<string>(), _fixture.Create<long>()) { Status = DocumentStatus.UnexpectedFailure},
+                new(_fixture.Create<string>(), _fixture.Create<long>()) { Status = DocumentStatus.PdfUploadedToBlob},
             };
 
             var output = await _tracker.AllDocumentsFailed();
@@ -277,7 +278,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId.ToString(), _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<OkObjectResult>();
         }
@@ -287,7 +288,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response  = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response  = await _tracker.HttpStart(message, _caseUrn, _caseId.ToString(), _mockDurableEntityClient.Object, _mockLogger.Object);
 
             var okObjectResult = response as OkObjectResult;
 
@@ -300,13 +301,13 @@ namespace coordinator.tests.Domain.Tracker
             var entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = false };
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId.ToString()),
                     null, null))
                 .ReturnsAsync(entityStateResponse);
 
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId.ToString(), _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<NotFoundObjectResult>();
         }
@@ -317,12 +318,12 @@ namespace coordinator.tests.Domain.Tracker
             var entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = false };
             _mockDurableEntityClient.Setup(
                     client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                        It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                        It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId.ToString()),
                         null, null))
                 .ReturnsAsync(entityStateResponse);
 
             var message = new HttpRequestMessage();
-            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId.ToString(), _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<BadRequestObjectResult>();
         }

@@ -43,8 +43,7 @@ namespace coordinator.tests.Functions.SubOrchestrators
             _content = fixture.Create<string>();
             var durableResponse = new DurableHttpResponse(HttpStatusCode.OK, content: _content);
             _pdfResponse = fixture.Create<GeneratePdfResponse>();
-            _pdfResponse.AlreadyProcessed = false;
-
+            
             var mockLogger = new Mock<ILogger<CaseDocumentOrchestrator>>();
             _mockDurableOrchestrationContext = new Mock<IDurableOrchestrationContext>();
             _mockTracker = new Mock<ITracker>();

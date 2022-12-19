@@ -18,7 +18,6 @@ namespace Common.Domain.Requests
         public string CaseUrn { get; set; }
         
         [Required]
-        [Range(1, long.MaxValue)]
         public long CaseId { get; set; }
 
         [Required]
@@ -31,7 +30,6 @@ namespace Common.Domain.Requests
         public string FileName { get; set; }
         
         [Required]
-        [Range(1, long.MaxValue)]
         public long VersionId { get; set; }
     }
 }
