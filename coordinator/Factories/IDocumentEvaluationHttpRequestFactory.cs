@@ -8,7 +8,7 @@ namespace coordinator.Factories
 {
 	public interface IDocumentEvaluationHttpRequestFactory
 	{
-		Task<DurableHttpRequest> Create(string caseUrn, long caseId, List<DocumentToRemove> documentsToRemove, List<DocumentToUpdate> documentToUpdate, Guid correlationId);
+		Task<DurableHttpRequest> Create(string caseUrn, long caseId, List<DocumentToRemove> documentsToRemove, Guid correlationId);
 	}
 }
 

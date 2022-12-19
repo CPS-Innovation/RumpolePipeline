@@ -33,14 +33,14 @@ namespace coordinator.Functions.ActivityFunctions
                 throw new ArgumentException("CaseUrn cannot be empty");
             if (payload.CaseId == 0)
                 throw new ArgumentException("CaseId cannot be zero");
-            if (payload.DocumentsToRemove?.Count == 0 && payload.DocumentsToUpdate.Count == 0)
+            if (payload.DocumentsToRemove?.Count == 0)
                 throw new ArgumentException("No documents-to-remove nor documents-to-update were supplied to this activity call");
             if (payload.CorrelationId == Guid.Empty)
                 throw new ArgumentException("CorrelationId must be valid GUID");
             
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
-            var result = await _documentEvaluationHttpRequestFactory.Create(payload.CaseUrn, payload.CaseId, payload.DocumentsToRemove, payload.DocumentsToUpdate, payload.CorrelationId);
+            var result = await _documentEvaluationHttpRequestFactory.Create(payload.CaseUrn, payload.CaseId, payload.DocumentsToRemove, payload.CorrelationId);
             
             _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
             return result;

@@ -32,7 +32,7 @@ public class DocumentEvaluationHttpRequestFactory : IDocumentEvaluationHttpReque
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));;
     }
     
-    public async Task<DurableHttpRequest> Create(string caseUrn, long caseId, List<DocumentToRemove> documentsToRemove, List<DocumentToUpdate> documentToUpdate, Guid correlationId)
+    public async Task<DurableHttpRequest> Create(string caseUrn, long caseId, List<DocumentToRemove> documentsToRemove, Guid correlationId)
     {
         _logger.LogMethodEntry(correlationId, nameof(Create), $"CaseUrn: {caseUrn}, CaseId: {caseId}");
         
@@ -48,7 +48,7 @@ public class DocumentEvaluationHttpRequestFactory : IDocumentEvaluationHttpReque
                 { HttpHeaderKeys.Authorization, $"{HttpHeaderValues.AuthTokenType} {result}"},
                 { HttpHeaderKeys.CorrelationId, correlationId.ToString() }
             };
-            var content = _jsonConvertWrapper.SerializeObject(new ProcessEvaluateDocumentsRequest(caseId, documentsToRemove, documentToUpdate));
+            var content = _jsonConvertWrapper.SerializeObject(new ProcessDocumentsToRemoveRequest(caseUrn, caseId, documentsToRemove));
 
             return new DurableHttpRequest(HttpMethod.Post, new Uri(_configuration[ConfigKeys.CoordinatorKeys.DocumentEvaluatorUrl]), headers, content);
         }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Common.Validators;
 
 namespace Common.Domain.Requests
 {
@@ -12,13 +13,13 @@ namespace Common.Domain.Requests
             BlobName = blobName;
         }
         
-        [Required]
+        [RequiredLongGreaterThanZero]
         public long CaseId { get; set; }
 
         [Required]
         public string DocumentId { get; set; }
         
-        [Required]
+        [RequiredLongGreaterThanZero]
         public long VersionId { get; set; }
         
         [Required]

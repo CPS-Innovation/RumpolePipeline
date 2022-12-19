@@ -4,13 +4,11 @@ namespace Common.Domain.Responses
 {
     public class EvaluateDocumentResponse
     {
-        public EvaluateDocumentResponse(long caseId, string documentId, long versionId, bool updateSearchIndex, DocumentEvaluationResult evaluationResult)
+        public EvaluateDocumentResponse(long caseId, string documentId, long versionId)
         {
             CaseId = caseId;
             DocumentId = documentId;
             VersionId = versionId;
-            UpdateSearchIndex = updateSearchIndex;
-            EvaluationResult = evaluationResult;
         }
         
         public DocumentEvaluationResult EvaluationResult { get; set; }
@@ -20,7 +18,5 @@ namespace Common.Domain.Responses
         public string DocumentId { get; set; }
 
         public long VersionId { get; set; }
-
-        public bool UpdateSearchIndex { get; set; }
     }
 }

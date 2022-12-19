@@ -36,7 +36,7 @@ namespace document_evaluator
             
             builder.Services.AddSingleton<IConfiguration>(configuration);
             
-            builder.Services.AddTransient<IValidatorWrapper<ProcessEvaluateDocumentsRequest>, ValidatorWrapper<ProcessEvaluateDocumentsRequest>>();
+            builder.Services.AddTransient<IValidatorWrapper<ProcessDocumentsToRemoveRequest>, ValidatorWrapper<ProcessDocumentsToRemoveRequest>>();
             builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByBlobNameQueueItem>, ValidatorWrapper<UpdateSearchIndexByBlobNameQueueItem>>();
             builder.Services.AddTransient<IValidatorWrapper<UpdateSearchIndexByVersionQueueItem>, ValidatorWrapper<UpdateSearchIndexByVersionQueueItem>>();
             builder.Services.AddTransient<IValidatorWrapper<UpdateBlobStorageQueueItem>, ValidatorWrapper<UpdateBlobStorageQueueItem>>();

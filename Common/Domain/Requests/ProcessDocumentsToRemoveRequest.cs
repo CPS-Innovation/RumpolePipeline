@@ -1,24 +1,25 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Common.Domain.DocumentEvaluation;
+using Common.Validators;
 
 namespace Common.Domain.Requests;
 
-public class ProcessEvaluateDocumentsRequest
+public class ProcessDocumentsToRemoveRequest
 {
-    public ProcessEvaluateDocumentsRequest(long caseId, List<DocumentToRemove> documentsToRemove, List<DocumentToUpdate> documentsToUpdate)
+    public ProcessDocumentsToRemoveRequest(string caseUrn, long caseId, List<DocumentToRemove> documentsToRemove)
     {
+        CaseUrn = caseUrn;
         CaseId = caseId;
         DocumentsToRemove = documentsToRemove;
-        DocumentsToUpdate = documentsToUpdate;
     }
     
-    [Required]
+    [Required] 
+    public string CaseUrn { get; set; }
+    
+    [RequiredLongGreaterThanZero]
     public long CaseId { get; set; }
     
     [Required]
     public List<DocumentToRemove> DocumentsToRemove { get; set; }
-    
-    [Required]
-    public List<DocumentToUpdate> DocumentsToUpdate { get; set; }
 }

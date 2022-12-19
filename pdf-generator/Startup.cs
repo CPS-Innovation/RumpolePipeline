@@ -15,6 +15,8 @@ using Common.Mappers;
 using Common.Mappers.Contracts;
 using Common.Services.BlobStorageService;
 using Common.Services.BlobStorageService.Contracts;
+using Common.Services.DocumentEvaluation;
+using Common.Services.DocumentEvaluation.Contracts;
 using Common.Services.DocumentExtractionService;
 using Common.Services.DocumentExtractionService.Contracts;
 using Common.Wrappers;
@@ -96,7 +98,8 @@ namespace pdf_generator
                 client.BaseAddress = new Uri(configuration[ConfigKeys.SharedKeys.DocumentsRepositoryBaseUrl]);
                 client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
             });
-            
+
+            builder.Services.AddTransient<IDocumentEvaluationService, DocumentEvaluationService>();
             builder.Services.AddTransient<IDocumentRedactionService, DocumentRedactionService>();
             builder.Services.AddScoped<IValidator<RedactPdfRequest>, RedactPdfRequestValidator>();
             builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();

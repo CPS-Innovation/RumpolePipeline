@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Common.Validators;
 
 namespace Common.Domain.Requests
 {
@@ -17,7 +18,7 @@ namespace Common.Domain.Requests
         [Required] 
         public string CaseUrn { get; set; }
         
-        [Required]
+        [RequiredLongGreaterThanZero]
         public long CaseId { get; set; }
 
         [Required]
@@ -29,7 +30,7 @@ namespace Common.Domain.Requests
         [RegularExpression(@"^.+\.[A-Za-z]{3,4}$")]
         public string FileName { get; set; }
         
-        [Required]
+        [RequiredLongGreaterThanZero]
         public long VersionId { get; set; }
     }
 }

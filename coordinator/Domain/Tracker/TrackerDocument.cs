@@ -5,10 +5,11 @@ namespace coordinator.Domain.Tracker
 {
     public class TrackerDocument
     {
-        public TrackerDocument(string documentId, long versionId)
+        public TrackerDocument(string documentId, long versionId, string originalFileName)
         {
             DocumentId = documentId;
             VersionId = versionId;
+            OriginalFileName = originalFileName;
         }
         
         [JsonProperty("documentId")]
@@ -16,6 +17,9 @@ namespace coordinator.Domain.Tracker
         
         [JsonProperty("versionId")]
         public long VersionId { get; set; }
+        
+        [JsonProperty("originalFileName")] 
+        public string OriginalFileName { get; set; }
 
         [JsonProperty("pdfBlobName")]
         public string PdfBlobName { get; set; }

@@ -10,10 +10,7 @@ public class DocumentEvaluationActivityPayload : BasePipelinePayload
      : base(caseUrn, caseId, correlationId)
     {
         DocumentsToRemove = new List<DocumentToRemove>();
-        DocumentsToUpdate = new List<DocumentToUpdate>();
     }
     
     public List<DocumentToRemove> DocumentsToRemove { get; set; }
-    
-    public List<DocumentToUpdate> DocumentsToUpdate { get; set; }
 }

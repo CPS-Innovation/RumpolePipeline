@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Common.Validators;
 
 namespace Common.Domain.QueueItems
 {
@@ -12,7 +13,7 @@ namespace Common.Domain.QueueItems
             CorrelationId = correlationId;
         }
     
-        [Required]
+        [RequiredLongGreaterThanZero]
         public long CaseId { get; set; }
 
         [Required]

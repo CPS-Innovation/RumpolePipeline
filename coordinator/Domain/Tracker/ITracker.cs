@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Common.Domain.DocumentEvaluation;
+
 // ReSharper disable InconsistentNaming
 
 namespace coordinator.Domain.Tracker
@@ -8,7 +10,7 @@ namespace coordinator.Domain.Tracker
     public interface ITracker
     {
         Task Initialise(string transactionId);
-        Task<DocumentEvaluationActivityPayload> RegisterDocumentIds(IEnumerable<Tuple<string, long>> documentIds, string caseUrn, long caseId, Guid correlationId);
+        Task<DocumentEvaluationActivityPayload> RegisterDocumentIds(string caseUrn, long caseId, List<IncomingDocument> incomingDocuments, Guid correlationId);
         Task RegisterPdfBlobName(RegisterPdfBlobNameArg arg);
         Task RegisterBlobAlreadyProcessed(RegisterPdfBlobNameArg arg);
         Task RegisterDocumentNotFoundInDDEI(string documentId);

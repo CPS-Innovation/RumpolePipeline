@@ -22,13 +22,13 @@ namespace document_evaluator.Functions
     {
         private readonly IAuthorizationValidator _authorizationValidator;
         private readonly IJsonConvertWrapper _jsonConvertWrapper;
-        private readonly IValidatorWrapper<ProcessEvaluateDocumentsRequest> _validatorWrapper;
+        private readonly IValidatorWrapper<ProcessDocumentsToRemoveRequest> _validatorWrapper;
         private readonly ILogger<ProcessEvaluatedDocuments> _log;
         private readonly IConfiguration _configuration;
         private readonly IStorageQueueService _storageQueueService;
 
         public ProcessEvaluatedDocuments(IAuthorizationValidator authorizationValidator, ILogger<ProcessEvaluatedDocuments> logger, IJsonConvertWrapper jsonConvertWrapper, 
-            IConfiguration configuration, IValidatorWrapper<ProcessEvaluateDocumentsRequest> validatorWrapper, IStorageQueueService storageQueueService)
+            IConfiguration configuration, IValidatorWrapper<ProcessDocumentsToRemoveRequest> validatorWrapper, IStorageQueueService storageQueueService)
         {
            _log = logger;
            _authorizationValidator = authorizationValidator;
@@ -75,7 +75,7 @@ namespace document_evaluator.Functions
                 if (string.IsNullOrWhiteSpace(content))
                     throw new BadRequestException("Request body cannot be null.", nameof(request));
                 
-                var processEvaluatedDocumentsRequest = _jsonConvertWrapper.DeserializeObject<ProcessEvaluateDocumentsRequest>(content);
+                var processEvaluatedDocumentsRequest = _jsonConvertWrapper.DeserializeObject<ProcessDocumentsToRemoveRequest>(content);
 
                 var results = _validatorWrapper.Validate(processEvaluatedDocumentsRequest);
                 if (results.Any())
@@ -87,14 +87,14 @@ namespace document_evaluator.Functions
                 {
                     foreach (var payload in processEvaluatedDocumentsRequest.DocumentsToRemove)
                     {
-                        await _storageQueueService.AddNewMessage(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByVersionQueueItem(processEvaluatedDocumentsRequest.CaseId, 
-                            payload.DocumentId, payload.VersionId, currentCorrelationId)), _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByVersionQueueName]);
+                        await _storageQueueService.AddNewMessage(
+                            _jsonConvertWrapper.SerializeObject(new UpdateBlobStorageQueueItem(payload.PdfBlobName, currentCorrelationId)),
+                            _configuration[ConfigKeys.SharedKeys.UpdateBlobStorageQueueName]);
+                        
+                        await _storageQueueService.AddNewMessage(
+                            _jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByVersionQueueItem(processEvaluatedDocumentsRequest.CaseId, payload.DocumentId, 
+                                payload.VersionId, currentCorrelationId)), _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByVersionQueueName]);
                     }
-                }
-
-                if (processEvaluatedDocumentsRequest.DocumentsToUpdate is {Count: > 0})
-                {
-                    
                 }
             }
             catch (Exception exception)

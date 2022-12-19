@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture;
 using Common.Constants;
+using Common.Domain.DocumentEvaluation;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Domain.Responses;
@@ -27,9 +28,6 @@ namespace coordinator.tests.Functions
     public class CoordinatorOrchestratorTests
     {
         private readonly CoordinatorOrchestrationPayload _payload;
-        private readonly string _caseUrn;
-        private readonly long _caseId;
-        private readonly Guid _correlationId;
         private readonly string _upstreamToken;
         private readonly CaseDocument[] _caseDocuments;
         private readonly string _transactionId;
@@ -45,10 +43,10 @@ namespace coordinator.tests.Functions
             var fixture = new Fixture();
             var accessToken = fixture.Create<string>();
             _upstreamToken = fixture.Create<string>();
-            _caseUrn = fixture.Create<string>();
-            _caseId = fixture.Create<long>();
-            _correlationId = fixture.Create<Guid>();
-            var documentEvaluationActivityPayload = new DocumentEvaluationActivityPayload(_caseUrn, _caseId, _correlationId);
+            var caseUrn = fixture.Create<string>();
+            var caseId = fixture.Create<long>();
+            var correlationId = fixture.Create<Guid>();
+            var documentEvaluationActivityPayload = new DocumentEvaluationActivityPayload(caseUrn, caseId, correlationId);
             fixture.Create<Guid>();
             var durableRequest = new DurableHttpRequest(HttpMethod.Post, new Uri("https://www.google.co.uk"));
             _payload = fixture.Build<CoordinatorOrchestrationPayload>()
@@ -71,18 +69,20 @@ namespace coordinator.tests.Functions
             
             _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
             _mockTracker.Setup(tracker => tracker.IsStale(false)).ReturnsAsync(true); //default, marked as Stale to perform a new run
-            _mockTracker.Setup(tracker => tracker.RegisterDocumentIds(It.IsAny<IEnumerable<Tuple<string, long>>>(), 
-                It.IsAny<string>(), It.IsAny<long>(), It.IsAny<Guid>())).ReturnsAsync(documentEvaluationActivityPayload);
+            _mockTracker.Setup(tracker => tracker.RegisterDocumentIds(It.IsAny<string>(), It.IsAny<long>(), 
+                It.IsAny<List<IncomingDocument>>(), It.IsAny<Guid>())).ReturnsAsync(documentEvaluationActivityPayload);
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CoordinatorOrchestrationPayload>())
                 .Returns(_payload);
             _mockDurableOrchestrationContext.Setup(context => context.InstanceId)
                 .Returns(_transactionId);
-            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
+            _mockDurableOrchestrationContext.Setup(context => context.CreateEntityProxy<ITracker>(
+                    It.Is<EntityId>(e => e.EntityName == nameof(Tracker).ToLower() && e.EntityKey == _payload.CaseId.ToString())))
                 .Returns(_mockTracker.Object);
             _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<string>(nameof(GetOnBehalfOfAccessToken), _payload.AccessToken))
                 .ReturnsAsync(accessToken);
-            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId 
+            _mockDurableOrchestrationContext.Setup(context => context.CallActivityAsync<CaseDocument[]>(nameof(GetCaseDocuments), 
+                    It.Is<GetCaseDocumentsActivityPayload>(p => p.CaseId == _payload.CaseId 
                     && p.UpstreamToken == _payload.UpstreamToken && p.CorrelationId == _payload.CorrelationId)))
                 .ReturnsAsync(_caseDocuments);
             
