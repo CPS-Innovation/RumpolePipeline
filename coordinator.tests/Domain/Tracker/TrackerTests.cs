@@ -21,6 +21,7 @@ namespace coordinator.tests.Domain.Tracker
         private readonly string _transactionId;
         private readonly List<IncomingDocument> _incomingDocuments;
         private readonly RegisterPdfBlobNameArg _pdfBlobNameArg;
+        private readonly RegisterDocumentIdsArg _registerDocumentIdsArg;
         private readonly List<TrackerDocument> _trackerDocuments;
         private readonly string _caseUrn;
         private readonly long _caseId;
@@ -46,6 +47,12 @@ namespace coordinator.tests.Domain.Tracker
             _trackerDocuments = _fixture.Create<List<TrackerDocument>>();
             _caseUrn = _fixture.Create<string>();
             _caseId = _fixture.Create<long>();
+            _registerDocumentIdsArg = _fixture.Build<RegisterDocumentIdsArg>()
+                .With(a => a.CaseUrn, _caseUrn)
+                .With(a => a.CaseId, _caseId)
+                .With(a => a.IncomingDocuments, _incomingDocuments)
+                .With(a => a.CorrelationId, _correlationId)
+                .Create();
             _entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = true };
 
             _mockDurableEntityContext = new Mock<IDurableEntityContext>();
@@ -78,7 +85,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterDocumentIds_RegistersDocumentIds()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_caseUrn, _caseId, _incomingDocuments, _correlationId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
 
             _tracker.Documents.Count().Should().Be(_incomingDocuments.Count());
 
@@ -89,7 +96,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterPdfBlobName_RegistersPdfBlobName()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_caseUrn, _caseId, _incomingDocuments, _correlationId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
             await _tracker.RegisterPdfBlobName(_pdfBlobNameArg);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
@@ -103,7 +110,7 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterDocumentNotFoundInDDEI_Registers()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_caseUrn, _caseId, _incomingDocuments, _correlationId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
             await _tracker.RegisterDocumentNotFoundInDDEI(_pdfBlobNameArg.DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
@@ -113,29 +120,28 @@ namespace coordinator.tests.Domain.Tracker
         }
 
         [Fact]
-        public async Task RegisterFailedToConvertToPdf_Registers()
+        public async Task Initialisation_SetsDocumentStatusToNone()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_caseUrn, _caseId, _incomingDocuments, _correlationId);
-            await _tracker.RegisterUnableToConvertDocumentToPdf(_pdfBlobNameArg.DocumentId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
-            document?.Status.Should().Be(DocumentStatus.UnableToConvertToPdf);
+            document?.Status.Should().Be(DocumentStatus.None);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(2);
         }
 
         [Fact]
         public async Task RegisterUnexpectedDocumentFailure_Registers()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_caseUrn, _caseId, _incomingDocuments, _correlationId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
             await _tracker.RegisterUnexpectedPdfDocumentFailure(_pdfBlobNameArg.DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.Status.Should().Be(DocumentStatus.UnexpectedFailure);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(3);
         }
 
         [Fact]
@@ -146,33 +152,33 @@ namespace coordinator.tests.Domain.Tracker
 
             _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInDDEI);
 
-            _tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count.Should().Be(2);
         }
 
         [Fact]
         public async Task RegisterIndexed_RegistersIndexed()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_caseUrn, _caseId, _incomingDocuments, _correlationId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
             await _tracker.RegisterIndexed(_incomingDocuments.First().DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.Status.Should().Be(DocumentStatus.Indexed);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(3);
         }
 
         [Fact]
         public async Task RegisterIndexed_RegistersOcrAndIndexFailure()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_caseUrn, _caseId, _incomingDocuments, _correlationId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
             await _tracker.RegisterOcrAndIndexFailure(_incomingDocuments.First().DocumentId);
 
             var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.Status.Should().Be(DocumentStatus.OcrAndIndexFailure);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(3);
         }
 
         [Fact]
@@ -183,7 +189,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _tracker.Status.Should().Be(TrackerStatus.Completed);
 
-            _tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count.Should().Be(2);
         }
 
         [Fact]
@@ -194,7 +200,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _tracker.Status.Should().Be(TrackerStatus.Failed);
 
-            _tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count.Should().Be(2);
         }
         
         [Fact]

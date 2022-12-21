@@ -8,6 +8,7 @@ public class DdeiCaseDocumentMapper : ICaseDocumentMapper<DdeiCaseDocumentRespon
 {
     public CaseDocument Map(DdeiCaseDocumentResponse ddeiResponse)
     {
-        return new CaseDocument(ddeiResponse.Id.ToString(), ddeiResponse.VersionId, ddeiResponse.OriginalFileName, ddeiResponse.TypeId, ddeiResponse.CmsDocCategory);
+        return new CaseDocument(ddeiResponse.Id.ToString(), ddeiResponse.VersionId, ddeiResponse.OriginalFileName, ddeiResponse.DocumentType, 
+            ddeiResponse.DocumentTypeId, ddeiResponse.CmsDocCategory);
     }
 }

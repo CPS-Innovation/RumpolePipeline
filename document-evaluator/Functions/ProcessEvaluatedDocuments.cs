@@ -54,13 +54,6 @@ namespace document_evaluator.Functions
                 if (!Guid.TryParse(correlationId, out currentCorrelationId) || currentCorrelationId == Guid.Empty)
                         throw new BadRequestException("Invalid correlationId. A valid GUID is required.", correlationId);
                 
-                request.Headers.TryGetValues(HttpHeaderKeys.UpstreamTokenName, out var upstreamTokenValues);
-                if (upstreamTokenValues == null)
-                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(request));
-                var upstreamToken = upstreamTokenValues.First();
-                if (string.IsNullOrWhiteSpace(upstreamToken))
-                    throw new BadRequestException("Invalid upstream token. A valid DDEI token must be received for this request.", nameof(request));
-
                 _log.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
                 var authValidation = await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId, 

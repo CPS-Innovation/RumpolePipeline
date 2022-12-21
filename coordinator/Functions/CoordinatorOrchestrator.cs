@@ -87,7 +87,7 @@ namespace coordinator.Functions
             
             log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
-            if (await tracker.IsAlreadyProcessed() || !await tracker.IsStale(payload.ForceRefresh))
+            if (await tracker.IsAlreadyProcessed() && !await tracker.IsStale(payload.ForceRefresh))
             {
                 log.LogMethodFlow(payload.CorrelationId, loggingName, 
                     $"Tracker has already finished processing, a 'force refresh' has not been issued and it is not stale - returning documents - {context.InstanceId}");
@@ -108,7 +108,7 @@ namespace coordinator.Functions
             
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
-                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Name, t.DocumentId, 
+                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.DocumentCategory, t.DocumentId, 
                         t.VersionId, t.FileName, payload.UpstreamToken, payload.CorrelationId)))
                 .ToList();
 
@@ -173,8 +173,9 @@ namespace coordinator.Functions
             IEnumerable<CaseDocument> documents)
         {
             safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
-            return await tracker.RegisterDocumentIds(payload.CaseUrn, payload.CaseId, 
+            var arg = new RegisterDocumentIdsArg(payload.CaseUrn, payload.CaseId,
                 documents.Select(item => new IncomingDocument(item.DocumentId, item.VersionId, item.FileName)).ToList(), payload.CorrelationId);
+            return await tracker.RegisterDocumentIds(arg);
         }
 
         private static async Task ProcessDocumentsToRemove(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, 

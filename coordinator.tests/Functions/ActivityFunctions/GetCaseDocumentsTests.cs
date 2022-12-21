@@ -19,9 +19,9 @@ namespace coordinator.tests.Functions.ActivityFunctions
         private readonly GetCaseDocumentsActivityPayload _payload;
 
         private readonly Mock<IDurableActivityContext> _mockDurableActivityContext;
-
+        
         private readonly GetCaseDocuments _getCaseDocuments;
-
+        
         public GetCaseDocumentsTests()
         {
             var fixture = new Fixture();

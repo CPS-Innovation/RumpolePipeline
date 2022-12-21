@@ -45,9 +45,12 @@ namespace coordinator.Functions.SubOrchestrators
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the PDF Generator for DocumentId: '{payload.DocumentId}', FileName: '{payload.FileName}'");
             var pdfGeneratorResponse = await CallPdfGeneratorAsync(context, payload, tracker, log);
 
-            log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the Text Extractor for DocumentId: '{payload.DocumentId}', FileName: '{payload.FileName}'");
-            await CallTextExtractorAsync(context, payload, pdfGeneratorResponse.BlobName, tracker, log);    
-            
+            if (!pdfGeneratorResponse.AlreadyProcessed)
+            {
+                log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the Text Extractor for DocumentId: '{payload.DocumentId}', FileName: '{payload.FileName}'");
+                await CallTextExtractorAsync(context, payload, pdfGeneratorResponse.BlobName, tracker, log);
+            }
+
             log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
         }
         
@@ -60,8 +63,17 @@ namespace coordinator.Functions.SubOrchestrators
                 log.LogMethodEntry(payload.CorrelationId, nameof(CallPdfGeneratorAsync), payload.ToJson());
                 
                 response = await CallPdfGeneratorHttpAsync(context, payload, tracker, log);
-                await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = payload.DocumentId, BlobName = response.BlobName });
+                
+                if (response.AlreadyProcessed)
+                {
+                    await tracker.RegisterBlobAlreadyProcessed(new RegisterPdfBlobNameArg(payload.DocumentId, payload.VersionId, response.BlobName));
+                }
 
+                else
+                {
+                    await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg(payload.DocumentId, payload.VersionId, response.BlobName));
+                }
+                
                 return response;
             }
             catch (Exception exception)

@@ -28,9 +28,7 @@ resource "azurerm_function_app" "fa_coordinator" {
     "DocumentsRepositoryBaseUrl"              = var.ddei_config.base_url
     "ListDocumentsUrl"                        = "urns/{0}/cases/{1}/documents?code=${var.ddei_config.list_documents_function_key}"
     "DocumentEvaluatorScope"                  = "api://fa-${local.resource_name}-document-evaluator/.default"
-    "UpdateSearchIndexQueueUrl"               = "https://sacps${local.resource_name}rumpolepipeline.queue.core.windows.net/{0}"
-    "EvaluateExistingDocumentsQueueName"      = var.queue_config.evaluate_existing_documents_queue_name
-    "UpdateSearchIndexByVersionQueueName"     = var.queue_config.update_search_index_by_version_queue_name
+    "DocumentEvaluatorUrl"                    = "https://fa-${local.resource_name}-document-evaluator.azurewebsites.net/api/processEvaluatedDocuments?code=${data.azurerm_function_app_host_keys.ak_document_evaluator.default_function_key}"
   }
   https_only                 = true
 

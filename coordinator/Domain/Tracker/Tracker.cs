@@ -53,12 +53,12 @@ namespace coordinator.Domain.Tracker
             return Task.CompletedTask;
         }
 
-        public Task<DocumentEvaluationActivityPayload> RegisterDocumentIds(string caseUrn, long caseId, List<IncomingDocument> incomingDocuments, Guid correlationId)
+        public Task<DocumentEvaluationActivityPayload> RegisterDocumentIds(RegisterDocumentIdsArg arg)
         {
-            var evaluationResults = new DocumentEvaluationActivityPayload(caseUrn, caseId, correlationId);
+            var evaluationResults = new DocumentEvaluationActivityPayload(arg.CaseUrn, arg.CaseId, arg.CorrelationId);
             if (Documents.Count == 0) //no documents yet loaded in the tracker for this case, grab them all
             {
-                Documents = incomingDocuments
+                Documents = arg.IncomingDocuments
                     .Select(item => new TrackerDocument(item.DocumentId, item.VersionId, item.OriginalFileName))
                     .ToList();
                 Log(LogType.RegisteredDocumentIds);
@@ -68,7 +68,7 @@ namespace coordinator.Domain.Tracker
                 //remove any documents that are no longer present in the list retrieved from CMS from the tracker so they are no reprocessed
                 foreach (var trackedDocument in 
                          Documents.Where(trackedDocument => 
-                             !incomingDocuments.Exists(x => x.DocumentId == trackedDocument.DocumentId && x.VersionId == trackedDocument.VersionId)))
+                             !arg.IncomingDocuments.Exists(x => x.DocumentId == trackedDocument.DocumentId && x.VersionId == trackedDocument.VersionId)))
                 {
                     evaluationResults.DocumentsToRemove.Add(new DocumentToRemove(trackedDocument.DocumentId, trackedDocument.VersionId, trackedDocument.PdfBlobName));
                 }
@@ -84,7 +84,7 @@ namespace coordinator.Domain.Tracker
                 //now evaluate all incoming documents against the existing tracker record that are not already identified for removal and make sure
                 //that anything new is added to the tracker
                 foreach (var cmsDocument in from cmsDocument in 
-                             incomingDocuments where !evaluationResults.DocumentsToRemove
+                             arg.IncomingDocuments where !evaluationResults.DocumentsToRemove
                              .Exists(x => x.DocumentId == cmsDocument.DocumentId && x.VersionId == cmsDocument.VersionId) 
                          let item = Documents.Find(x => x.DocumentId == cmsDocument.DocumentId) where item == null select cmsDocument)
                 {

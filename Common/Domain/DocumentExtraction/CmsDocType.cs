@@ -6,15 +6,18 @@ namespace Common.Domain.DocumentExtraction
 	{
 		public CmsDocType() { }
 		
-		public CmsDocType(string documentType, string documentCategory)
+		public CmsDocType(string documentType, string documentTypeId, string documentCategory)
 		{
-			Code = documentType ?? MiscCategories.UnknownDocumentType;
-			Name = documentCategory;
+			DocumentTypeId = documentTypeId ?? MiscCategories.UnknownDocumentType;
+			DocumentType = documentType;
+			DocumentCategory = documentCategory;
 		}
 		
-		public string Code { get; set; }
+		public string DocumentTypeId { get; set; }
 
-		public string Name { get; set; }
+		public string DocumentType { get; set; }
+
+		public string DocumentCategory { get; set; }
 	}
 }
 

@@ -95,7 +95,7 @@
             public const string DocumentEvaluatorQueueUrl = "DocumentEvaluatorQueueUrl";
             public const string UpdateBlobStorageQueueName = "UpdateBlobStorageQueueName";
             public const string UpdateSearchIndexByVersionQueueName = "UpdateSearchIndexByVersionQueueName";
-            public const string UpdateSearchIndexByBlobNameQueueName = "UpdateSearchIndexByVersionQueueName";
+            public const string UpdateSearchIndexByBlobNameQueueName = "UpdateSearchIndexByBlobNameQueueName";
         }
     }
 }

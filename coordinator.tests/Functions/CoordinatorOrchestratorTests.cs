@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture;
 using Common.Constants;
-using Common.Domain.DocumentEvaluation;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Domain.Responses;
@@ -69,8 +68,7 @@ namespace coordinator.tests.Functions
             
             _mockTracker.Setup(tracker => tracker.GetDocuments()).ReturnsAsync(_trackerDocuments);
             _mockTracker.Setup(tracker => tracker.IsStale(false)).ReturnsAsync(true); //default, marked as Stale to perform a new run
-            _mockTracker.Setup(tracker => tracker.RegisterDocumentIds(It.IsAny<string>(), It.IsAny<long>(), 
-                It.IsAny<List<IncomingDocument>>(), It.IsAny<Guid>())).ReturnsAsync(documentEvaluationActivityPayload);
+            _mockTracker.Setup(tracker => tracker.RegisterDocumentIds(It.IsAny<RegisterDocumentIdsArg>())).ReturnsAsync(documentEvaluationActivityPayload);
 
             _mockDurableOrchestrationContext.Setup(context => context.GetInput<CoordinatorOrchestrationPayload>())
                 .Returns(_payload);
@@ -115,6 +113,7 @@ namespace coordinator.tests.Functions
         public async Task Run_DoesNotInitialiseWhenTrackerAlreadyProcessedAndForceRefreshIsFalse()
         {
             _mockTracker.Setup(tracker => tracker.IsAlreadyProcessed()).ReturnsAsync(true);
+            _mockTracker.Setup(tracker => tracker.IsStale(false)).ReturnsAsync(false);
 
             await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
@@ -125,6 +124,7 @@ namespace coordinator.tests.Functions
         public async Task Run_Tracker_DoesNotInitialiseTheTrackerWhenIsAlreadyProcessed()
         {
             _mockTracker.Setup(tracker => tracker.IsAlreadyProcessed()).ReturnsAsync(true);
+            _mockTracker.Setup(tracker => tracker.IsStale(false)).ReturnsAsync(false);
             
             await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
@@ -139,7 +139,7 @@ namespace coordinator.tests.Functions
             
             await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
 
-            _mockTracker.Verify(tracker => tracker.Initialise(_transactionId), Times.Never);
+            _mockTracker.Verify(tracker => tracker.Initialise(_transactionId), Times.Once);
         }
 
         [Fact]
