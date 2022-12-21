@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Common.Wrappers
 {
-    public interface IValidatorWrapper<TRequest>
+    public interface IValidatorWrapper<in TRequest>
     {
         ICollection<ValidationResult> Validate(TRequest request);
     }

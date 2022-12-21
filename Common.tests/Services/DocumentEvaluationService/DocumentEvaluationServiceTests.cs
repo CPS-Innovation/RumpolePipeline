@@ -4,7 +4,7 @@ using Common.Domain.BlobStorage;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Requests;
 using Common.Services.BlobStorageService.Contracts;
-using Common.Services.DocumentEvaluationService.Contracts;
+using Common.Services.DocumentEvaluation.Contracts;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.Logging;
@@ -25,13 +25,13 @@ public class DocumentEvaluationServiceTests
     {
         _fixture = new Fixture();
         _mockBlobStorageService = new Mock<IBlobStorageService>();
-        var mockLogger = new Mock<ILogger<Common.Services.DocumentEvaluationService.DocumentEvaluationService>>();
+        var mockLogger = new Mock<ILogger<Common.Services.DocumentEvaluation.DocumentEvaluationService>>();
 
         _correlationId = Guid.NewGuid();
 
         var incomingDocument = _fixture.Create<CaseDocument>();
 
-        _documentEvaluationService = new Common.Services.DocumentEvaluationService.DocumentEvaluationService(_mockBlobStorageService.Object, mockLogger.Object);
+        _documentEvaluationService = new Common.Services.DocumentEvaluation.DocumentEvaluationService(_mockBlobStorageService.Object, mockLogger.Object);
 
         _mockBlobStorageService.Setup(s => s.RemoveDocumentAsync(It.IsAny<string>(), _correlationId)).ReturnsAsync(true);
 
@@ -55,9 +55,6 @@ public class DocumentEvaluationServiceTests
             result.CaseId.Should().Be(request.CaseId);
             result.DocumentId.Should().Be(request.DocumentId);
             result.EvaluationResult.Should().Be(DocumentEvaluationResult.AcquireDocument);
-            result.UpdateSearchIndex.Should().BeFalse();
-            
-            _mockBlobStorageService.Verify(v => v.RemoveDocumentAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Never);
         }
     }
     
@@ -81,9 +78,6 @@ public class DocumentEvaluationServiceTests
             result.CaseId.Should().Be(request.CaseId);
             result.DocumentId.Should().Be(request.DocumentId);
             result.EvaluationResult.Should().Be(DocumentEvaluationResult.DocumentUnchanged);
-            result.UpdateSearchIndex.Should().BeFalse();
-            
-            _mockBlobStorageService.Verify(v => v.RemoveDocumentAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Never);
         }
     }
     
@@ -107,9 +101,6 @@ public class DocumentEvaluationServiceTests
             result.CaseId.Should().Be(request.CaseId);
             result.DocumentId.Should().Be(request.DocumentId);
             result.EvaluationResult.Should().Be(DocumentEvaluationResult.AcquireDocument);
-            result.UpdateSearchIndex.Should().BeTrue();
-            
-            _mockBlobStorageService.Verify(v => v.RemoveDocumentAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Once);
         }
     }
 }

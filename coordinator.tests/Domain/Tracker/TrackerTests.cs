@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture;
+using Common.Domain.DocumentEvaluation;
 using coordinator.Domain.Tracker;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +17,14 @@ namespace coordinator.tests.Domain.Tracker
 {
     public class TrackerTests
     {
+        private readonly Fixture _fixture;
         private readonly string _transactionId;
-        private readonly IEnumerable<Tuple<string, long>> _documentIds;
+        private readonly List<IncomingDocument> _incomingDocuments;
         private readonly RegisterPdfBlobNameArg _pdfBlobNameArg;
+        private readonly RegisterDocumentIdsArg _registerDocumentIdsArg;
         private readonly List<TrackerDocument> _trackerDocuments;
         private readonly string _caseUrn;
-        private readonly string _caseId;
+        private readonly long _caseId;
         private readonly Guid _correlationId;
         private readonly EntityStateResponse<coordinator.Domain.Tracker.Tracker> _entityStateResponse;
 
@@ -33,18 +36,23 @@ namespace coordinator.tests.Domain.Tracker
 
         public TrackerTests()
         {
-            var fixture = new Fixture();
-            _transactionId = fixture.Create<string>();
-            _documentIds = fixture.Create<IEnumerable<Tuple<string, long>>>();
-            _correlationId = fixture.Create<Guid>();
-            var documentIds = _documentIds.ToList();
-            _pdfBlobNameArg = fixture.Build<RegisterPdfBlobNameArg>()
-                                .With(a => a.DocumentId, documentIds.First().Item1)
-                                .With(a => a.VersionId, documentIds.First().Item2)
+            _fixture = new Fixture();
+            _transactionId = _fixture.Create<string>();
+            _incomingDocuments = _fixture.CreateMany<IncomingDocument>(3).ToList();
+            _correlationId = _fixture.Create<Guid>();
+            _pdfBlobNameArg = _fixture.Build<RegisterPdfBlobNameArg>()
+                                .With(a => a.DocumentId, _incomingDocuments.First().DocumentId)
+                                .With(a => a.VersionId, _incomingDocuments.First().VersionId)
                                 .Create();
-            _trackerDocuments = fixture.Create<List<TrackerDocument>>();
-            _caseUrn = fixture.Create<string>();
-            _caseId = fixture.Create<string>();
+            _trackerDocuments = _fixture.Create<List<TrackerDocument>>();
+            _caseUrn = _fixture.Create<string>();
+            _caseId = _fixture.Create<long>();
+            _registerDocumentIdsArg = _fixture.Build<RegisterDocumentIdsArg>()
+                .With(a => a.CaseUrn, _caseUrn)
+                .With(a => a.CaseId, _caseId)
+                .With(a => a.IncomingDocuments, _incomingDocuments)
+                .With(a => a.CorrelationId, _correlationId)
+                .Create();
             _entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = true };
 
             _mockDurableEntityContext = new Mock<IDurableEntityContext>();
@@ -53,7 +61,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId.ToString()),
                     null, null))
                 .ReturnsAsync(_entityStateResponse);
 
@@ -77,9 +85,9 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterDocumentIds_RegistersDocumentIds()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
 
-            _tracker.Documents.Count().Should().Be(_documentIds.Count());
+            _tracker.Documents.Count().Should().Be(_incomingDocuments.Count());
 
             _tracker.Logs.Count().Should().Be(2);
         }
@@ -88,10 +96,10 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterPdfBlobName_RegistersPdfBlobName()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
             await _tracker.RegisterPdfBlobName(_pdfBlobNameArg);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
             document?.Status.Should().Be(DocumentStatus.PdfUploadedToBlob);
 
@@ -102,39 +110,38 @@ namespace coordinator.tests.Domain.Tracker
         public async Task RegisterDocumentNotFoundInDDEI_Registers()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
             await _tracker.RegisterDocumentNotFoundInDDEI(_pdfBlobNameArg.DocumentId);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.Status.Should().Be(DocumentStatus.NotFoundInDDEI);
 
             _tracker.Logs.Count().Should().Be(3);
         }
 
         [Fact]
-        public async Task RegisterFailedToConvertToPdf_Registers()
+        public async Task Initialisation_SetsDocumentStatusToNone()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterUnableToConvertDocumentToPdf(_pdfBlobNameArg.DocumentId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
-            document?.Status.Should().Be(DocumentStatus.UnableToConvertToPdf);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
+            document?.Status.Should().Be(DocumentStatus.None);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(2);
         }
 
         [Fact]
         public async Task RegisterUnexpectedDocumentFailure_Registers()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
             await _tracker.RegisterUnexpectedPdfDocumentFailure(_pdfBlobNameArg.DocumentId);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.Status.Should().Be(DocumentStatus.UnexpectedFailure);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(3);
         }
 
         [Fact]
@@ -145,33 +152,33 @@ namespace coordinator.tests.Domain.Tracker
 
             _tracker.Status.Should().Be(TrackerStatus.NoDocumentsFoundInDDEI);
 
-            _tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count.Should().Be(2);
         }
 
         [Fact]
         public async Task RegisterIndexed_RegistersIndexed()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterIndexed(_documentIds.First().Item1);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.RegisterIndexed(_incomingDocuments.First().DocumentId);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.Status.Should().Be(DocumentStatus.Indexed);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(3);
         }
 
         [Fact]
         public async Task RegisterIndexed_RegistersOcrAndIndexFailure()
         {
             await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_documentIds);
-            await _tracker.RegisterOcrAndIndexFailure(_documentIds.First().Item1);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.RegisterOcrAndIndexFailure(_incomingDocuments.First().DocumentId);
 
-            var document = _tracker.Documents.Find(document => document.DocumentId == _documentIds.First().Item1);
+            var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.Status.Should().Be(DocumentStatus.OcrAndIndexFailure);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(3);
         }
 
         [Fact]
@@ -182,7 +189,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _tracker.Status.Should().Be(TrackerStatus.Completed);
 
-            _tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count.Should().Be(2);
         }
 
         [Fact]
@@ -193,7 +200,7 @@ namespace coordinator.tests.Domain.Tracker
 
             _tracker.Status.Should().Be(TrackerStatus.Failed);
 
-            _tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count.Should().Be(2);
         }
         
         [Fact]
@@ -209,9 +216,9 @@ namespace coordinator.tests.Domain.Tracker
         public async Task AllDocumentsFailed_ReturnsTrueIfAllDocumentsFailed()
         {
             _tracker.Documents = new List<TrackerDocument> {
-                new TrackerDocument { Status = DocumentStatus.NotFoundInDDEI},
-                new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
-                new TrackerDocument { Status = DocumentStatus.UnexpectedFailure}
+                new(_fixture.Create<string>(), _fixture.Create<long>(), _fixture.Create<string>()) { Status = DocumentStatus.NotFoundInDDEI},
+                new(_fixture.Create<string>(), _fixture.Create<long>(), _fixture.Create<string>()) { Status = DocumentStatus.UnableToConvertToPdf},
+                new(_fixture.Create<string>(), _fixture.Create<long>(), _fixture.Create<string>()) { Status = DocumentStatus.UnexpectedFailure}
             };
 
             var output = await _tracker.AllDocumentsFailed();
@@ -223,10 +230,10 @@ namespace coordinator.tests.Domain.Tracker
         public async Task AllDocumentsFailed_ReturnsFalseIfAllDocumentsHaveNotFailed()
         {
             _tracker.Documents = new List<TrackerDocument> {
-                new TrackerDocument { Status = DocumentStatus.NotFoundInDDEI},
-                new TrackerDocument { Status = DocumentStatus.UnableToConvertToPdf},
-                new TrackerDocument { Status = DocumentStatus.UnexpectedFailure},
-                new TrackerDocument { Status = DocumentStatus.PdfUploadedToBlob},
+                new(_fixture.Create<string>(), _fixture.Create<long>(), _fixture.Create<string>()) { Status = DocumentStatus.NotFoundInDDEI},
+                new(_fixture.Create<string>(), _fixture.Create<long>(), _fixture.Create<string>()) { Status = DocumentStatus.UnableToConvertToPdf},
+                new (_fixture.Create<string>(), _fixture.Create<long>(), _fixture.Create<string>()) { Status = DocumentStatus.UnexpectedFailure},
+                new(_fixture.Create<string>(), _fixture.Create<long>(), _fixture.Create<string>()) { Status = DocumentStatus.PdfUploadedToBlob},
             };
 
             var output = await _tracker.AllDocumentsFailed();
@@ -277,7 +284,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId.ToString(), _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<OkObjectResult>();
         }
@@ -287,7 +294,7 @@ namespace coordinator.tests.Domain.Tracker
         {
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response  = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response  = await _tracker.HttpStart(message, _caseUrn, _caseId.ToString(), _mockDurableEntityClient.Object, _mockLogger.Object);
 
             var okObjectResult = response as OkObjectResult;
 
@@ -300,13 +307,13 @@ namespace coordinator.tests.Domain.Tracker
             var entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = false };
             _mockDurableEntityClient.Setup(
                 client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                    It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId.ToString()),
                     null, null))
                 .ReturnsAsync(entityStateResponse);
 
             var message = new HttpRequestMessage();
             message.Headers.Add("Correlation-Id", _correlationId.ToString());
-            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId.ToString(), _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<NotFoundObjectResult>();
         }
@@ -317,12 +324,12 @@ namespace coordinator.tests.Domain.Tracker
             var entityStateResponse = new EntityStateResponse<coordinator.Domain.Tracker.Tracker>() { EntityExists = false };
             _mockDurableEntityClient.Setup(
                     client => client.ReadEntityStateAsync<coordinator.Domain.Tracker.Tracker>(
-                        It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId),
+                        It.Is<EntityId>(e => e.EntityName == nameof(coordinator.Domain.Tracker.Tracker).ToLower() && e.EntityKey == _caseId.ToString()),
                         null, null))
                 .ReturnsAsync(entityStateResponse);
 
             var message = new HttpRequestMessage();
-            var response = await _tracker.HttpStart(message, _caseUrn, _caseId, _mockDurableEntityClient.Object, _mockLogger.Object);
+            var response = await _tracker.HttpStart(message, _caseUrn, _caseId.ToString(), _mockDurableEntityClient.Object, _mockLogger.Object);
 
             response.Should().BeOfType<BadRequestObjectResult>();
         }

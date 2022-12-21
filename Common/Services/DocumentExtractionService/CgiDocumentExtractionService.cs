@@ -63,209 +63,209 @@ public class CgiDocumentExtractionService : BaseDocumentExtractionService, ICgiD
                 {
                     DocumentId = "MG12",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG12.doc",
+                    FileName =  "MG12.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG12",
-                        Name = "MG12 File"
+                        DocumentType = "MG12",
+                        DocumentCategory = "MG12 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "stmt Shelagh McLove MG11",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "stmt Shelagh McLove MG11.docx",
+                    FileName =  "stmt Shelagh McLove MG11.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG11",
-                        Name = "MG11 File"
+                        DocumentType = "MG11",
+                        DocumentCategory = "MG11 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MG00",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG00.doc",
+                    FileName =  "MG00.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG00",
-                        Name = "MG00 File"
+                        DocumentType = "MG00",
+                        DocumentCategory = "MG00 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "stmt JONES 1989 1 JUNE mg11",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "stmt JONES 1989 1 JUNE mg11.docx",
+                    FileName =  "stmt JONES 1989 1 JUNE mg11.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG11",
-                        Name = "MG11 File"
+                        DocumentType = "MG11",
+                        DocumentCategory = "MG11 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MG20 10 JUNE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG20 10 JUNE.doc",
+                    FileName =  "MG20 10 JUNE.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG20",
-                        Name = "MG20 File"
+                        DocumentType = "MG20",
+                        DocumentCategory = "MG20 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "UNUSED 1 - STORM LOG 1881 01.6.20 - EDITED 2020-11-23 MCLOVE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "UNUSED 1 - STORM LOG 1881 01.6.20 - EDITED 2020-11-23 MCLOVE.docx",
+                    FileName =  "UNUSED 1 - STORM LOG 1881 01.6.20 - EDITED 2020-11-23 MCLOVE.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG11",
-                        Name = "MG11 File"
+                        DocumentType = "MG11",
+                        DocumentCategory = "MG11 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "Shelagh McLove VPS mg11",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "Shelagh McLove VPS mg11.docx",
+                    FileName =  "Shelagh McLove VPS mg11.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG11",
-                        Name = "MG11 File"
+                        DocumentType = "MG11",
+                        DocumentCategory = "MG11 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "UNUSED 6 - DA CHECKLIST MCLOVE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "UNUSED 6 - DA CHECKLIST MCLOVE.docx",
+                    FileName =  "UNUSED 6 - DA CHECKLIST MCLOVE.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG6",
-                        Name = "MG6 File"
+                        DocumentType = "MG6",
+                        DocumentCategory = "MG6 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MG0",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG0.docx",
+                    FileName =  "MG0.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG0",
-                        Name = "MG0 File"
+                        DocumentType = "MG0",
+                        DocumentCategory = "MG0 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MG06 3 June",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG06 3 June.doc",
+                    FileName =  "MG06 3 June.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG06",
-                        Name = "MG06 File"
+                        DocumentType = "MG06",
+                        DocumentCategory = "MG06 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "SDC items to be Disclosed (1-6) MCLOVE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "SDC items to be Disclosed (1-6) MCLOVE.doc",
+                    FileName =  "SDC items to be Disclosed (1-6) MCLOVE.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG11",
-                        Name = "MG11 File"
+                        DocumentType = "MG11",
+                        DocumentCategory = "MG11 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "stmt BLAYNEE 2034 1 JUNE mg11",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "stmt BLAYNEE 2034 1 JUNE mg11.docx",
+                    FileName =  "stmt BLAYNEE 2034 1 JUNE mg11.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG11",
-                        Name = "MG11 File"
+                        DocumentType = "MG11",
+                        DocumentCategory = "MG11 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "PRE CONS D",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "PRE CONS D.docx",
+                    FileName =  "PRE CONS D.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG00",
-                        Name = "MG00 File"
+                        DocumentType = "MG00",
+                        DocumentCategory = "MG00 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MG05 MCLOVE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG05 MCLOVE.doc",
+                    FileName =  "MG05 MCLOVE.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG05",
-                        Name = "MG05 File"
+                        DocumentType = "MG05",
+                        DocumentCategory = "MG05 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MG20 5 JUNE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG20 5 JUNE.doc",
+                    FileName =  "MG20 5 JUNE.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG20",
-                        Name = "MG20 File"
+                        DocumentType = "MG20",
+                        DocumentCategory = "MG20 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MG02 SHELAGH MCLOVE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG02 SHELAGH MCLOVE.doc",
+                    FileName =  "MG02 SHELAGH MCLOVE.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG02",
-                        Name = "MG02 File"
+                        DocumentType = "MG02",
+                        DocumentCategory = "MG02 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MG06 10 june",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MG06 10 june.doc",
+                    FileName =  "MG06 10 june.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG06",
-                        Name = "MG06 File"
+                        DocumentType = "MG06",
+                        DocumentCategory = "MG06 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "stmt Lucy Doyle MG11",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "stmt Lucy Doyle MG11.docx",
+                    FileName =  "stmt Lucy Doyle MG11.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG11",
-                        Name = "MG11 File"
+                        DocumentType = "MG11",
+                        DocumentCategory = "MG11 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "MCLOVE MG3",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "MCLOVE MG3.docx",
+                    FileName =  "MCLOVE MG3.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG3",
-                        Name = "MG3 File"
+                        DocumentType = "MG3",
+                        DocumentCategory = "MG3 File"
                     }
                 }
             }
@@ -283,187 +283,187 @@ public class CgiDocumentExtractionService : BaseDocumentExtractionService, ICgiD
                 {
                     DocumentId = "docCDE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "docCDE.doc",
+                    FileName =  "docCDE.doc",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG0",
-                        Name = "MG0 File"
+                        DocumentType = "MG0",
+                        DocumentCategory = "MG0 File"
                     }
                 },
                 new CaseDocument
                 {
                     DocumentId = "docxCDE",
                     VersionId = VersionIdPlaceholder,
-                    FileName = "docxCDE.docx",
+                    FileName =  "docxCDE.docx",
                     CmsDocType = new CmsDocType
                     {
-                        Code = "MG0",
-                    Name = "MG0 File"
+                        DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "docmCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "docmCDE.docm",
+                FileName =  "docmCDE.docm",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "xlsxCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "xlsxCDE.xlsx",
+                FileName =  "xlsxCDE.xlsx",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "xlsCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "xlsCDE.xls",
+                FileName =  "xlsCDE.xls",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "pptCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "pptCDE.ppt",
+                FileName =  "pptCDE.ppt",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "pptxCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "pptxCDE.pptx",
+                FileName =  "pptxCDE.pptx",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "htmlCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "htmlCDE.html",
+                FileName =  "htmlCDE.html",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "msgCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "msgCDE.msg",
+                FileName =  "msgCDE.msg",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "vsdCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "vsdCDE.vsd",
+                FileName =  "vsdCDE.vsd",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "bmpCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "bmpCDE.bmp",
+                FileName =  "bmpCDE.bmp",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "gifCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "gifCDE.gif",
+                FileName =  "gifCDE.gif",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "jpgCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "jpgCDE.jpg",
+                FileName =  "jpgCDE.jpg",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "pngCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "pngCDE.png",
+                FileName =  "pngCDE.png",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "tiffCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "tiffCDE.tiff",
+                FileName =  "tiffCDE.tiff",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "rtfCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "rtfCDE.rtf",
+                FileName =  "rtfCDE.rtf",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             },
             new CaseDocument
             {
                 DocumentId = "txtCDE",
                 VersionId = VersionIdPlaceholder,
-                FileName = "txtCDE.txt",
+                FileName =  "txtCDE.txt",
                 CmsDocType = new CmsDocType
                 {
-                    Code = "MG0",
-                    Name = "MG0 File"
+                    DocumentType = "MG0",
+                    DocumentCategory = "MG0 File"
                 }
             }
         }

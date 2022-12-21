@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AutoFixture;
+using AutoFixture.AutoMoq;
 using Common.Domain.Exceptions;
 using Common.Domain.Requests;
 using Common.Exceptions.Contracts;
@@ -46,6 +47,8 @@ namespace text_extractor.tests.Functions
 		public ExtractTextTests()
 		{
             _fixture = new Fixture();
+            _fixture.Customize(new AutoMoqCustomization());
+
 			_serializedExtractTextRequest = _fixture.Create<string>();
 			_httpRequestMessage = new HttpRequestMessage()
 			{

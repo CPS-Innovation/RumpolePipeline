@@ -22,20 +22,20 @@ public class HandlePolarisDocumentDeletedTests
     private const string QueueName = "update-search-index-by-blob-name";
     private readonly Mock<IStorageQueueService> _mockStorageQueueService;
 
-    private readonly HandlePolarisDocumentDeleted _handlePolarisDocumentDeleted;
+    private readonly HandleDocumentDeletedEvent _handleDocumentDeletedEvent;
     
     public HandlePolarisDocumentDeletedTests()
     {
         _fixture = new Fixture();
         _mockStorageQueueService = new Mock<IStorageQueueService>();
 
-        var logger = new Mock<ILogger<HandlePolarisDocumentDeleted>>();
+        var logger = new Mock<ILogger<HandleDocumentDeletedEvent>>();
         var mockJsonConverterWrapper = new Mock<IJsonConvertWrapper>();
         var mockConfiguration = new Mock<IConfiguration>();
         
         mockConfiguration.Setup(x => x[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName]).Returns(QueueName);
         
-        _handlePolarisDocumentDeleted = new HandlePolarisDocumentDeleted(logger.Object, mockJsonConverterWrapper.Object, mockConfiguration.Object, _mockStorageQueueService.Object);
+        _handleDocumentDeletedEvent = new HandleDocumentDeletedEvent(logger.Object, mockJsonConverterWrapper.Object, mockConfiguration.Object, _mockStorageQueueService.Object);
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class HandlePolarisDocumentDeletedTests
     {
         var act = async () =>
         {
-           await _handlePolarisDocumentDeleted.RunAsync(null, new ExecutionContext());
+           await _handleDocumentDeletedEvent.RunAsync(null, new ExecutionContext());
         };
 
         using (new AssertionScope())
@@ -59,7 +59,7 @@ public class HandlePolarisDocumentDeletedTests
     {
         var evt = _fixture.Create<EventGridEvent>();
 
-        await _handlePolarisDocumentDeleted.RunAsync(evt, new ExecutionContext());
+        await _handleDocumentDeletedEvent.RunAsync(evt, new ExecutionContext());
         
         _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
             Times.Never);
@@ -74,7 +74,7 @@ public class HandlePolarisDocumentDeletedTests
         
         var act = async () =>
         {
-            await _handlePolarisDocumentDeleted.RunAsync(evt, new ExecutionContext());
+            await _handleDocumentDeletedEvent.RunAsync(evt, new ExecutionContext());
         };
 
         using (new AssertionScope())
@@ -107,7 +107,7 @@ public class HandlePolarisDocumentDeletedTests
                     }";
         evt.Data = new BinaryData(eventJson);
         
-        await _handlePolarisDocumentDeleted.RunAsync(evt, new ExecutionContext());
+        await _handleDocumentDeletedEvent.RunAsync(evt, new ExecutionContext());
         
         _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
             Times.Once);

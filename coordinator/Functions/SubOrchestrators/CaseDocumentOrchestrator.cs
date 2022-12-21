@@ -47,17 +47,8 @@ namespace coordinator.Functions.SubOrchestrators
 
             if (!pdfGeneratorResponse.AlreadyProcessed)
             {
-                if (pdfGeneratorResponse.UpdateSearchIndex)
-                {
-                    log.LogMethodFlow(payload.CorrelationId, loggingName, $"Updating the search index for DocumentId: '{payload.DocumentId}' by dropping a message " +
-                                                                          $"onto the queue");
-                    
-                    await context.CallActivityAsync(nameof(QueueUpdateSearchIndexByVersion),
-                        new QueueUpdateSearchIndexByVersionPayload(payload.CaseUrn, payload.CaseId, payload.DocumentId, payload.VersionId, payload.CorrelationId));
-                }
-                
                 log.LogMethodFlow(payload.CorrelationId, loggingName, $"Calling the Text Extractor for DocumentId: '{payload.DocumentId}', FileName: '{payload.FileName}'");
-                await CallTextExtractorAsync(context, payload, pdfGeneratorResponse.BlobName, tracker, log);    
+                await CallTextExtractorAsync(context, payload, pdfGeneratorResponse.BlobName, tracker, log);
             }
 
             log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
@@ -72,17 +63,17 @@ namespace coordinator.Functions.SubOrchestrators
                 log.LogMethodEntry(payload.CorrelationId, nameof(CallPdfGeneratorAsync), payload.ToJson());
                 
                 response = await CallPdfGeneratorHttpAsync(context, payload, tracker, log);
-
+                
                 if (response.AlreadyProcessed)
                 {
-                    await tracker.RegisterBlobAlreadyProcessed(new RegisterPdfBlobNameArg { DocumentId = payload.DocumentId, BlobName = response.BlobName });
+                    await tracker.RegisterBlobAlreadyProcessed(new RegisterPdfBlobNameArg(payload.DocumentId, payload.VersionId, response.BlobName));
                 }
 
                 else
                 {
-                    await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg { DocumentId = payload.DocumentId, BlobName = response.BlobName });
+                    await tracker.RegisterPdfBlobName(new RegisterPdfBlobNameArg(payload.DocumentId, payload.VersionId, response.BlobName));
                 }
-
+                
                 return response;
             }
             catch (Exception exception)

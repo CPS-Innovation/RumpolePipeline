@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Constants;
+using Common.Domain.DocumentEvaluation;
 using Common.Domain.DocumentExtraction;
 using Common.Domain.Extensions;
 using Common.Logging;
@@ -86,10 +87,10 @@ namespace coordinator.Functions
             
             log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             
-            if (!payload.ForceRefresh && await tracker.IsAlreadyProcessed())
+            if (await tracker.IsAlreadyProcessed() && !await tracker.IsStale(payload.ForceRefresh))
             {
-                log.LogMethodFlow(payload.CorrelationId, loggingName, $"Tracker has already finished processing and a 'force refresh' has not been issued - returning " +
-                                                                      $"documents - {context.InstanceId}");
+                log.LogMethodFlow(payload.CorrelationId, loggingName, 
+                    $"Tracker has already finished processing, a 'force refresh' has not been issued and it is not stale - returning documents - {context.InstanceId}");
                 return await tracker.GetDocuments();
             }
 
@@ -100,15 +101,14 @@ namespace coordinator.Functions
             if (documents.Length == 0)
                 return new List<TrackerDocument>();
 
-            //register documents to be processed in the orchestration's tracker
-            await RegisterDocuments(tracker, loggingName, log, payload, documents);
+            //offload evaluated document results, if any, to a new durable activity, to be queued and processed outside of the pipeline's bandwidth
+            var evaluationResults = await RegisterDocuments(tracker, loggingName, log, payload, documents);
+            if (evaluationResults.DocumentsToRemove.Count > 0)
+                await ProcessDocumentsToRemove(context, tracker, loggingName, log, evaluationResults);
             
-            //evaluate incoming documents for items removed in CMS but previously processed by Polaris, handle separately to running pipeline
-            //await EvaluateIncomingDocuments(context, loggingName, log, payload, documents);
-
             log.LogMethodFlow(payload.CorrelationId, loggingName, $"Now process each document for case {payload.CaseId}");
             var caseDocumentTasks = documents.Select(t => context.CallSubOrchestratorAsync(nameof(CaseDocumentOrchestrator), 
-                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.Name, t.DocumentId, 
+                    new CaseDocumentOrchestrationPayload(payload.CaseUrn, payload.CaseId, t.CmsDocType.DocumentCategory, t.DocumentId, 
                         t.VersionId, t.FileName, payload.UpstreamToken, payload.CorrelationId)))
                 .ToList();
 
@@ -148,7 +148,8 @@ namespace coordinator.Functions
             return result;
         }
 
-        private static async Task<CaseDocument[]> RetrieveDocuments(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, CoordinatorOrchestrationPayload payload)
+        private static async Task<CaseDocument[]> RetrieveDocuments(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, 
+            CoordinatorOrchestrationPayload payload)
         {
             safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Getting list of documents for case {payload.CaseId}");
             
@@ -168,20 +169,26 @@ namespace coordinator.Functions
             return documents;
         }
 
-        private static async Task RegisterDocuments(ITracker tracker, string nameToLog, ILogger safeLogger, BasePipelinePayload payload, IEnumerable<CaseDocument> documents)
-        {
-            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
-            await tracker.RegisterDocumentIds(documents.Select(item => new Tuple<string, long>(item.DocumentId, item.VersionId)));
-        }
-
-        private static async Task EvaluateIncomingDocuments(IDurableOrchestrationContext context, string nameToLog, ILogger safeLogger, BasePipelinePayload payload, 
+        private static async Task<DocumentEvaluationActivityPayload> RegisterDocuments(ITracker tracker, string nameToLog, ILogger safeLogger, BasePipelinePayload payload, 
             IEnumerable<CaseDocument> documents)
         {
-            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Passing documents to document evaluation process to remove previously processed documents " +
-                                                                       $"that are no longer retrieved via a call to DDEI, for caseId: {payload.CaseId}");
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Documents found, register document Ids in tracker for case {payload.CaseId}");
+            var arg = new RegisterDocumentIdsArg(payload.CaseUrn, payload.CaseId,
+                documents.Select(item => new IncomingDocument(item.DocumentId, item.VersionId, item.FileName)).ToList(), payload.CorrelationId);
+            return await tracker.RegisterDocumentIds(arg);
+        }
 
-            await context.CallActivityAsync(nameof(QueueExistingDocumentsEvaluation), new QueueExistingDocumentsEvaluationPayload(payload.CaseUrn, payload.CaseId, documents, 
-                payload.CorrelationId));
+        private static async Task ProcessDocumentsToRemove(IDurableOrchestrationContext context, ITracker tracker, string nameToLog, ILogger safeLogger, 
+            DocumentEvaluationActivityPayload payload)
+        {
+            safeLogger.LogMethodFlow(payload.CorrelationId, nameToLog, $"Offloading evaluated documents to separate queues for processing for case {payload.CaseId}");
+            
+            var request = await context.CallActivityAsync<DurableHttpRequest>(
+                nameof(CreateDocumentEvaluationHttpRequest),
+                payload);
+                
+            await context.CallHttpAsync(request); //errors are registered by the separate pipeline and are not captured here so the pipeline's normal running remains unaffected
+            await tracker.ProcessEvaluatedDocuments();
         }
     }
 }

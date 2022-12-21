@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using Azure.Storage.Queues.Models;
 using Common.Constants;
-using Common.Domain.Requests;
+using Common.Domain.QueueItems;
 using Common.Logging;
 using Common.Services.SearchIndexService.Contracts;
 using Common.Wrappers;
@@ -16,11 +16,11 @@ namespace document_evaluator.Functions;
 public class UpdateSearchIndexByBlobName
 {
     private readonly IJsonConvertWrapper _jsonConvertWrapper;
-    private readonly IValidatorWrapper<UpdateSearchIndexByBlobNameRequest> _validatorWrapper;
+    private readonly IValidatorWrapper<UpdateSearchIndexByBlobNameQueueItem> _validatorWrapper;
     private readonly IConfiguration _configuration;
     private readonly ISearchIndexService _searchIndexService;
 
-    public UpdateSearchIndexByBlobName(IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<UpdateSearchIndexByBlobNameRequest> validatorWrapper, 
+    public UpdateSearchIndexByBlobName(IJsonConvertWrapper jsonConvertWrapper, IValidatorWrapper<UpdateSearchIndexByBlobNameQueueItem> validatorWrapper, 
         IConfiguration configuration, ISearchIndexService searchIndexService)
     {
         _jsonConvertWrapper = jsonConvertWrapper;
@@ -34,7 +34,10 @@ public class UpdateSearchIndexByBlobName
     {
         log.LogInformation("Received message from {QueueName}, content={Content}", _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName], message.MessageText);
         
-        var request = _jsonConvertWrapper.DeserializeObject<UpdateSearchIndexByBlobNameRequest>(message.MessageText);
+        var request = _jsonConvertWrapper.DeserializeObject<UpdateSearchIndexByBlobNameQueueItem>(message.MessageText);
+        if (request == null)
+            throw new Exception($"An invalid message received on the queue: '{message.MessageText}'");
+        
         var results = _validatorWrapper.Validate(request);
         if (results.Any())
             throw new Exception(string.Join(Environment.NewLine, results));

@@ -1,11 +1,12 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Common.Validators;
 
-namespace Common.Domain.Requests;
+namespace Common.Domain.QueueItems;
 
-public class UpdateSearchIndexByVersionRequest
+public class UpdateSearchIndexByVersionQueueItem
 {
-    public UpdateSearchIndexByVersionRequest(long caseId, string documentId, long versionId, Guid correlationId)
+    public UpdateSearchIndexByVersionQueueItem(long caseId, string documentId, long versionId, Guid correlationId)
     {
         CaseId = caseId;
         DocumentId = documentId;
@@ -13,13 +14,13 @@ public class UpdateSearchIndexByVersionRequest
         CorrelationId = correlationId;
     }
     
-    [Required]
+    [RequiredLongGreaterThanZero]
     public long CaseId { get; set; }
 
     [Required]
     public string DocumentId { get; set; }
     
-    [Required]
+    [RequiredLongGreaterThanZero]
     public long VersionId { get; set; }
     
     [Required]

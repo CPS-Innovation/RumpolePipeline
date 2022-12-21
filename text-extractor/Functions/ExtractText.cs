@@ -61,7 +61,7 @@ namespace text_extractor.Functions
                 _log.LogMethodEntry(currentCorrelationId, loggingName, string.Empty);
 
                 var authValidation = await _authorizationValidator.ValidateTokenAsync(request.Headers.Authorization, currentCorrelationId,
-                    PipelineScopes.ExtractText, PipelineRoles.ExtractText);
+                    PipelineScopes.EmptyScope, PipelineRoles.ExtractText);
                 if (!authValidation.Item1)
                     throw new UnauthorizedException("Token validation failed");
 
@@ -70,17 +70,15 @@ namespace text_extractor.Functions
 
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
-                {
                     throw new BadRequestException("Request body cannot be null.", nameof(request));
-                }
-
+                
                 var extractTextRequest = _jsonConvertWrapper.DeserializeObject<ExtractTextRequest>(content);
+                if (extractTextRequest == null)
+                    throw new BadRequestException($"An invalid message was received '{content}'", nameof(request));
 
                 var results = _validatorWrapper.Validate(extractTextRequest);
                 if (results.Any())
-                {
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
-                }
 
                 _log.LogMethodFlow(currentCorrelationId, loggingName, $"Beginning OCR process for blob {extractTextRequest.BlobName}");
                 var ocrResults = await _ocrService.GetOcrResultsAsync(extractTextRequest.BlobName, currentCorrelationId);

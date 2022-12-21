@@ -15,7 +15,7 @@ using Common.Domain.Responses;
 using Common.Exceptions.Contracts;
 using Common.Handlers;
 using Common.Services.BlobStorageService.Contracts;
-using Common.Services.DocumentEvaluationService.Contracts;
+using Common.Services.DocumentEvaluation.Contracts;
 using Common.Services.DocumentExtractionService.Contracts;
 using Common.Wrappers;
 using FluentAssertions;
@@ -42,6 +42,7 @@ namespace pdf_generator.tests.Functions
 
 		private readonly Mock<IAuthorizationValidator> _mockAuthorizationValidator;
 		private readonly Mock<IJsonConvertWrapper> _mockJsonConvertWrapper;
+		private readonly Mock<IDocumentEvaluationService> _mockDocumentEvaluationService;
 		private readonly Mock<IDdeiDocumentExtractionService> _mockDocumentExtractionService;
 		private readonly Mock<IBlobStorageService> _mockBlobStorageService;
         private readonly Mock<IExceptionHandler> _mockExceptionHandler;
@@ -74,7 +75,7 @@ namespace pdf_generator.tests.Functions
 			_mockAuthorizationValidator = new Mock<IAuthorizationValidator>();
 			_mockJsonConvertWrapper = new Mock<IJsonConvertWrapper>();
 			_mockValidatorWrapper = new Mock<IValidatorWrapper<GeneratePdfRequest>>();
-			var mockDocumentEvaluationService = new Mock<IDocumentEvaluationService>();
+			_mockDocumentEvaluationService = new Mock<IDocumentEvaluationService>();
 			_mockDocumentExtractionService = new Mock<IDdeiDocumentExtractionService>();
 			_mockBlobStorageService = new Mock<IBlobStorageService>();
 			var mockPdfOrchestratorService = new Mock<IPdfOrchestratorService>();
@@ -89,8 +90,8 @@ namespace pdf_generator.tests.Functions
 			_mockJsonConvertWrapper.Setup(wrapper => wrapper.SerializeObject(It.Is<GeneratePdfResponse>(r => r.BlobName == _blobName)))
 				.Returns(_serializedGeneratePdfResponse);
 			_mockValidatorWrapper.Setup(wrapper => wrapper.Validate(_generatePdfRequest)).Returns(new List<ValidationResult>());
-			mockDocumentEvaluationService.Setup(service => service.EvaluateDocumentAsync(It.IsAny<EvaluateDocumentRequest>(), It.IsAny<Guid>()))
-				.ReturnsAsync(new EvaluateDocumentResponse(_generatePdfRequest.CaseId, _generatePdfRequest.DocumentId, _generatePdfRequest.VersionId, false, DocumentEvaluationResult.AcquireDocument));
+			_mockDocumentEvaluationService.Setup(service => service.EvaluateDocumentAsync(It.IsAny<EvaluateDocumentRequest>(), It.IsAny<Guid>()))
+				.ReturnsAsync(new EvaluateDocumentResponse(_generatePdfRequest.CaseId, _generatePdfRequest.DocumentId, _generatePdfRequest.VersionId) { EvaluationResult = DocumentEvaluationResult.AcquireDocument } );
 			_mockDocumentExtractionService.Setup(service => service.GetDocumentAsync(_generatePdfRequest.CaseUrn, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentCategory, _generatePdfRequest.DocumentId, It.IsAny<string>(), It.IsAny<Guid>()))
 				.ReturnsAsync(_documentStream);
 			mockPdfOrchestratorService.Setup(service => service.ReadToPdfStream(_documentStream, FileType.DOC, _generatePdfRequest.DocumentId, _correlationId))
@@ -100,7 +101,7 @@ namespace pdf_generator.tests.Functions
 								_mockAuthorizationValidator.Object,
 								_mockJsonConvertWrapper.Object,
 								_mockValidatorWrapper.Object,
-								mockDocumentEvaluationService.Object,
+								_mockDocumentEvaluationService.Object,
 								_mockDocumentExtractionService.Object,
 								_mockBlobStorageService.Object,
 								mockPdfOrchestratorService.Object,
@@ -208,6 +209,23 @@ namespace pdf_generator.tests.Functions
 
 			response.Should().Be(_errorHttpResponseMessage);
 		}
+
+		[Fact]
+		public async Task Run_DoesNotProcessTheDocument_WhenDocumentEvaluation_Returns_AlreadyProcessed()
+		{
+			_generatePdfRequest.FileName = "Test.pdf";
+			_mockDocumentExtractionService.Setup(service => service.GetDocumentAsync(_generatePdfRequest.CaseUrn, _generatePdfRequest.CaseId.ToString(), 
+					_generatePdfRequest.DocumentCategory, _generatePdfRequest.DocumentId, It.IsAny<string>(), It.IsAny<Guid>()))
+				.ReturnsAsync(_documentStream);
+			_mockDocumentEvaluationService.Setup(service => service.EvaluateDocumentAsync(It.IsAny<EvaluateDocumentRequest>(), It.IsAny<Guid>()))
+				.ReturnsAsync(new EvaluateDocumentResponse(_generatePdfRequest.CaseId, _generatePdfRequest.DocumentId, _generatePdfRequest.VersionId) { EvaluationResult = DocumentEvaluationResult.DocumentUnchanged } );
+			
+			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
+			await _generatePdf.Run(_httpRequestMessage);
+
+			_mockBlobStorageService.Verify(service => service.UploadDocumentAsync(_documentStream, _blobName, _generatePdfRequest.CaseId.ToString(), _generatePdfRequest.DocumentId, 
+				_generatePdfRequest.VersionId.ToString(), _correlationId), Times.Never);
+		}
 		
 		[Fact]
 		public async Task Run_UploadsDocumentStreamWhenFileTypeIsPdf()
@@ -270,4 +288,3 @@ namespace pdf_generator.tests.Functions
 		}
 	}
 }
-

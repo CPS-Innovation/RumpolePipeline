@@ -9,7 +9,12 @@ namespace Common.Wrappers
         public ICollection<ValidationResult> Validate(TRequest request)
         {
             var validationResults = new Collection<ValidationResult>();
-            Validator.TryValidateObject(request, new ValidationContext(request), validationResults, true);
+            if (request != null)
+                Validator.TryValidateObject(request, new ValidationContext(request), validationResults, true);
+            else
+            {
+                validationResults.Add(new ValidationResult("A null request was received and could not be validated."));
+            }
             return validationResults;
         } 
     }

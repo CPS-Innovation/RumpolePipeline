@@ -26,7 +26,7 @@ variable "ddei_config" {
 
 variable "queue_config" {
   type = object({
-    evaluate_existing_documents_queue_name = string
+    update_blob_storage_queue_name = string
     update_search_index_by_version_queue_name = string
     update_search_index_by_blob_name_queue_name = string
   })
