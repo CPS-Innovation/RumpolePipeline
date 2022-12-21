@@ -91,14 +91,14 @@ namespace pdf_generator.Functions
                 var content = await request.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
                     throw new BadRequestException("Request body cannot be null.", nameof(request));
-                
+
                 var pdfRequest = _jsonConvertWrapper.DeserializeObject<GeneratePdfRequest>(content);
+                if (pdfRequest == null)
+                    throw new BadRequestException($"An invalid message was received '{content}'", nameof(request));
 
                 var results = _validatorWrapper.Validate(pdfRequest);
                 if (results.Any())
-                {
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
-                }
                 
                 var blobName = $"{pdfRequest.CaseId}/pdfs/{Path.GetFileNameWithoutExtension(pdfRequest.FileName)}.pdf";
                 generatePdfResponse = new GeneratePdfResponse(blobName);

@@ -81,163 +81,163 @@ public class ProcessEvaluatedDocumentsTests
     }
     
     [Fact]
-		public async Task Run_ReturnsExceptionWhenCorrelationIdIsMissing()
-		{
-			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
-				.ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
-			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<ILogger<ProcessEvaluatedDocuments>>()))
-				.Returns(_errorHttpResponseMessage);
-			_httpRequestMessage.Content = new StringContent(" ");
-			
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
-		}
-
-		[Fact]
-		public async Task Run_ReturnsUnauthorizedWhenUnauthorized()
-		{
-			_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
-				.ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
-			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
-				.Returns(_errorHttpResponseMessage);
-			_httpRequestMessage.Content = new StringContent(" ");
-			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
-
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
-		}
-
-		[Fact]
-		public async Task Run_ReturnsBadRequestWhenContentIsInvalid()
-        {
-			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
-				.Returns(_errorHttpResponseMessage);
-			_httpRequestMessage.Content = new StringContent(" ");
-			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
-
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
-		}
+	public async Task Run_ReturnsExceptionWhenCorrelationIdIsMissing()
+	{
+		_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
+			.ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
+		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
+		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<ILogger<ProcessEvaluatedDocuments>>()))
+			.Returns(_errorHttpResponseMessage);
+		_httpRequestMessage.Content = new StringContent(" ");
 		
-		[Fact]
-		public async Task Run_ReturnsBadRequestWhenContentIsNull()
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
 		{
-			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
-				.Returns(_errorHttpResponseMessage);
-			_httpRequestMessage.Content = null;
-			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
-
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
+	}
+
+	[Fact]
+	public async Task Run_ReturnsUnauthorizedWhenUnauthorized()
+	{
+		_mockAuthorizationValidator.Setup(handler => handler.ValidateTokenAsync(It.IsAny<AuthenticationHeaderValue>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
+			.ReturnsAsync(new Tuple<bool, string>(false, string.Empty));
+		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);
+		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<UnauthorizedException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
+			.Returns(_errorHttpResponseMessage);
+		_httpRequestMessage.Content = new StringContent(" ");
+		_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
+
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
+		{
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
+		}
+	}
+
+	[Fact]
+	public async Task Run_ReturnsBadRequestWhenContentIsInvalid()
+    {
+		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
+		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
+			.Returns(_errorHttpResponseMessage);
+		_httpRequestMessage.Content = new StringContent(" ");
+		_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
+
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
+		{
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
+		}
+	}
+	
+	[Fact]
+	public async Task Run_ReturnsBadRequestWhenContentIsNull()
+	{
+		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
+		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
+			.Returns(_errorHttpResponseMessage);
+		_httpRequestMessage.Content = null;
+		_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
+
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
+		{
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
+		}
+	}
+	
+	[Fact]
+	public async Task Run_ReturnsBadRequestWhenUsingAnInvalidCorrelationId()
+	{
+		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
+		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
+			.Returns(_errorHttpResponseMessage);
+		_httpRequestMessage.Headers.Add("Correlation-Id", string.Empty);
+
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
+		{
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
+		}
+	}
+	
+	[Fact]
+	public async Task Run_ReturnsBadRequestWhenUsingAnEmptyCorrelationId()
+	{
+		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
+		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
+			.Returns(_errorHttpResponseMessage);
+		_httpRequestMessage.Headers.Add("Correlation-Id", Guid.Empty.ToString());
+
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
+		{
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
+		}
+	}
+
+	[Fact]
+	public async Task Run_ReturnsBadRequestWhenThereAreAnyValidationErrors()
+	{
+		var validationResults = _fixture.CreateMany<ValidationResult>(2).ToList();
 		
-		[Fact]
-		public async Task Run_ReturnsBadRequestWhenUsingAnInvalidCorrelationId()
+		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
+		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
+			.Returns(_errorHttpResponseMessage);
+		_mockValidatorWrapper.Setup(wrapper => wrapper.Validate(_documentsToRemoveRequest)).Returns(validationResults);
+		_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
+
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
 		{
-			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
-				.Returns(_errorHttpResponseMessage);
-			_httpRequestMessage.Headers.Add("Correlation-Id", string.Empty);
-
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
-		
-		[Fact]
-		public async Task Run_ReturnsBadRequestWhenUsingAnEmptyCorrelationId()
+	}
+	
+	[Fact]
+	public async Task Run_ReturnsOk()
+	{
+		_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
 		{
-			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
-				.Returns(_errorHttpResponseMessage);
-			_httpRequestMessage.Headers.Add("Correlation-Id", Guid.Empty.ToString());
-
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(_documentsToRemoveRequest.DocumentsToRemove.Count * 2));
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
+	}
 
-		[Fact]
-		public async Task Run_ReturnsBadRequestWhenThereAreAnyValidationErrors()
+	[Fact]
+	public async Task Run_ReturnsResponseWhenExceptionOccurs()
+	{
+		_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+		var exception = new Exception();
+		_mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<ProcessDocumentsToRemoveRequest>(_serializedDocumentsToRemoveRequest))
+			.Throws(exception);
+		_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
+			.Returns(_errorHttpResponseMessage);
+
+		var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
+
+		using (new AssertionScope())
 		{
-			var validationResults = _fixture.CreateMany<ValidationResult>(2).ToList();
-			
-			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<BadRequestException>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
-				.Returns(_errorHttpResponseMessage);
-			_mockValidatorWrapper.Setup(wrapper => wrapper.Validate(_documentsToRemoveRequest)).Returns(validationResults);
-			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
-
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
+			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
-		
-		[Fact]
-		public async Task Run_ReturnsOk()
-		{
-			_httpRequestMessage.Headers.Add("Correlation-Id", _correlationId.ToString());
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(_documentsToRemoveRequest.DocumentsToRemove.Count * 2));
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
-		}
-
-		[Fact]
-		public async Task Run_ReturnsResponseWhenExceptionOccurs()
-		{
-			_errorHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.InternalServerError);
-			var exception = new Exception();
-			_mockJsonConvertWrapper.Setup(wrapper => wrapper.DeserializeObject<ProcessDocumentsToRemoveRequest>(_serializedDocumentsToRemoveRequest))
-				.Throws(exception);
-			_mockExceptionHandler.Setup(handler => handler.HandleException(It.IsAny<Exception>(), It.IsAny<Guid>(), It.IsAny<string>(), _mockLogger.Object))
-				.Returns(_errorHttpResponseMessage);
-
-			var response = await _processEvaluatedDocuments.Run(_httpRequestMessage);
-
-			using (new AssertionScope())
-			{
-				_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-				response.StatusCode.Should().Be(HttpStatusCode.OK);
-			}
-		}
+	}
 }

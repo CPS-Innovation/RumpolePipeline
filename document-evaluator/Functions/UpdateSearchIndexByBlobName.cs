@@ -35,6 +35,9 @@ public class UpdateSearchIndexByBlobName
         log.LogInformation("Received message from {QueueName}, content={Content}", _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName], message.MessageText);
         
         var request = _jsonConvertWrapper.DeserializeObject<UpdateSearchIndexByBlobNameQueueItem>(message.MessageText);
+        if (request == null)
+            throw new Exception($"An invalid message received on the queue: '{message.MessageText}'");
+        
         var results = _validatorWrapper.Validate(request);
         if (results.Any())
             throw new Exception(string.Join(Environment.NewLine, results));

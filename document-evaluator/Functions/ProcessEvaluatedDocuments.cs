@@ -69,13 +69,13 @@ namespace document_evaluator.Functions
                     throw new BadRequestException("Request body cannot be null.", nameof(request));
                 
                 var processEvaluatedDocumentsRequest = _jsonConvertWrapper.DeserializeObject<ProcessDocumentsToRemoveRequest>(content);
+                if (processEvaluatedDocumentsRequest == null)
+                    throw new Exception($"An invalid message was received '{content}'");
 
                 var results = _validatorWrapper.Validate(processEvaluatedDocumentsRequest);
                 if (results.Any())
-                {
                     throw new BadRequestException(string.Join(Environment.NewLine, results), nameof(request));
-                }
-
+                
                 if (processEvaluatedDocumentsRequest.DocumentsToRemove is {Count: > 0})
                 {
                     foreach (var payload in processEvaluatedDocumentsRequest.DocumentsToRemove)
