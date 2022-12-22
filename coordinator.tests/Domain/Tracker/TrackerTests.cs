@@ -7,6 +7,7 @@ using AutoFixture;
 using Common.Domain.DocumentEvaluation;
 using coordinator.Domain.Tracker;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -78,18 +79,7 @@ namespace coordinator.tests.Domain.Tracker
             _tracker.Logs.Should().NotBeNull();
             _tracker.Status.Should().Be(TrackerStatus.Running);
 
-            _tracker.Logs.Count().Should().Be(1);
-        }
-
-        [Fact]
-        public async Task RegisterDocumentIds_RegistersDocumentIds()
-        {
-            await _tracker.Initialise(_transactionId);
-            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
-
-            _tracker.Documents.Count().Should().Be(_incomingDocuments.Count());
-
-            _tracker.Logs.Count().Should().Be(2);
+            _tracker.Logs.Count.Should().Be(1);
         }
 
         [Fact]
@@ -103,7 +93,7 @@ namespace coordinator.tests.Domain.Tracker
             document?.PdfBlobName.Should().Be(_pdfBlobNameArg.BlobName);
             document?.Status.Should().Be(DocumentStatus.PdfUploadedToBlob);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(3);
         }
 
         [Fact]
@@ -116,7 +106,43 @@ namespace coordinator.tests.Domain.Tracker
             var document = _tracker.Documents.Find(document => document.DocumentId == _incomingDocuments.First().DocumentId);
             document?.Status.Should().Be(DocumentStatus.NotFoundInDDEI);
 
-            _tracker.Logs.Count().Should().Be(3);
+            _tracker.Logs.Count.Should().Be(3);
+        }
+        
+        [Fact]
+        public async Task RegisterIfRequired_EvaluatedDocuments_RequireProcessing()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.ProcessEvaluatedDocuments();
+
+            _tracker.Logs.Count.Should().Be(3);
+        }
+        
+        [Fact]
+        public async Task RegisterDocumentAsAlreadyProcessed_Registers()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.RegisterBlobAlreadyProcessed(new RegisterPdfBlobNameArg(_pdfBlobNameArg.DocumentId, _pdfBlobNameArg.VersionId, _pdfBlobNameArg.BlobName));
+
+            var document = _tracker.Documents.Find(document => document.DocumentId == _pdfBlobNameArg.DocumentId);
+            document?.Status.Should().Be(DocumentStatus.DocumentAlreadyProcessed);
+
+            _tracker.Logs.Count.Should().Be(3);
+        }
+        
+        [Fact]
+        public async Task RegisterDocumentAsFailedPDFConversion_Registers()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.RegisterUnableToConvertDocumentToPdf(_pdfBlobNameArg.DocumentId);
+
+            var document = _tracker.Documents.Find(document => document.DocumentId == _pdfBlobNameArg.DocumentId);
+            document?.Status.Should().Be(DocumentStatus.UnableToConvertToPdf);
+
+            _tracker.Logs.Count.Should().Be(3);
         }
 
         [Fact]
@@ -333,5 +359,266 @@ namespace coordinator.tests.Domain.Tracker
 
             response.Should().BeOfType<BadRequestObjectResult>();
         }
+        
+        #region IsStale Tests
+        
+        [Fact]
+        public async Task IsStaleCheck_ReturnsTrue_WhenForceRefreshIsPassedAsTrue()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.RegisterCompleted();
+
+            var result = await _tracker.IsStale(true);
+
+            result.Should().BeTrue();
+        }
+        
+        [Fact]
+        public async Task IsStaleCheck_ReturnsFalse_WhenForceRefreshIsPassedAsFalse()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+
+            var result = await _tracker.IsStale(false);
+
+            result.Should().BeFalse();
+        }
+        
+        [Fact]
+        public async Task IsStaleCheck_ReturnsTrue_WhenForceRefreshIsPassedAsFalse_ButTheTrackerStatusIsFailed()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.RegisterFailed();
+
+            var result = await _tracker.IsStale(false);
+
+            result.Should().BeTrue();
+            _tracker.Logs.Count.Should().Be(3);
+        }
+        
+        [Fact]
+        public async Task IsStaleCheck_ReturnsFalse_WhenForceRefreshIsPassedAsFalse_ButTheTrackerStatusIsRunning()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            _tracker.Status = TrackerStatus.Running;
+
+            var result = await _tracker.IsStale(false);
+
+            result.Should().BeFalse();
+        }
+        
+        [Fact]
+        public async Task IsStaleCheck_ReturnsFalse_WhenForceRefreshIsPassedAsTrue_ButTheTrackerStatusIsRunning()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            _tracker.Status = TrackerStatus.Running;
+
+            var result = await _tracker.IsStale(true);
+
+            result.Should().BeFalse();
+        }
+        
+        [Fact]
+        public async Task IsStaleCheck_ReturnsFalse_WhenForceRefreshIsPassedAsFalse_AndTheProcessingDateHasNotBeenSet()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            _tracker.ProcessingCompleted = null;
+
+            var result = await _tracker.IsStale(false);
+
+            result.Should().BeFalse();
+        }
+        
+        [Fact]
+        public async Task IsStaleCheck_ReturnsFalse_WhenForceRefreshIsPassedAsFalse_AndTheProcessingDateIsTheSameAsToday()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.RegisterCompleted();
+
+            var result = await _tracker.IsStale(false);
+
+            result.Should().BeFalse();
+        }
+        
+        [Fact]
+        public async Task IsStaleCheck_ReturnsTrue_WhenForceRefreshIsPassedAsFalse_AndTheProcessingDateIsNotTheSameAsToday()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            await _tracker.RegisterCompleted();
+
+            _tracker.ProcessingCompleted = _tracker.ProcessingCompleted.GetValueOrDefault(DateTime.Now).AddDays(-1);
+
+            var result = await _tracker.IsStale(false);
+
+            result.Should().BeTrue();
+        }
+        
+        #endregion
+        
+        #region RegisterDocumentIds
+        
+        [Fact]
+        public async Task RegisterDocumentIds_ForTheFirstTime_HoldsTheCorrectNumberOfDocs()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+
+            _tracker.Documents.Count.Should().Be(_incomingDocuments.Count);
+
+            _tracker.Logs.Count.Should().Be(2);
+        }
+        
+        [Fact]
+        public async Task RegisterDocumentIds_TheNextDaysRun_IncomingDocumentsTheSame_ReturnsNothingToEvaluate()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            _tracker.Documents.Count.Should().Be(_incomingDocuments.Count);
+            
+            var newDaysIncomingDocuments = new IncomingDocument[3];
+            _incomingDocuments.CopyTo(newDaysIncomingDocuments);
+            var newDaysDocumentIdsArg = _fixture.Build<RegisterDocumentIdsArg>()
+                .With(a => a.CaseUrn, _caseUrn)
+                .With(a => a.CaseId, _caseId)
+                .With(a => a.IncomingDocuments, newDaysIncomingDocuments.ToList())
+                .With(a => a.CorrelationId, _correlationId)
+                .Create();
+
+            await _tracker.Initialise(_transactionId);
+            var evaluationResults = await _tracker.RegisterDocumentIds(newDaysDocumentIdsArg);
+
+            using (new AssertionScope())
+            {
+                _tracker.Documents.Count.Should().Be(_incomingDocuments.Count);
+                evaluationResults.DocumentsToRemove.Count.Should().Be(0);
+            }
+        }
+        
+        [Fact]
+        public async Task RegisterDocumentIds_TheNextDaysRun_IncomingDocumentsNotTheSame_ReturnsRecordsToEvaluate()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            _tracker.Documents.Count.Should().Be(_incomingDocuments.Count);
+            
+            var newDaysIncomingDocuments = new List<IncomingDocument> {_incomingDocuments.First()};
+            ////only one document in today's run, the next two should be removed from the tracker and in the evaluation results
+            
+            var newDaysDocumentIdsArg = _fixture.Build<RegisterDocumentIdsArg>()
+                .With(a => a.CaseUrn, _caseUrn)
+                .With(a => a.CaseId, _caseId)
+                .With(a => a.IncomingDocuments, newDaysIncomingDocuments)
+                .With(a => a.CorrelationId, _correlationId)
+                .Create();
+
+            await _tracker.Initialise(_transactionId);
+            var evaluationResults = await _tracker.RegisterDocumentIds(newDaysDocumentIdsArg);
+
+            using (new AssertionScope())
+            {
+                _tracker.Documents.Count.Should().Be(1);
+                evaluationResults.DocumentsToRemove.Count.Should().Be(2);
+                evaluationResults.DocumentsToRemove[0].DocumentId.Should().Be(_incomingDocuments[1].DocumentId);
+                evaluationResults.DocumentsToRemove[1].DocumentId.Should().Be(_incomingDocuments[2].DocumentId);
+            }
+        }
+        
+        [Fact]
+        public async Task RegisterDocumentIds_TheNextDaysRun_IncomingDocumentsTheSameExceptForANewVersionOfOneDoc_ReturnsOneRecordToEvaluate()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            _tracker.Documents.Count.Should().Be(_incomingDocuments.Count);
+            
+            var newDaysIncomingDocuments = new IncomingDocument[3];
+            _incomingDocuments.CopyTo(newDaysIncomingDocuments);
+            var originalVersionId = newDaysIncomingDocuments[1].VersionId;
+            var newVersionId = originalVersionId + 1;
+            newDaysIncomingDocuments[1].VersionId = newVersionId;
+            var modifiedDocumentId = newDaysIncomingDocuments[1].DocumentId;
+            var newDaysDocumentIdsArg = _fixture.Build<RegisterDocumentIdsArg>()
+                .With(a => a.CaseUrn, _caseUrn)
+                .With(a => a.CaseId, _caseId)
+                .With(a => a.IncomingDocuments, newDaysIncomingDocuments.ToList())
+                .With(a => a.CorrelationId, _correlationId)
+                .Create();
+
+            await _tracker.Initialise(_transactionId);
+            var evaluationResults = await _tracker.RegisterDocumentIds(newDaysDocumentIdsArg);
+
+            using (new AssertionScope())
+            {
+                _tracker.Documents.Count.Should().Be(_incomingDocuments.Count);
+                var newVersion = _tracker.Documents.Find(x => x.DocumentId == modifiedDocumentId);
+
+                newVersion.Should().NotBeNull();
+                newVersion?.VersionId.Should().Be(newVersionId);
+                
+                evaluationResults.DocumentsToRemove.Count.Should().Be(1);
+                evaluationResults.DocumentsToRemove[0].DocumentId.Should().Be(modifiedDocumentId);
+                evaluationResults.DocumentsToRemove[0].VersionId.Should().Be(originalVersionId);
+            }
+        }
+        
+        [Fact]
+        public async Task RegisterDocumentIds_TheNextDaysRun_OneDocumentRemovedAndOneANewVersion_ReturnsTwoRecordToEvaluate()
+        {
+            await _tracker.Initialise(_transactionId);
+            await _tracker.RegisterDocumentIds(_registerDocumentIdsArg);
+            _tracker.Documents.Count.Should().Be(_incomingDocuments.Count);
+            
+            var newDaysIncomingDocuments = new List<IncomingDocument>();
+            newDaysIncomingDocuments.Add(_incomingDocuments[1]);
+            newDaysIncomingDocuments.Add(_incomingDocuments[2]);
+
+            var documentRemovedFromCmsId = _incomingDocuments[0].DocumentId;
+            var originalVersionId = newDaysIncomingDocuments[0].VersionId;
+            var newVersionId = originalVersionId + 1;
+            newDaysIncomingDocuments[0].VersionId = newVersionId;
+            var modifiedDocumentId = newDaysIncomingDocuments[0].DocumentId;
+
+            var unmodifiedDocumentId = newDaysIncomingDocuments[1].DocumentId;
+            var unmodifiedDocumentVersionId = newDaysIncomingDocuments[1].VersionId;
+            
+            var newDaysDocumentIdsArg = _fixture.Build<RegisterDocumentIdsArg>()
+                .With(a => a.CaseUrn, _caseUrn)
+                .With(a => a.CaseId, _caseId)
+                .With(a => a.IncomingDocuments, newDaysIncomingDocuments.ToList())
+                .With(a => a.CorrelationId, _correlationId)
+                .Create();
+
+            await _tracker.Initialise(_transactionId);
+            var evaluationResults = await _tracker.RegisterDocumentIds(newDaysDocumentIdsArg);
+
+            using (new AssertionScope())
+            {
+                _tracker.Documents.Count.Should().Be(2);
+                var newVersion = _tracker.Documents.Find(x => x.DocumentId == modifiedDocumentId);
+                var unmodifiedDocument = _tracker.Documents.Find(x => x.DocumentId == unmodifiedDocumentId);
+
+                newVersion.Should().NotBeNull();
+                newVersion?.VersionId.Should().Be(newVersionId);
+
+                unmodifiedDocument.Should().NotBeNull();
+                unmodifiedDocument?.VersionId.Should().Be(unmodifiedDocumentVersionId);
+                
+                evaluationResults.DocumentsToRemove.Count.Should().Be(2);
+
+                var documentFlaggedAsRemovedFromCms = evaluationResults.DocumentsToRemove.Find(x => x.DocumentId == documentRemovedFromCmsId);
+                var documentFlaggedAsOldVersion = evaluationResults.DocumentsToRemove.Find(x => x.DocumentId == modifiedDocumentId);
+
+                documentFlaggedAsRemovedFromCms.Should().NotBeNull();
+                documentFlaggedAsOldVersion.Should().NotBeNull();
+            }
+        }
+        
+        #endregion
     }
 }

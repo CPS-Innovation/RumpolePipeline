@@ -69,7 +69,7 @@ public class HandleDocumentDeletedEvent
                 var caseId = long.Parse(blobDetails[2]);
                 var blobName = blobDetails[4];
                 
-                await _storageQueueService.AddNewMessage(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByBlobNameQueueItem(caseId, 
+                await _storageQueueService.AddNewMessageAsync(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByBlobNameQueueItem(caseId, 
                     blobName, correlationId)), _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName]);
                 
                 var searchIndexUpdated = $"The search index update was queued and should remove any joint references to caseId: {caseId} and blobName: '{blobName}'";

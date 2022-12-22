@@ -49,6 +49,9 @@ namespace Common.Services.BlobStorageService
             var result = new List<BlobSearchResult>();
             
             var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_blobServiceContainerName);
+            if (!await blobContainerClient.ExistsAsync())
+                throw new RequestFailedException((int)HttpStatusCode.NotFound, $"Blob container '{_blobServiceContainerName}' does not exist");
+            
             await foreach (var blobItem in blobContainerClient.GetBlobsAsync (BlobTraits.Metadata, BlobStates.None, blobPrefix))
             {
                 blobItem.Metadata.TryGetValue(DocumentTags.VersionId, out var blobVersionAsString);

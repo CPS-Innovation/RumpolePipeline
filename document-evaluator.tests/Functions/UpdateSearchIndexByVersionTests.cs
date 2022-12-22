@@ -5,7 +5,6 @@ using Azure.Storage.Queues.Models;
 using Common.Constants;
 using Common.Domain.Extensions;
 using Common.Domain.QueueItems;
-using Common.Services.BlobStorageService.Contracts;
 using Common.Services.SearchIndexService.Contracts;
 using Common.Wrappers;
 using document_evaluator.Functions;

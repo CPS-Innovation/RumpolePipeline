@@ -220,11 +220,11 @@ namespace coordinator.Domain.Tracker
 
         public Task<bool> IsStale(bool forceRefresh)
         {
-            if (forceRefresh || Status is TrackerStatus.Failed)
-                return Task.FromResult(true);
-
             if (Status is TrackerStatus.Running)
                 return Task.FromResult(false);
+            
+            if (forceRefresh || Status is TrackerStatus.Failed)
+                return Task.FromResult(true);
 
             return ProcessingCompleted.HasValue 
                 ? Task.FromResult(ProcessingCompleted.Value.Date != DateTime.Now.Date) 

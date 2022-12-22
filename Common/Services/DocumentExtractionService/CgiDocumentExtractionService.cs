@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -27,6 +28,7 @@ public class CgiDocumentExtractionService : BaseDocumentExtractionService, ICgiD
         _configuration = configuration;
     }
 
+    [ExcludeFromCodeCoverage]
     public Task<CaseDocument[]> ListDocumentsAsync(string caseId, string accessToken, Guid correlationId)
     {
         _logger.LogMethodEntry(correlationId, nameof(ListDocumentsAsync), caseId);
@@ -52,6 +54,7 @@ public class CgiDocumentExtractionService : BaseDocumentExtractionService, ICgiD
         return result;
     }
     
+    [ExcludeFromCodeCoverage]
     private static Case McLoveCase(string caseId)
     {
         return new Case
@@ -272,6 +275,7 @@ public class CgiDocumentExtractionService : BaseDocumentExtractionService, ICgiD
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static Case MultipleFileTypeCase(string caseId)
     {
         return new Case
