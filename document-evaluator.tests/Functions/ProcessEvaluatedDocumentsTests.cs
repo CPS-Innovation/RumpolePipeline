@@ -94,7 +94,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}
@@ -114,7 +114,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}
@@ -132,7 +132,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}
@@ -150,7 +150,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}
@@ -167,7 +167,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}
@@ -184,7 +184,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}
@@ -204,7 +204,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}
@@ -217,7 +217,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(_documentsToRemoveRequest.DocumentsToRemove.Count * 2));
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(_documentsToRemoveRequest.DocumentsToRemove.Count * 2));
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}
@@ -236,7 +236,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}

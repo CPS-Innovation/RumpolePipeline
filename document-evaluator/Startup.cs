@@ -60,7 +60,12 @@ namespace document_evaluator
             builder.Services.AddTransient<IHttpRequestFactory, HttpRequestFactory>();
 
             builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
-            builder.Services.AddTransient<IStorageQueueService>(_ => new StorageQueueService(configuration[ConfigKeys.SharedKeys.DocumentEvaluatorQueueUrl]));
+            builder.Services.AddTransient<IStorageQueueHelper, StorageQueueHelper>();
+            builder.Services.AddTransient<IStorageQueueService>(provider =>
+            {
+                var helper = provider.GetService<IStorageQueueHelper>();
+                return new StorageQueueService(configuration[ConfigKeys.SharedKeys.DocumentEvaluatorQueueUrl], helper);
+            });
         }
     }
 }

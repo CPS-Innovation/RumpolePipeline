@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure;
@@ -13,6 +14,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Common.Services.SearchIndexService
 {
+    [ExcludeFromCodeCoverage]
     public class SearchIndexService : ISearchIndexService
     {
         private readonly SearchClient _searchClient;

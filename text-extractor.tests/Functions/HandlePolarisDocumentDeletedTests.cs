@@ -49,7 +49,7 @@ public class HandlePolarisDocumentDeletedTests
         using (new AssertionScope())
         {
             await act.Should().ThrowAsync<ArgumentNullException>();
-            _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
+            _mockStorageQueueService.Verify(s => s.AddNewMessageAsync(It.IsAny<string>(), QueueName), 
                 Times.Never);
         }
     }
@@ -61,7 +61,7 @@ public class HandlePolarisDocumentDeletedTests
 
         await _handleDocumentDeletedEvent.RunAsync(evt, new ExecutionContext());
         
-        _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
+        _mockStorageQueueService.Verify(s => s.AddNewMessageAsync(It.IsAny<string>(), QueueName), 
             Times.Never);
     }
     
@@ -80,7 +80,7 @@ public class HandlePolarisDocumentDeletedTests
         using (new AssertionScope())
         {
             await act.Should().ThrowAsync<NullReferenceException>();
-            _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
+            _mockStorageQueueService.Verify(s => s.AddNewMessageAsync(It.IsAny<string>(), QueueName), 
                 Times.Never);
         }
     }
@@ -109,7 +109,7 @@ public class HandlePolarisDocumentDeletedTests
         
         await _handleDocumentDeletedEvent.RunAsync(evt, new ExecutionContext());
         
-        _mockStorageQueueService.Verify(s => s.AddNewMessage(It.IsAny<string>(), QueueName), 
+        _mockStorageQueueService.Verify(s => s.AddNewMessageAsync(It.IsAny<string>(), QueueName), 
             Times.Once);
     }
 }

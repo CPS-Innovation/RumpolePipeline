@@ -80,11 +80,11 @@ namespace document_evaluator.Functions
                 {
                     foreach (var payload in processEvaluatedDocumentsRequest.DocumentsToRemove)
                     {
-                        await _storageQueueService.AddNewMessage(
+                        await _storageQueueService.AddNewMessageAsync(
                             _jsonConvertWrapper.SerializeObject(new UpdateBlobStorageQueueItem(payload.PdfBlobName, currentCorrelationId)),
                             _configuration[ConfigKeys.SharedKeys.UpdateBlobStorageQueueName]);
                         
-                        await _storageQueueService.AddNewMessage(
+                        await _storageQueueService.AddNewMessageAsync(
                             _jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByVersionQueueItem(processEvaluatedDocumentsRequest.CaseId, payload.DocumentId, 
                                 payload.VersionId, currentCorrelationId)), _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByVersionQueueName]);
                     }

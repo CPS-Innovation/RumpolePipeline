@@ -141,6 +141,17 @@ namespace coordinator.tests.Functions
 
             _mockTracker.Verify(tracker => tracker.Initialise(_transactionId), Times.Once);
         }
+        
+        [Fact]
+        public async Task Run_Tracker_InitialisesTheTrackerWhenIsAlreadyProcessed_ForceRefreshIsFalse_ButIsStaleReturnsTrue()
+        {
+            _mockTracker.Setup(tracker => tracker.IsAlreadyProcessed()).ReturnsAsync(true);
+            _mockTracker.Setup(tracker => tracker.IsStale(false)).ReturnsAsync(true); //default, marked as Stale to perform a new run
+            
+            await _coordinatorOrchestrator.Run(_mockDurableOrchestrationContext.Object);
+
+            _mockTracker.Verify(tracker => tracker.Initialise(_transactionId), Times.Once);
+        }
 
         [Fact]
         public async Task Run_Tracker_Initialises()

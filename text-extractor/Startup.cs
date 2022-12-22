@@ -57,7 +57,12 @@ namespace text_extractor
             builder.Services.AddTransient<ISearchClientFactory, SearchClientFactory>();
             builder.Services.AddTransient<IComputerVisionClientFactory, ComputerVisionClientFactory>();
             builder.Services.AddTransient<ISearchIndexingBufferedSenderFactory, SearchIndexingBufferedSenderFactory>();
-            builder.Services.AddTransient<IStorageQueueService>(_ => new StorageQueueService(configuration[ConfigKeys.SharedKeys.DocumentEvaluatorQueueUrl]));
+            builder.Services.AddTransient<IStorageQueueHelper, StorageQueueHelper>();
+            builder.Services.AddTransient<IStorageQueueService>(provider =>
+            {
+                var helper = provider.GetService<IStorageQueueHelper>();
+                return new StorageQueueService(configuration[ConfigKeys.SharedKeys.DocumentEvaluatorQueueUrl], helper);
+            });
         }
     }
 }
