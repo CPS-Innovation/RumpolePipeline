@@ -56,12 +56,6 @@ resource "azurerm_role_assignment" "ra_blob_data_contributor_text_extractor" {
   principal_id         = azurerm_function_app.fa_text_extractor.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "ra_queue_data_message_sender_coordinator" {
-  scope                = azurerm_storage_container.container.resource_manager_id
-  role_definition_name = "Storage Queue Data Contributor"
-  principal_id         = azurerm_function_app.fa_coordinator.identity[0].principal_id
-}
-
 resource "azurerm_role_assignment" "ra_queue_data_message_sender_text_extractor" {
   scope                = azurerm_storage_container.container.resource_manager_id
   role_definition_name = "Storage Queue Data Message Sender"
@@ -78,7 +72,7 @@ resource "azurerm_storage_management_policy" "pipeline-documents-lifecycle" {
   storage_account_id   = azurerm_storage_account.sa.id
   
   rule {
-    name               = "polaris-documents-lifecycle"
+    name               = "polaris-documents-${var.env != "prod" ? var.env : ""}-lifecycle"
     enabled            = true
     filters {
       prefix_match     = ["documents"]
@@ -90,6 +84,7 @@ resource "azurerm_storage_management_policy" "pipeline-documents-lifecycle" {
       }
     }
   }
+  depends_on = [azurerm_storage_account.sa]
 }
 
 data "azurerm_function_app_host_keys" "fa_text_extractor_generator_host_keys" {
@@ -130,5 +125,16 @@ resource "azurerm_eventgrid_system_topic" "pipeline_document_deleted_topic" {
   tags = {
     environment = "${var.env}"
   }
-  depends_on = [azurerm_storage_account.sa]
+  depends_on = [azurerm_storage_account.sa,azurerm_storage_management_policy.pipeline-documents-lifecycle]
+}
+
+resource "azurerm_eventgrid_event_subscription" "pipeline_document_deleted_event_subscription" {
+  name                   = "pipeline-storage-document-deleted-${var.env != "prod" ? var.env : ""}-event-sub"
+  scope                  = "${azurerm_eventgrid_system_topic.pipeline_document_deleted_topic.id}"
+
+  webhook_endpoint {
+    url                  = "https://fa-rumpole-pipeline-${local.resource_name}-text-extractor.azurewebsites.net/runtime/webhooks/EventGrid?functionName=HandleDocumentDeletedEvent&code=${data.azurerm_function_app_host_keys.ak_text_extractor.event_grid_extension_config_key}"
+  }
+
+  included_event_types = ["Blob Deleted"]
 }
