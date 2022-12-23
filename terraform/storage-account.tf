@@ -134,7 +134,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "pipeline_document_
   resource_group_name    = azurerm_resource_group.rg.name
 
   webhook_endpoint {
-    url                  = "https://fa-rumpole-pipeline-${local.resource_name}-text-extractor.azurewebsites.net/runtime/webhooks/EventGrid?functionName=HandleDocumentDeletedEvent&code=${data.azurerm_function_app_host_keys.ak_text_extractor.event_grid_extension_config_key}"
+    url                  = "https://fa-rumpole-pipeline-${local.resource_name}-text-extractor.azurewebsites.net/api/HandleDocumentDeletedEvent?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
   }
 
   included_event_types = ["Blob Deleted"]
