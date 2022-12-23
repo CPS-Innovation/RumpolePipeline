@@ -133,10 +133,10 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "pipeline_document_
   system_topic           = azurerm_eventgrid_system_topic.pipeline_document_deleted_topic.name
   resource_group_name    = azurerm_resource_group.rg.name
 
-  webhook_endpoint {
-    url                  = "https://fa-rumpole-pipeline-${local.resource_name}-text-extractor.azurewebsites.net/api/HandleDocumentDeletedEvent?code=${data.azurerm_function_app_host_keys.ak_text_extractor.default_function_key}"
+  azure_function_endpoint {
+    function_id          = "${azurerm_function_app.fa_text_extractor.id}/functions/HandleDocumentDeletedEvent"
   }
 
   included_event_types = ["Blob Deleted"]
-  depends_on = [azurerm_storage_account.sa,azurerm_storage_management_policy.pipeline-documents-lifecycle,azurerm_eventgrid_system_topic.pipeline_document_deleted_topic]
+  depends_on = [azurerm_storage_account.sa,azurerm_storage_management_policy.pipeline-documents-lifecycle,azurerm_eventgrid_system_topic.pipeline_document_deleted_topic,azurerm_function_app.fa_text_extractor]
 }
