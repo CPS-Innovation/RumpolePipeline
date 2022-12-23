@@ -128,14 +128,18 @@ resource "azurerm_eventgrid_system_topic" "pipeline_document_deleted_topic" {
   depends_on = [azurerm_storage_account.sa,azurerm_storage_management_policy.pipeline-documents-lifecycle]
 }
 
-resource "azurerm_eventgrid_event_subscription" "pipeline_document_deleted_event_subscription" {
+resource "azurerm_eventgrid_system_topic_event_subscription" "pipeline_document_deleted_event_subscription" {
   name                   = "pipeline-storage-document-deleted-${var.env != "prod" ? var.env : ""}-event-sub"
-  scope                  = "${azurerm_eventgrid_system_topic.pipeline_document_deleted_topic.id}"
+  system_topic           = azurerm_eventgrid_system_topic.pipeline_document_deleted_topic.name
+  resource_group_name    = azurerm_resource_group.rg.name
 
   webhook_endpoint {
     url                  = "https://fa-rumpole-pipeline-${local.resource_name}-text-extractor.azurewebsites.net/runtime/webhooks/EventGrid?functionName=HandleDocumentDeletedEvent&code=${data.azurerm_function_app_host_keys.ak_text_extractor.event_grid_extension_config_key}"
   }
 
   included_event_types = ["Blob Deleted"]
+  tags = {
+    environment = "${var.env}"
+  }
   depends_on = [azurerm_storage_account.sa,azurerm_storage_management_policy.pipeline-documents-lifecycle,azurerm_eventgrid_system_topic.pipeline_document_deleted_topic]
 }
