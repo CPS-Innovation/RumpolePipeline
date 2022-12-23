@@ -41,7 +41,7 @@ public class HandleDocumentDeletedEvent
     /// <param name="context"></param>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="NullReferenceException"></exception>
-    [FunctionName("HandlePolarisDocumentDeleted")]
+    [FunctionName("HandleDocumentDeletedEvent")]
     public async Task RunAsync([EventGridTrigger] EventGridEvent eventGridEvent, ExecutionContext context)
     {
         var processCompleted = false;
