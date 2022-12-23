@@ -138,8 +138,5 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "pipeline_document_
   }
 
   included_event_types = ["Blob Deleted"]
-  tags = {
-    environment = "${var.env}"
-  }
   depends_on = [azurerm_storage_account.sa,azurerm_storage_management_policy.pipeline-documents-lifecycle,azurerm_eventgrid_system_topic.pipeline_document_deleted_topic]
 }
