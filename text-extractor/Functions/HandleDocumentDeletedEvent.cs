@@ -10,10 +10,8 @@ using Common.Domain.QueueItems;
 using Common.Logging;
 using Common.Services.StorageQueueService.Contracts;
 using Common.Wrappers;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -39,59 +37,51 @@ public class HandleDocumentDeletedEvent
     /// Handles blob-deletion events raised by Azure Storage, when case documents grow stale either by lack of interaction with the CMS case or the CMS case is archived/closed
     /// The initial deletion is carried out via a LifeCycle Management policy setup against the storage table containing the documents 
     /// </summary>
+    /// <param name="eventGridEvent"></param>
+    /// <param name="context"></param>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="NullReferenceException"></exception>
     [FunctionName("HandleDocumentDeletedEvent")]
-    public async Task<IActionResult> RunAsync([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req)
+    public async Task RunAsync([EventGridTrigger] EventGridEvent eventGridEvent, ExecutionContext context)
     {
-        const string loggerSource = "HandleDocumentDeletedEvent - EventGrid - Event";
-        var correlationId = Guid.NewGuid();
-
         var processCompleted = false;
-        var response = string.Empty;
-        var events = await BinaryData.FromStreamAsync(req.Body);
-        _logger.LogMethodEntry(correlationId, loggerSource, $"Received events: {events}");
+        const string loggerSource = "HandlePolarisDocumentDeleted - EventGrid - Event";
+        var correlationId = Guid.NewGuid();
 
         try
         {
-            var eventGridEvents = EventGridEvent.ParseMany(events);
-
-            foreach (var eventGridEvent in eventGridEvents)
+            if (eventGridEvent == null || string.IsNullOrWhiteSpace(eventGridEvent.EventType))
             {
-                // Handle system events
-                if (!eventGridEvent.TryGetSystemEventData(out var eventData)) continue;
+                throw new ArgumentNullException(nameof(eventGridEvent), "Null or invalid Event Grid Event received");
+            }
 
-                switch (eventData)
-                {
-                    // Handle the subscription validation event
-                    case SubscriptionValidationEventData subscriptionValidationEventData:
-                        _logger.LogMethodFlow(correlationId, loggerSource, 
-                            $"Got SubscriptionValidation event data, validation code: {subscriptionValidationEventData.ValidationCode}, topic: {eventGridEvent.Topic}");
-                        
-                        var responseData = new
-                        {
-                            ValidationResponse = subscriptionValidationEventData.ValidationCode
-                        };
-                        return new OkObjectResult(responseData);
-                    // Handle the storage blob created event
-                    case StorageBlobDeletedEventData storageBlobDeletedEventData:
-                        _logger.LogMethodFlow(correlationId, loggerSource, ReturnEventGridEventLevel(storageBlobDeletedEventData));
+            _logger.LogMethodEntry(correlationId, loggerSource, ReturnEventGridTopLevel(eventGridEvent));
 
-                        var blobDetails = new Uri(storageBlobDeletedEventData.Url).PathAndQuery.Split("/");
-                        var caseId = long.Parse(blobDetails[2]);
-                        var blobName = blobDetails[4];
+            if (eventGridEvent.EventType == EventGridEvents.BlobDeletedEvent)
+            {
+                var eventData = eventGridEvent.Data.ToObjectFromJson<StorageBlobDeletedEventData>();
+                if (eventData == null)
+                    throw new NullReferenceException("Could not deserialize event data into the expected type: 'StorageBlobDeletedEventData'");
                 
-                        await _storageQueueService.AddNewMessageAsync(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByBlobNameQueueItem(caseId, 
-                            blobName, correlationId)), _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName]);
+                _logger.LogMethodFlow(correlationId, loggerSource, ReturnEventGridEventLevel(eventData));
+
+                var blobDetails = new Uri(eventData.Url).PathAndQuery.Split("/");
+                var caseId = long.Parse(blobDetails[2]);
+                var blobName = blobDetails[4];
                 
-                        var searchIndexUpdated = $"The search index update was queued and should remove any joint references to caseId: {caseId} and blobName: '{blobName}'";
-                        _logger.LogMethodFlow(correlationId, loggerSource, searchIndexUpdated);
-                        break;
-                }
+                await _storageQueueService.AddNewMessageAsync(_jsonConvertWrapper.SerializeObject(new UpdateSearchIndexByBlobNameQueueItem(caseId, 
+                    blobName, correlationId)), _configuration[ConfigKeys.SharedKeys.UpdateSearchIndexByBlobNameQueueName]);
+                
+                var searchIndexUpdated = $"The search index update was queued and should remove any joint references to caseId: {caseId} and blobName: '{blobName}'";
+                _logger.LogMethodFlow(correlationId, loggerSource, searchIndexUpdated);
+            }
+            else
+            {
+                var wrongMessageTypeReceived = $"Event grid event type was not of type Microsoft.Storage.BlobDeleted, but rather {eventGridEvent.EventType} - ignoring the raised event";
+                _logger.LogMethodFlow(correlationId, loggerSource, wrongMessageTypeReceived);
             }
 
             processCompleted = true;
-            return new OkObjectResult(response);
         }
         catch (Exception ex)
         {
@@ -102,6 +92,16 @@ public class HandleDocumentDeletedEvent
         {
             _logger.LogMethodExit(correlationId, loggerSource, $"Blob deletion event completed successfully: '{processCompleted}'");
         }
+    }
+
+    private static string ReturnEventGridTopLevel(EventGridEvent eventGridEvent)
+    {
+        return $@"New Event Grid Event:
+            - Id=[{eventGridEvent.Id}]
+            - EventType=[{eventGridEvent.EventType}]
+            - EventTime=[{eventGridEvent.EventTime}]
+            - Subject=[{eventGridEvent.Subject}]
+            - Topic=[{eventGridEvent.Topic}]";
     }
 
     private static string ReturnEventGridEventLevel(StorageBlobDeletedEventData eventData)
