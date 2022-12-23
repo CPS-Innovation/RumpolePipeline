@@ -137,4 +137,5 @@ resource "azurerm_eventgrid_event_subscription" "pipeline_document_deleted_event
   }
 
   included_event_types = ["Blob Deleted"]
+  depends_on = [azurerm_storage_account.sa,azurerm_storage_management_policy.pipeline-documents-lifecycle,azurerm_eventgrid_system_topic.pipeline_document_deleted_topic]
 }
