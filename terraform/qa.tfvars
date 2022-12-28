@@ -9,7 +9,6 @@ ddei_config = {
     get_document_function_key = "Kdk8RI0pQlJ8nm1AANKohWRA69llzAIkHIpbjqlMj9FhAzFucFAWQA=="
 }
 queue_config = {
-    update_blob_storage_queue_name = "update-blob-storage"
     update_search_index_by_version_queue_name = "update-search-index-by-version"
     update_search_index_by_blob_name_queue_name = "update-search-index-by-blob-name"
 }

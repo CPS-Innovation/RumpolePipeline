@@ -21,7 +21,6 @@ resource "azurerm_function_app" "fa_document_evaluator" {
     "SearchClientEndpointUrl"                 = "https://${azurerm_search_service.ss.name}.search.windows.net"
     "SearchClientIndexName"                   = jsondecode(file("search-index-definition.json")).name
     "DocumentEvaluatorQueueUrl"               = "https://sacps${var.env != "prod" ? var.env : ""}rumpolepipeline.queue.core.windows.net/{0}"
-    "UpdateBlobStorageQueueName"              = var.queue_config.update_blob_storage_queue_name
     "UpdateSearchIndexByVersionQueueName"     = var.queue_config.update_search_index_by_version_queue_name
   }
   https_only                 = true

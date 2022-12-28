@@ -217,7 +217,7 @@ public class ProcessEvaluatedDocumentsTests
 
 		using (new AssertionScope())
 		{
-			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(_documentsToRemoveRequest.DocumentsToRemove.Count * 2));
+			_mockStorageQueueService.Verify(x => x.AddNewMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(_documentsToRemoveRequest.DocumentsToRemove.Count));
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
 		}
 	}

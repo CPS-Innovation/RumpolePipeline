@@ -6,11 +6,10 @@ namespace Common.Domain.DocumentEvaluation;
 
 public class DocumentToRemove
 {
-    public DocumentToRemove(string documentId, long versionId, string pdfBlobName)
+    public DocumentToRemove(string documentId, long versionId)
     {
         DocumentId = documentId;
         VersionId = versionId;
-        PdfBlobName = pdfBlobName;
     }
     
     [JsonProperty("documentId")]
@@ -20,8 +19,4 @@ public class DocumentToRemove
     [JsonProperty("versionId")]
     [RequiredLongGreaterThanZero]
     public long VersionId { get; set; }
-    
-    [JsonProperty("pdfBlobName")]
-    [Required]
-    public string PdfBlobName { get; set; }
 }

@@ -70,7 +70,7 @@ namespace coordinator.Domain.Tracker
                          Documents.Where(trackedDocument => 
                              !arg.IncomingDocuments.Exists(x => x.DocumentId == trackedDocument.DocumentId && x.VersionId == trackedDocument.VersionId)))
                 {
-                    evaluationResults.DocumentsToRemove.Add(new DocumentToRemove(trackedDocument.DocumentId, trackedDocument.VersionId, trackedDocument.PdfBlobName));
+                    evaluationResults.DocumentsToRemove.Add(new DocumentToRemove(trackedDocument.DocumentId, trackedDocument.VersionId));
                 }
                 
                 //now remove any invalid documents from the tracker so they are not reprocessed
