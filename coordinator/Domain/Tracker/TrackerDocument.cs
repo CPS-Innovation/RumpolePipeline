@@ -10,6 +10,7 @@ namespace coordinator.Domain.Tracker
             DocumentId = documentId;
             VersionId = versionId;
             OriginalFileName = originalFileName;
+            Status = DocumentStatus.None;
         }
         
         [JsonProperty("documentId")]
