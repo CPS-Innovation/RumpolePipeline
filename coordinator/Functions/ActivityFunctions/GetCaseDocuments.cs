@@ -42,7 +42,7 @@ namespace coordinator.Functions.ActivityFunctions
             _log.LogMethodEntry(payload.CorrelationId, loggingName, payload.ToJson());
             var caseDetails = await _documentExtractionService.ListDocumentsAsync(payload.CaseUrn, payload.CaseId.ToString(), payload.UpstreamToken, payload.CorrelationId);
             
-            _log.LogMethodExit(payload.CorrelationId, loggingName, string.Empty);
+            _log.LogMethodExit(payload.CorrelationId, loggingName, caseDetails.ToJson());
             return caseDetails;
         }
     }

@@ -1,5 +1,5 @@
 // Default URL for triggering event grid function in the local environment.
-// http://localhost:7071/runtime/webhooks/EventGrid?functionName=HandlePolarisDocumentDeleted
+// http://localhost:7071/runtime/webhooks/EventGrid?functionName=HandleDocumentDeletedEvent
 
 using System;
 using System.Threading.Tasks;
@@ -45,7 +45,7 @@ public class HandleDocumentDeletedEvent
     public async Task RunAsync([EventGridTrigger] EventGridEvent eventGridEvent, ExecutionContext context)
     {
         var processCompleted = false;
-        const string loggerSource = "HandlePolarisDocumentDeleted - EventGrid - Event";
+        const string loggerSource = "HandleDocumentDeletedEvent - EventGrid - Event";
         var correlationId = Guid.NewGuid();
 
         try
