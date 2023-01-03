@@ -20,7 +20,7 @@ resource "azurerm_function_app" "fa_document_evaluator" {
     "SearchClientAuthorizationKey"            = azurerm_search_service.ss.primary_key
     "SearchClientEndpointUrl"                 = "https://${azurerm_search_service.ss.name}.search.windows.net"
     "SearchClientIndexName"                   = jsondecode(file("search-index-definition.json")).name
-    "DocumentEvaluatorQueueUrl"               = "https://sacps${var.env != "prod" ? var.env : ""}rumpolepipeline.queue.core.windows.net/{0}"
+    "DocumentEvaluatorQueueUrl"               = "https://sacps${var.env != "prod" ? var.env : ""}polarispipeline.queue.core.windows.net/{0}"
     "UpdateSearchIndexByVersionQueueName"     = var.queue_config.update_search_index_by_version_queue_name
   }
   https_only                 = true
@@ -130,7 +130,7 @@ resource "azuread_service_principal_password" "sp_fa_document_evaluator_pw" {
   service_principal_id = module.azurerm_service_principal_fa_document_evaluator.object_id
 }
 
-resource "azuread_service_principal_delegated_permission_grant" "rumpole_document_evaluator_grant_access_to_msgraph" {
+resource "azuread_service_principal_delegated_permission_grant" "polaris_document_evaluator_grant_access_to_msgraph" {
   service_principal_object_id          = module.azurerm_service_principal_fa_document_evaluator.object_id
   resource_service_principal_object_id = azuread_service_principal.msgraph.object_id
   claim_values                         = ["User.Read"]

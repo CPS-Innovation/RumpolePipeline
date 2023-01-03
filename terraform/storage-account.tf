@@ -1,5 +1,5 @@
 resource "azurerm_storage_account" "sa" {
-  name                = "sacps${var.env != "prod" ? var.env : ""}rumpolepipeline"
+  name                = "sacps${var.env != "prod" ? var.env : ""}polarispipeline"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 
@@ -19,7 +19,7 @@ resource "azurerm_storage_account" "sa" {
   }
 }
 
-resource "azurerm_storage_account_customer_managed_key" "rumpole_storage_pipeline_cmk" {
+resource "azurerm_storage_account_customer_managed_key" "polaris_storage_pipeline_cmk" {
   storage_account_id = azurerm_storage_account.sa.id
   key_vault_id       = azurerm_key_vault.kv.id
   key_name           = azurerm_key_vault_key.kvap_sa_customer_managed_key.name

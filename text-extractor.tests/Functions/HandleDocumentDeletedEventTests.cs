@@ -99,7 +99,7 @@ public class HandleDocumentDeletedEventTests
                     ""contentType"": ""application/octet-stream"",
                     ""contentLength"": 56754,
                     ""blobType"": ""BlockBlob"",
-                    ""url"": ""https://sacpsdevrumpolepipeline.blob.core.windows.net/documents/18848/pdfs/docCDE.pdf"",
+                    ""url"": ""https://sacpsdevpolarispipeline.blob.core.windows.net/documents/18848/pdfs/docCDE.pdf"",
                     ""sequencer"": ""00000000000000000000000000015EBD000000000008c2d5"",
                     ""storageDiagnostics"": {
                         ""batchId"": ""c68eb2e3-a006-003a-0034-dfe775000000""

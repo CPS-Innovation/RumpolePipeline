@@ -35,7 +35,7 @@ terraform {
     resource_group_name  = "rg-terraform"
     //storage_account_name = "cpsqastorageterraform" //QA
     storage_account_name = "cpsdevstorageterraform" //DEV
-    container_name       = "terraform-rumpole-pipeline"
+    container_name       = "terraform-polaris-pipeline"
     key                  = "terraform.tfstate"
     access_key           = "[manually assigned]"
   }*/
@@ -59,6 +59,7 @@ provider "azurerm" {
 
 locals {
   resource_name = "${var.env != "prod" ? "${var.resource_name_prefix}-${var.env}" : var.resource_name_prefix}"
+  ddei_resource_name = "${var.env != "prod" ? "${var.ddei_resource_name_prefix}-${var.env}" : var.ddei_resource_name_prefix}"
 }
 
 data "azurerm_client_config" "current" {}

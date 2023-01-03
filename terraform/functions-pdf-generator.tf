@@ -14,7 +14,7 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"     = ""
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE"         = ""
     "AzureWebJobsStorage"                     = azurerm_storage_account.sa.primary_connection_string
-    "BlobServiceUrl"                          = "https://sacps${var.env != "prod" ? var.env : ""}rumpolepipeline.blob.core.windows.net/"
+    "BlobServiceUrl"                          = "https://sacps${var.env != "prod" ? var.env : ""}polarispipeline.blob.core.windows.net/"
     "BlobServiceContainerName"                = "documents"
     "CallingAppTenantId"                      = data.azurerm_client_config.current.tenant_id
     "CallingAppValidAudience"                 = "api://fa-${local.resource_name}-pdf-generator"
@@ -22,7 +22,7 @@ resource "azurerm_function_app" "fa_pdf_generator" {
     "SearchClientEndpointUrl"                 = "https://${azurerm_search_service.ss.name}.search.windows.net"
     "SearchClientIndexName"                   = jsondecode(file("search-index-definition.json")).name
     "DocumentsRepositoryBaseUrl"              = var.ddei_config.base_url
-    "GetDocumentUrl"                          = "urns/{0}/cases/{1}/documents/{2}/{3}?code=${var.ddei_config.get_document_function_key}"
+    "GetDocumentUrl"                          = "urns/{0}/cases/{1}/documents/{2}/{3}?code=${data.azurerm_function_app_host_keys.ak_ddei_host_keys.default_function_key}"
   }
   https_only                 = true
 
@@ -96,6 +96,15 @@ module "azurerm_app_reg_fa_pdf_generator" {
       id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
       type = "Scope"
     }]
+  },
+  {
+    # DDEI
+    resource_app_id = data.azuread_application.fa_ddei.id
+    resource_access = [{
+      # User Impersonation Scope
+      id   = data.azuread_application.fa_ddei.oauth2_permission_scope_ids["user_impersonation"]
+      type = "Scope"
+    }]
   }]
   web = {
     redirect_uris = ["https://fa-${local.resource_name}-pdf-generator.azurewebsites.net/.auth/login/aad/callback"]
@@ -141,8 +150,14 @@ resource "azuread_service_principal_password" "sp_fa_pdf_generator_pw" {
   service_principal_id = module.azurerm_service_principal_fa_pdf_generator.object_id
 }
 
-resource "azuread_service_principal_delegated_permission_grant" "rumpole_pdf_generator_grant_access_to_msgraph" {
+resource "azuread_service_principal_delegated_permission_grant" "polaris_pdf_generator_grant_access_to_msgraph" {
   service_principal_object_id          = module.azurerm_service_principal_fa_pdf_generator.object_id
   resource_service_principal_object_id = azuread_service_principal.msgraph.object_id
   claim_values                         = ["User.Read"]
+}
+
+resource "azuread_service_principal_delegated_permission_grant" "polaris_ddei_grant_access_to_pdf_generator" {
+  service_principal_object_id          = module.azurerm_service_principal_fa_pdf_generator.object_id
+  resource_service_principal_object_id = data.azuread_service_principal.fa_ddei_service_principal.object_id
+  claim_values                         = ["user_impersonation"]
 }

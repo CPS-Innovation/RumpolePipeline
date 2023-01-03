@@ -2,7 +2,12 @@
 
 variable "resource_name_prefix" {
   type = string
-  default = "rumpole-pipeline"
+  default = "polaris-pipeline"
+}
+
+variable "ddei_resource_name_prefix" {
+  type = string
+  default = "polaris-ddei"
 }
 
 variable "env" {
@@ -19,8 +24,6 @@ variable "app_service_plan_sku" {
 variable "ddei_config" {
   type = object({
     base_url = string
-    list_documents_function_key = string
-    get_document_function_key = string
   })
 }
 

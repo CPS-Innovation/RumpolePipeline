@@ -4,9 +4,7 @@ app_service_plan_sku = {
     tier = "Basic"
 }
 ddei_config = {
-    base_url = "https://fa-rumpole-tde-temp.azurewebsites.net/api/"
-    list_documents_function_key = "smz7KW0-fIcR6oT-EaX63P3hduRAXoQvtn9YqGIKOzlXAzFuRdA73g=="
-    get_document_function_key = "Kdk8RI0pQlJ8nm1AANKohWRA69llzAIkHIpbjqlMj9FhAzFucFAWQA=="
+    base_url = "https://fa-${local.ddei_resource_name}.azurewebsites.net/api/"
 }
 queue_config = {
     update_search_index_by_version_queue_name = "update-search-index-by-version"
