@@ -10,6 +10,28 @@ resource "azurerm_storage_account" "sa" {
 
   min_tls_version = "TLS1_2"
 
+  queue_properties  {
+      logging {
+        delete                = true
+        read                  = true
+        write                 = true
+        version               = "1.0"
+        retention_policy_days = 10
+      }
+      hour_metrics {
+        enabled               = true
+        include_apis          = true
+        version               = "1.0"
+        retention_policy_days = 10
+      }
+      minute_metrics {
+        enabled               = true
+        include_apis          = true
+        version               = "1.0"
+        retention_policy_days = 10
+      }
+  }
+
   network_rules {
     default_action = "Allow"
   }
